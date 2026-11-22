@@ -7,8 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
-<style>
-/* ========== Tokens ========== */
+<style>/* ========== Tokens ========== */
 :root {
   color-scheme: light;
   --bg: #E4ECE6;
@@ -1450,12 +1449,11 @@ const ACH = [
   { id: 'daily7', n: '七日打卡', d: '连续 7 天领取补给', r: 3, ok: () => S.daily.streak >= 7 },
   { id: 'sig', n: '镇馆之宝', d: '设置一个镇馆模型', r: 1, ok: () => !!S.sig }
 ];
-</script>
-<script>
-'use strict';
+
 /* =================== UTIL =================== */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+function textIfChanged(el, value) { if (el.textContent !== value) el.textContent = value; }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const UNITS = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极'];
 function trim0(s) { return s.indexOf('.') >= 0 ? s.replace(/0+$/, '').replace(/\.$/, '') : s; }
@@ -1501,14 +1499,17 @@ function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return n
 function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
 function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
+
 /* =================== STATE =================== */
 const SAVE_KEY = 'frontier-pull-save-v1';
+// Decide the starter from the evaluated rarity, not the historical grouping in the list.
+const STARTER = MODELS_BY_TIER[0].find(m => m.id === 'eliza') || MODELS_BY_TIER[0][0];
 function randomLabName() { return '实验室-' + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0'); }
 function defaultState() {
   return {
     v: 1, created: Date.now(), lastSave: Date.now(),
     tokens: 1000, lifetime: 0, gpu: 0,
-    cards: { transformer: [1, 0, 0, 0] }, train: {}, leaks: 0,
+    cards: { [STARTER.id]: [1, 0, 0, 0] }, train: {}, leaks: 0,
     up: { multi: 0, speed: 0, clone: 0, price: 0 },
     tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0 },
     pack: 1, auto: false, autoReb: false, autoBench: false,
@@ -1522,6 +1523,7 @@ function defaultState() {
 function mergeState(base, saved) {
   if (!saved || typeof saved !== 'object') return base;
   for (const k of Object.keys(saved)) {
+    if (!Object.hasOwn(base, k)) continue;
     const sv = saved[k], bv = base[k];
     if (bv && typeof bv === 'object' && !Array.isArray(bv) && sv && typeof sv === 'object' && !Array.isArray(sv) && k !== 'cards' && k !== 'train' && k !== 'pity' && k !== 'ach') base[k] = mergeState(bv, sv);
     else if (sv !== undefined && sv !== null) base[k] = sv;
@@ -1549,13 +1551,19 @@ function sanitizeState(st) {
 }
 function parseSave(text) {
   const obj = JSON.parse(text);
+  if (!obj || typeof obj.cards !== 'object' || !obj.cards || Array.isArray(obj.cards)) throw new Error('Invalid inventory');
   return sanitizeState(mergeState(defaultState(), obj));
 }
 let S = defaultState();
 let lastYield = 0;
 let buffs = [];
-let caches = { lab: null, dex: null, series: null };
-function invalidate() { caches.lab = null; caches.dex = null; caches.series = null; }
+const caches = { lab: null, dex: null, series: null, production: null };
+function invalidateProduction() { caches.production = null; }
+function invalidate() {
+  caches.lab = caches.dex = caches.series = null;
+  invalidateProduction();
+}
+
 
 /* =================== ECONOMY =================== */
 function addTokens(x) { if (x > 0 && isFinite(x)) { S.tokens += x; S.lifetime += x; } }
@@ -1567,6 +1575,7 @@ function buffMul(type, lab) {
 function addBuff(b) {
   const dur = (b.dur || 30) * (1 + 0.2 * S.tech.news);
   buffs.push({ type: b.type, mul: b.mul, lab: b.lab || null, label: b.label, until: Date.now() + dur * 1000 });
+  if (b.type === 'lab') invalidateProduction();
   markDirty('hud');
 }
 function multi() { return 1 + S.up.multi; }
@@ -1582,8 +1591,8 @@ function variantProbs() {
   const h = Math.min(0.05, 0.001 * L), mx = Math.min(0.15, 0.01 * L), th = Math.min(0.5, 0.1 * L);
   return [1 - h - mx - th, th, mx, h];
 }
-function rollVariant() {
-  const p = variantProbs(); const r = Math.random();
+function rollVariant(p = variantProbs()) {
+  const r = Math.random();
   if (r < p[3]) return 3; if (r < p[3] + p[2]) return 2; if (r < p[3] + p[2] + p[1]) return 1; return 0;
 }
 function tierRate(p, t) { const x = p.r.find(a => a[0] === t); return x ? x[1] : 0; }
@@ -1598,10 +1607,11 @@ function upInfo(now = Date.now()) {
   const period = 2 * 3600e3, k = Math.floor(now / period);
   return { lab: UP_LABS[k % UP_LABS.length], ends: (k + 1) * period };
 }
+const upPools = MODELS_BY_TIER.map(pool => Object.fromEntries(UP_LABS.map(lab => [lab, pool.filter(m => m.lab === lab)])));
 function pickModel(t) {
   const pool = MODELS_BY_TIER[t];
   const up = upInfo().lab;
-  const upPool = pool.filter(m => m.lab === up);
+  const upPool = upPools[t][up];
   if (upPool.length && upPool.length < pool.length && Math.random() < upChance()) return pick(upPool);
   return pick(pool);
 }
@@ -1653,20 +1663,29 @@ function mulParts() {
     ['算力复利', compoundMul()], ['全服奇点', worldMul()], ['热点', buffMul('frenzy')]
   ];
 }
-function globalMul() { return mulParts().reduce((a, p) => a * p[1], 1); }
+function globalMul() {
+  return rebirthMul() * dexInfo().mul * seriesMul() * benchMul() * priceMul() * compoundMul() * worldMul() * buffMul('frenzy');
+}
 function perCard(m) { return TIERS[m.t].base * trainMul(m.id) * labStats()[m.lab].mul * buffMul('lab', m.lab); }
 function rawUnits(c) { return c[0] + c[1] * 3 + c[2] * 10 + c[3] * 50; }
 function bestVar(c) { return c[3] > 0 ? 3 : c[2] > 0 ? 2 : c[1] > 0 ? 1 : 0; }
-function bestSingle() {
-  let best = 0;
-  for (const m of MODELS) { const c = S.cards[m.id]; if (!total(c)) continue; best = Math.max(best, perCard(m) * VARIANTS[bestVar(c)].mul); }
-  return best;
+// Inventory, training and lab buffs affect the subtotal. Global multipliers
+// stay live so world milestones, benchmarks and timed events apply immediately.
+function production() {
+  if (caches.production) return caches.production;
+  let sum = 0, best = 0;
+  for (const m of MODELS) {
+    const c = S.cards[m.id]; if (!total(c)) continue;
+    const unit = perCard(m);
+    sum += rawUnits(c) * unit;
+    best = Math.max(best, unit * VARIANTS[bestVar(c)].mul);
+  }
+  return caches.production = { sum, best };
 }
+function bestSingle() { return production().best; }
 function computeYield() {
-  let sum = 0;
-  for (const m of MODELS) { const c = S.cards[m.id]; if (!total(c)) continue; sum += rawUnits(c) * perCard(m); }
-  sum += S.leaks * bestSingle();
-  return sum * globalMul();
+  const { sum, best } = production();
+  return (sum + S.leaks * best) * globalMul();
 }
 function modelOut(m) { const c = S.cards[m.id]; return total(c) ? rawUnits(c) * perCard(m) * globalMul() : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
@@ -1674,26 +1693,25 @@ function rebirthCost() { return 5e7 * Math.pow(25, S.rebirths); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
 function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
+
 /* =================== PULL =================== */
-let lastResults = [];
-let lastResultMeta = null;
-function doPull(auto, originEl) {
-  const p = curPack();
+function settlePull(p) {
   const n = multi(), cost = pullCost(p);
-  if (S.tokens < cost) { if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(cost)} Token`); return false; }
+  if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
   const clone = cloneN();
+  const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
   const res = [];
   let structural = false;
   for (let i = 0; i < n; i++) {
     S.stats.pulls++;
-    if (Math.random() < leakChance()) { S.leaks++; structural = true; res.push({ leak: true, t: 7, v: 3, prob: leakChance(), n: 1 }); continue; }
+    if (Math.random() < leak) { S.leaks++; structural = true; res.push({ leak: true, t: 7, v: 3, prob: leak, n: 1 }); continue; }
     const pc = (S.pity[p.id] || 0) + 1;
     let t, viaPity = false;
-    if (pc >= pityN(p)) { t = p.pt; viaPity = true; } else t = rollTier(p);
+    if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p);
     S.pity[p.id] = t >= p.pt ? 0 : pc;
-    const m = pickModel(t), v = rollVariant();
+    const m = pickModel(t), v = rollVariant(variants);
     let c = S.cards[m.id];
     const isNew = !total(c);
     if (!c) c = S.cards[m.id] = [0, 0, 0, 0];
@@ -1702,54 +1720,11 @@ function doPull(auto, originEl) {
     S.stats.byTier[t]++;
     if (t > S.stats.maxTier) S.stats.maxTier = t;
     if (v > S.stats.maxVar) S.stats.maxVar = v;
-    res.push({ id: m.id, v, t, isNew, prob: tierRate(p, t) * variantProbs()[v], pity: viaPity, n: clone });
+    res.push({ id: m.id, v, t, isNew, prob: tierRate(p, t) * variants[v], pity: viaPity, n: clone });
   }
   if (structural) invalidate();
-  afterPull(res, auto, p, originEl);
-  return true;
-}
-function resultScore(r) { return r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
-function afterPull(res, auto, p, originEl) {
-  const now = Date.now();
-  // aggregate for display
-  const map = new Map();
-  for (const r of res) {
-    const k = r.leak ? 'leak' : r.id + '|' + r.v;
-    const e = map.get(k);
-    if (e) { e.n += r.n; e.isNew = e.isNew || r.isNew; } else map.set(k, Object.assign({}, r));
-  }
-  lastResults = Array.from(map.values()).sort((a, b) => resultScore(b) - resultScore(a));
-  lastResultMeta = { auto, pack: p.id, count: res.length, at: now, fly: !auto };
-  // log & rare broadcast
-  let rareChanged = false;
-  for (const r of lastResults) {
-    if (r.leak) { S.log.unshift({ id: 'leak', v: 3, ts: now }); S.rare.unshift({ id: 'leak', v: 3, ts: now }); rareChanged = true; continue; }
-    if (r.t >= 3 || r.v >= 2) S.log.unshift({ id: r.id, v: r.v, ts: now, n: r.n });
-    if (r.t >= 5 || (r.v === 3 && r.t >= 2)) { S.rare.unshift({ id: r.id, v: r.v, ts: now }); rareChanged = true; }
-  }
-  if (S.log.length > 60) S.log.length = 60;
-  if (S.rare.length > 8) S.rare.length = 8;
-  if (rareChanged) cloudBump(true);
-  // reveal decision
-  const best = lastResults[0];
-  let cine = false;
-  if (best) {
-    cine = best.leak || best.t >= 6 || (best.isNew && best.t >= 4) || (best.v === 3 && best.t >= 4) || best.prob <= 1e-4;
-    if (auto && !S.set.autoCine) cine = false;
-  }
-  if (cine) { playRare(best.t >= 7); showCine(best); }
-  else {
-    if (!auto) playPull();
-    for (const r of lastResults.slice(0, 3)) {
-      if (r.leak) continue;
-      if (auto && !((r.isNew && r.t >= 3) || r.t >= 6 || (r.v === 3 && r.t >= 3))) continue;
-      const m = MODEL_BY_ID[r.id];
-      if (r.isNew && r.t >= 2) toast('新模型入库', `${TIERS[r.t].id} ${m.n}${r.v ? ' · ' + VARIANTS[r.v].name : ''}`, true);
-      else if (r.t >= 5 || r.v >= 2) toast((r.v ? VARIANTS[r.v].name + '版 ' : '') + m.n, `${TIERS[r.t].id} · 数量 ×${fmt(r.n)}`, true);
-    }
-  }
-  if (!auto && originEl && S.set.fx) burstAt(originEl, best ? TIER_HEX[best.t] : '#fff');
-  markDirty('pullLite', 'models', 'dex', 'bench', 'hud');
+  else invalidateProduction();
+  return { res, structural };
 }
 
 /* =================== REBIRTH / UPGRADES / TECH =================== */
@@ -1793,6 +1768,7 @@ function trainModel(id) {
   const m = MODEL_BY_ID[id]; const c = trainCost(m);
   if (!owned(m) || S.tokens < c) return false;
   S.tokens -= c; S.train[id] = trainLv(id) + 1;
+  invalidateProduction();
   playTick();
   markDirty('models', 'bench', 'hud');
   return true;
@@ -1905,8 +1881,14 @@ function checkAch() {
   if (got) { playRare(false); markDirty('feats', 'research', 'hud'); }
 }
 
+
 /* =================== SAVE =================== */
-function saveLocal() { S.lastSave = Date.now(); lsSet(SAVE_KEY, JSON.stringify(S)); }
+function saveLocal() {
+  S.lastSave = Date.now();
+  const json = JSON.stringify(S);
+  lsSet(SAVE_KEY, json);
+  return json;
+}
 function loadLocal() {
   const raw = lsGet(SAVE_KEY);
   if (!raw) return null;
@@ -1921,9 +1903,7 @@ function applyOffline(fromTs) {
   addTokens(earned);
   return { sec, earned, rate };
 }
-</script>
-<script>
-'use strict';
+
 /* =================== ART =================== */
 const artCache = new Map();
 function elementMark(size, sym, no, hue) {
@@ -2030,6 +2010,7 @@ function statusTag(st) { return STATUS[st] ? `<span class="tag st-${st}">${STATU
 function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; }
 function tierTag(t) { return `<span class="tag tier-text" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
 
+
 /* =================== TOAST / MODAL / FX =================== */
 function toast(title, desc, isPull) {
   if (isPull && !S.set.toast) return;
@@ -2102,20 +2083,81 @@ function playRare(big) {
   try { const t = actx.currentTime; const f = big ? [261.6, 329.6, 392, 523.3, 659.3, 784, 1046.5] : [523.3, 659.3, 784, 1046.5]; f.forEach((x, i) => tone(x, t + i * 0.07, big ? 0.9 : 0.4, i === f.length - 1 ? 'sawtooth' : 'triangle', 0.07)); } catch (e) {}
 }
 
+
+let lastResults = [];
+let lastResultMeta = null;
+function doPull(auto, originEl) {
+  const p = curPack(), draw = settlePull(p);
+  if (!draw) {
+    if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(pullCost(p))} Token`);
+    return false;
+  }
+  if (draw.structural) markDirty('dex');
+  afterPull(draw.res, auto, p, originEl);
+  return true;
+}
+function resultScore(r) { return r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
+function afterPull(res, auto, p, originEl) {
+  const now = Date.now();
+  // aggregate for display
+  const map = new Map();
+  for (const r of res) {
+    const k = r.leak ? 'leak' : r.id + '|' + r.v;
+    const e = map.get(k);
+    if (e) { e.n += r.n; e.isNew = e.isNew || r.isNew; } else map.set(k, Object.assign({}, r));
+  }
+  lastResults = Array.from(map.values()).sort((a, b) => resultScore(b) - resultScore(a));
+  lastResultMeta = { auto, pack: p.id, count: res.length, at: now, fly: !auto };
+  // log & rare broadcast
+  let rareChanged = false;
+  for (const r of lastResults) {
+    if (r.leak) { S.log.unshift({ id: 'leak', v: 3, ts: now }); S.rare.unshift({ id: 'leak', v: 3, ts: now }); rareChanged = true; continue; }
+    if (r.t >= 3 || r.v >= 2) S.log.unshift({ id: r.id, v: r.v, ts: now, n: r.n });
+    if (r.t >= 5 || (r.v === 3 && r.t >= 2)) { S.rare.unshift({ id: r.id, v: r.v, ts: now }); rareChanged = true; }
+  }
+  if (S.log.length > 60) S.log.length = 60;
+  if (S.rare.length > 8) S.rare.length = 8;
+  if (rareChanged) cloudBump(true);
+  // reveal decision
+  const best = lastResults[0];
+  let cine = false;
+  if (best) {
+    cine = best.leak || best.t >= 6 || (best.isNew && best.t >= 4) || (best.v === 3 && best.t >= 4) || best.prob <= 1e-4;
+    if (auto && !S.set.autoCine) cine = false;
+  }
+  if (cine) { playRare(best.t >= 7); showCine(best); }
+  else {
+    if (!auto) playPull();
+    for (const r of lastResults.slice(0, 3)) {
+      if (r.leak) continue;
+      if (auto && !((r.isNew && r.t >= 3) || r.t >= 6 || (r.v === 3 && r.t >= 3))) continue;
+      const m = MODEL_BY_ID[r.id];
+      if (r.isNew && r.t >= 2) toast('新模型入库', `${TIERS[r.t].id} ${m.n}${r.v ? ' · ' + VARIANTS[r.v].name : ''}`, true);
+      else if (r.t >= 5 || r.v >= 2) toast((r.v ? VARIANTS[r.v].name + '版 ' : '') + m.n, `${TIERS[r.t].id} · 数量 ×${fmt(r.n)}`, true);
+    }
+  }
+  if (!auto && originEl && S.set.fx) burstAt(originEl, best ? TIER_HEX[best.t] : '#fff');
+  markDirty('pullLite', 'models', 'bench', 'hud');
+}
+
+
 /* =================== RENDER: HUD =================== */
 const dirty = new Set(['pull', 'models', 'dex', 'bench', 'research', 'world', 'feats', 'prefs', 'hud']);
 function markDirty(...v) { for (const x of v) dirty.add(x); }
 let currentView = 'pull';
+let hud, previousBuffs;
 function renderHUD() {
-  $('#hudTokens').textContent = fmt(S.tokens);
-  $('#hudRate').textContent = '+' + fmt(lastYield) + '/s';
-  $('#hudGpu').textContent = fmt(S.gpu);
-  $('#hudMul').textContent = '×' + fmtMul(globalMul());
+  hud ??= Object.fromEntries(['hudTokens','hudRate','hudGpu','hudMul','hudBuffs','dotFeats','dotResearch'].map(id => [id, document.getElementById(id)]));
+  textIfChanged(hud.hudTokens, fmt(S.tokens));
+  textIfChanged(hud.hudRate, '+' + fmt(lastYield) + '/s');
+  textIfChanged(hud.hudGpu, fmt(S.gpu));
+  textIfChanged(hud.hudMul, '×' + fmtMul(globalMul()));
   const now = Date.now();
-  $('#hudBuffs').innerHTML = buffs.map(b => `<span class="buff">${esc(b.label)} · ${Math.ceil((b.until - now) / 1000)}s</span>`).join('');
-  $('#dotFeats').classList.toggle('hidden', !dailyAvail());
+  const html = buffs.map(b => `<span class="buff">${esc(b.label)} · ${Math.ceil((b.until - now) / 1000)}s</span>`).join('');
+  if (html !== previousBuffs) { hud.hudBuffs.innerHTML = html; previousBuffs = html; }
+  hud.dotFeats.classList.toggle('hidden', !dailyAvail());
   const canTech = TECH.some(t => (t.max === null || S.tech[t.key] < t.max) && S.gpu >= t.cost(S.tech[t.key]));
-  $('#dotResearch').classList.toggle('hidden', !canTech && S.tokens < rebirthCost());
+  hud.dotResearch.classList.toggle('hidden', !canTech && S.tokens < rebirthCost());
 }
 function renderNews() {
   const pill = $('#newsPill');
@@ -2183,8 +2225,12 @@ function renderResults() {
   $('#resultSide').textContent = `${lastResultMeta.auto ? '自动' : '手动'} · ${lastResultMeta.count} 张${more > 0 ? `，另有 ${more} 种未显示` : ''}`;
   if (lastResultMeta) lastResultMeta.fly = false;
 }
+let previousLogHead, previousLogMinute;
 function renderLog() {
   const el = $('#pullLog');
+  const minute = Math.floor(Date.now() / 60000);
+  if (previousLogHead === S.log[0] && previousLogMinute === minute) return;
+  previousLogHead = S.log[0]; previousLogMinute = minute;
   if (!S.log.length) { el.innerHTML = '<div class="muted" style="padding:6px 2px">还没有高光时刻。SSR 以上的模型会记录在这里。</div>'; return; }
   el.innerHTML = S.log.slice(0, 30).map(l => {
     const m = modelOrLeak(l.id); if (!m) return '';
@@ -2251,7 +2297,56 @@ function openDetail(id) {
 }
 
 /* =================== RENDER: DEX =================== */
+// Keep the grid mounted (focus/scroll survive a draw). Decorative artwork
+// is only attached near the viewport; labels and buttons always exist.
+let dexGrid;
+function mountDex() {
+  const root = $('#view-dex');
+  const rows = $$('.dex-row', root).map(el => ({ id: el.dataset.model, icon: $('.ic', el), cells: $$('.cells i', el), mask: -1 }));
+  const heads = $$('.lab-head', root).map(el => ({ key: el.dataset.labKey, prog: $('.prog', el), bonus: $('.bonus', el) }));
+  const sets = $$('.series', root).map(el => ({ el, bonus: $('.series-top .b', el), count: $('.series-foot .num', el),
+    bar: $('.bar > i', el), icons: $$('.sic', el) }));
+  const paint = el => { el.innerHTML = cardArt(MODEL_BY_ID[el.dataset.thumb]); };
+  const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
+    for (const { target, isIntersecting } of entries) {
+      if (isIntersecting && !target.firstChild) paint(target);
+      else if (!isIntersecting && target.firstChild) target.replaceChildren();
+    }
+  }, { rootMargin: '240px' }) : null;
+  for (const el of $$('[data-thumb]', root)) { if (observer) observer.observe(el); else paint(el); }
+  return { rows, heads, sets, observer };
+}
+function syncDex() {
+  const di = dexInfo(), si = seriesInfo(), ls = labStats();
+  if (dexGrid.snapshot === di) return;
+  dexGrid.snapshot = di;
+  textIfChanged($('#dexCount'), `${di.n}/${MODELS.length * 4}`);
+  textIfChanged($('#dexBonus'), '×' + fmtMul(di.mul));
+  textIfChanged($('#dexSetBonus'), '×' + fmtMul(si.mul));
+  textIfChanged($('#dexSeries .side'), `已完成 ${si.done}/${SERIES.length}，凑齐一组即生效`);
+  for (const r of dexGrid.rows) {
+    const c = S.cards[r.id]; let mask = 0;
+    if (c) for (let v = 0; v < 4; v++) if (c[v] > 0) mask |= 1 << v;
+    if (r.mask === mask) continue;
+    r.mask = mask; r.icon.classList.toggle('off', !mask);
+    r.cells.forEach((el, i) => el.classList.toggle('on', !!(mask & (1 << i))));
+  }
+  for (const {key, prog, bonus} of dexGrid.heads) {
+    const s = ls[key]; textIfChanged(prog, `${s.own}/${s.total}`);
+    textIfChanged(bonus, `羁绊 ×${fmtMul(s.mul)}${s.full ? '，已集齐' : ''}`); bonus.classList.toggle('full', s.full);
+  }
+  si.rows.forEach(({se, own, full}, i) => {
+    const r = dexGrid.sets[i]; r.el.classList.toggle('full', full);
+    textIfChanged(r.bonus, `${full ? '已生效 ' : ''}+${Math.round(se.b * seriesBoost() * 100)}%`);
+    textIfChanged(r.count, `${own}/${se.ids.length}`); r.bar.style.width = (own / se.ids.length * 100) + '%';
+    for (const el of r.icons) {
+      const m = MODEL_BY_ID[el.dataset.model], has = owned(m);
+      if (el.classList.contains('off') === has) { el.classList.toggle('off', !has); el.setAttribute('aria-label', m.n + (has ? '' : '（未拥有）')); }
+    }
+  });
+}
 function renderDex() {
+  if (dexGrid) { syncDex(); return; }
   const di = dexInfo();
   $('#dexCount').textContent = `${di.n}/${MODELS.length * 4}`;
   $('#dexBonus').textContent = '×' + fmtMul(di.mul);
@@ -2263,12 +2358,13 @@ function renderDex() {
     const L = LABS[k], st = ls[k];
     const rows = LAB_MODELS[k].slice().sort((a, b) => a.t - b.t).map(m => {
       const c = S.cards[m.id] || [0, 0, 0, 0], has = total(c) > 0;
-      return `<button class="dex-row" data-model="${m.id}" type="button"><span class="ic${has ? '' : ' off'}">${cardArt(m)}</span><span style="min-width:0"><span class="t1">${tierTag(m.t)}<span>${esc(m.n)}</span></span><span class="cells">${[0, 1, 2, 3].map(v => `<i class="c${v}${c[v] > 0 ? ' on' : ''}" title="${VARIANTS[v].name}"></i>`).join('')}${m.st ? `<b class="st-mini st-${m.st}">${STATUS[m.st].stamp}</b>` : ''}</span></span></button>`;
+      return `<button class="dex-row" data-model="${m.id}" type="button"><span data-thumb="${m.id}" class="ic${has ? '' : ' off'}"></span><span style="min-width:0"><span class="t1">${tierTag(m.t)}<span>${esc(m.n)}</span></span><span class="cells">${[0, 1, 2, 3].map(v => `<i class="c${v}${c[v] > 0 ? ' on' : ''}" title="${VARIANTS[v].name}"></i>`).join('')}${m.st ? `<b class="st-mini st-${m.st}">${STATUS[m.st].stamp}</b>` : ''}</span></span></button>`;
     }).join('');
-    return `<div class="lab-block"><div class="lab-head">${elementMark(34, L.sym, L.no, L.hue)}<span class="name">${esc(L.name)}</span><span class="prog">${st.own}/${st.total}</span><span class="bonus${st.full ? ' full' : ''}">羁绊 ×${fmtMul(st.mul)}${st.full ? '，已集齐' : ''}</span></div><div class="dex-grid">${rows}</div></div>`;
+    return `<div class="lab-block"><div class="lab-head" data-lab-key="${k}">${elementMark(34, L.sym, L.no, L.hue)}<span class="name">${esc(L.name)}</span><span class="prog">${st.own}/${st.total}</span><span class="bonus${st.full ? ' full' : ''}">羁绊 ×${fmtMul(st.mul)}${st.full ? '，已集齐' : ''}</span></div><div class="dex-grid">${rows}</div></div>`;
   };
   const big = order.filter(k => LAB_MODELS[k].length >= 3), small = order.filter(k => LAB_MODELS[k].length < 3);
   $('#dexLabs').innerHTML = big.map(block).join('') + `<div class="lab-minis">${small.map(block).join('')}</div>`;
+  dexGrid = mountDex();
 }
 
 function tierRange(t) {
@@ -2290,7 +2386,7 @@ function renderSeries() {
     <div class="series-grid">${si.rows.map(({ se, own, full }) => `<div class="series${full ? ' full' : ''}">
       <div class="series-top"><span class="n">${esc(se.n)}</span><span class="b">${full ? '已生效 ' : ''}+${Math.round(se.b * boost * 100)}%</span></div>
       <div class="d">${esc(se.d)}</div>
-      <div class="series-icons">${se.ids.map(id => { const m = MODEL_BY_ID[id]; const has = owned(m); return `<button type="button" class="sic${has ? '' : ' off'}" data-model="${id}" title="${esc(m.n)}" aria-label="${esc(m.n)}${has ? '' : '（未拥有）'}">${cardArt(m)}</button>`; }).join('')}</div>
+      <div class="series-icons">${se.ids.map(id => { const m = MODEL_BY_ID[id]; const has = owned(m); return `<button type="button" class="sic${has ? '' : ' off'}" data-thumb="${id}" data-model="${id}" title="${esc(m.n)}" aria-label="${esc(m.n)}${has ? '' : '（未拥有）'}"></button>`; }).join('')}</div>
       <div class="series-foot"><div class="bar${full ? ' gold' : ''}"><i style="width:${own / se.ids.length * 100}%"></i></div><span class="num">${own}/${se.ids.length}</span></div>
     </div>`).join('')}</div>`;
 }
@@ -2385,17 +2481,19 @@ function applyTheme() {
 
 /* =================== AFFORDABILITY REFRESH =================== */
 function refreshAfford() {
-  for (const b of $$('.view.active [data-cost]')) {
+  const active = document.getElementById('view-' + currentView);
+  if (currentView === 'pull' || currentView === 'research') for (const b of $$('[data-cost]', active)) {
     const c = Number(b.dataset.cost);
     if (b.classList.contains('pack')) b.classList.toggle('locked', S.tokens < c);
-    else if (!b.closest('.maxed')) b.disabled = S.tokens < c;
+    else if (!b.closest('.maxed') && b.disabled !== (S.tokens < c)) b.disabled = S.tokens < c;
   }
-  for (const b of $$('.view.active [data-gpu]')) { if (b.dataset.gpu === '') continue; b.disabled = S.gpu < Number(b.dataset.gpu); }
+  if (currentView === 'research') for (const b of $$('[data-gpu]', active)) {
+    if (b.dataset.gpu === '') continue;
+    const disabled = S.gpu < Number(b.dataset.gpu); if (b.disabled !== disabled) b.disabled = disabled;
+  }
   const mb = $('#modal [data-cost]'); if (mb && !mb.closest('.detail')?.querySelector('.card.locked')) mb.disabled = S.tokens < Number(mb.dataset.cost);
 }
-</script>
-<script>
-'use strict';
+
 /* =================== CLOUD (artifact db + user + sample) =================== */
 const cloud = {
   ready: false, db: null, user: null, uid: null, canWrite: null, readOnly: false,
@@ -2405,7 +2503,10 @@ const cloud = {
 };
 const WORLD_MS = [1e4, 1e5, 1e6, 1e7, 1e8, 1e9];
 function cloudBump(priority) { cloud.playerPending = true; if (priority) cloud.priority = true; }
-function withTimeout(p, ms) { return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej({ code: 'timeout' }), ms))]); }
+function withTimeout(p, ms) {
+  let timer;
+  return Promise.race([p, new Promise((_, reject) => { timer = setTimeout(() => reject({ code: 'timeout' }), ms); })]).finally(() => clearTimeout(timer));
+}
 function setCloudStatus(s) {
   cloud.status = s;
   const led = $('#cloudLed'), txt = $('#cloudText');
@@ -2468,7 +2569,7 @@ async function initCloud() {
       const d = snap.data();
       if (d && typeof d.json === 'string' && (cloud.freshStart || Number(d.ts) > S.lastSave + 3000)) {
         const st = parseSave(d.json);
-        S = st; invalidate(); applyTheme();
+        installSave(st);
         const off = applyOffline(st.lastSave);
         lastYield = computeYield();
         toast('已从云端恢复进度', off ? `离线期间获得 ${fmt(off.earned)} Token` : '你在其他设备上的进度已同步过来');
@@ -2496,8 +2597,8 @@ async function cloudTick(force) {
   if (force || now - cloud.lastSaveWrite > 45000) {
     cloud.writing = true;
     try {
-      saveLocal();
-      await cloud.db.doc(`data/users/${cloud.uid}/save`).set({ json: JSON.stringify(S), ts: S.lastSave, v: 1 });
+      const json = saveLocal();
+      await cloud.db.doc(`data/users/${cloud.uid}/save`).set({ json, ts: S.lastSave, v: 1 });
       cloud.lastSaveWrite = Date.now();
       if (cloud.gotPlayers) setCloudStatus('on');
     } catch (e) { cloudError(e); cloud.lastSaveWrite = Date.now(); }
@@ -2516,6 +2617,7 @@ async function cloudTick(force) {
     cloud.writing = false;
   }
 }
+
 
 /* =================== RENDER: WORLD =================== */
 let lbMode = 'tps';
@@ -2600,9 +2702,7 @@ async function runAI() {
     btn.disabled = false; stop.classList.add('hidden'); aiAbort = null;
   }
 }
-</script>
-<script>
-'use strict';
+
 /* =================== ROUTER =================== */
 const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'feats', 'prefs'];
 const RENDER = { pull: renderPull, models: renderModels, dex: renderDex, bench: renderBench, research: renderResearch, world: renderWorld, feats: renderFeats, prefs: renderPrefs };
@@ -2620,28 +2720,27 @@ function showView(v) {
 }
 function renderActive(force) {
   const now = Date.now();
-  if (!force && (pointerDown || now - lastRender < (MIN_GAP[currentView] || 300))) {
-    if (currentView === 'pull' && dirty.has('pullLite') && !pointerDown && now - lastRender >= 200) { lastRender = now; dirty.delete('pullLite'); renderPullBox(); renderResults(); renderLog(); renderPityOnly(); }
-    return;
-  }
-  if (dirty.has(currentView) || force) {
+  const lite = currentView === 'pull' && !dirty.has('pull') && dirty.has('pullLite');
+  if (!force && (pointerDown || now - lastRender < (lite ? 200 : MIN_GAP[currentView]))) return;
+  if (!lite && (dirty.has(currentView) || force)) {
     lastRender = now; dirty.delete(currentView); dirty.delete('pullLite');
     try { RENDER[currentView](); } catch (e) { console.error(e); }
-  } else if (currentView === 'pull' && dirty.has('pullLite')) {
+  } else if (lite) {
     lastRender = now; dirty.delete('pullLite'); renderPullBox(); renderResults(); renderLog(); renderPityOnly();
   }
 }
 function renderPityOnly() {
   const p = curPack(), pc = S.pity[p.id] || 0, pn = pityN(p);
   const el = $('#pity'); if (!el.firstElementChild) return;
-  const top = el.querySelector('.pity-top'); const bar = el.querySelector('.bar > i');
-  if (top) top.innerHTML = `<span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span>`;
+  const counters = el.querySelectorAll('.pity-top .num'); const bar = el.querySelector('.bar > i');
+  if (counters.length === 2) { textIfChanged(counters[0], fmt(pn - pc)); textIfChanged(counters[1], `${fmt(pc)}/${fmt(pn)}`); }
   if (bar) bar.style.width = (pc / pn * 100) + '%';
 }
 window.addEventListener('hashchange', () => showView(location.hash.slice(1)));
 document.addEventListener('pointerdown', () => { pointerDown = true; }, true);
 document.addEventListener('pointerup', () => { setTimeout(() => { pointerDown = false; }, 60); }, true);
 document.addEventListener('pointercancel', () => { pointerDown = false; }, true);
+
 
 /* =================== BINDINGS =================== */
 function on(sel, ev, fn) { const el = $(sel); if (el) el.addEventListener(ev, fn); }
@@ -2682,8 +2781,7 @@ on('#prefList', 'click', e => {
   if (t) { S.set.theme = t.dataset.themeOpt; applyTheme(); renderPrefs(); }
 });
 on('#exportBtn', 'click', async () => {
-  saveLocal();
-  const text = JSON.stringify(S);
+  const text = saveLocal();
   let ok = false;
   try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
   if (ok) toast('存档已复制', '粘贴到任意地方保存即可');
@@ -2695,17 +2793,16 @@ on('#importBtn', 'click', () => {
   let st;
   try { st = parseSave(text); } catch (e) { return toast('导入失败', '这段文本不是有效的存档'); }
   confirmModal('导入存档', '当前进度会被覆盖，确定导入吗？', null, '导入', () => {
-    S = st; S.lastSave = Date.now(); invalidate(); applyTheme(); saveLocal(); cloudTick(true);
+    installSave(st); saveLocal(); cloudTick(true);
     $('#importText').value = '';
     markDirty(...VIEWS, 'hud'); renderActive(true); toast('导入成功', '欢迎回来，' + S.name);
   });
 });
 on('#resetBtn', 'click', () => {
   confirmModal('重置进度', '全部卡片、升级、科技和成就都会被清空，并且无法恢复。', null, '确认重置', () => {
-    const keep = S.set; S = defaultState(); S.set = keep; invalidate(); lastResults = []; buffs = [];
-    $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
+    const fresh = defaultState(); fresh.set = S.set; installSave(fresh);
     saveLocal(); cloudTick(true); cloudBump(true);
-    markDirty(...VIEWS, 'hud'); renderActive(true); toast('进度已重置', '从一张 Transformer 重新开始');
+    markDirty(...VIEWS, 'hud'); renderActive(true); toast('进度已重置', `从一张 N 级标准版 ${STARTER.n} 重新开始`);
   });
 });
 on('#hudMulBtn', 'click', showMulBreakdown);
@@ -2721,6 +2818,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
+
 /* =================== LOOP =================== */
 let lastT = Date.now(), autoAcc = 0, lastAch = 0, lastLocalSave = Date.now(), lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0, upKey = 0;
 function updateTimers() {
@@ -2729,16 +2827,15 @@ function updateTimers() {
   const t = $('#upTimer'); if (t) t.textContent = clock(up.ends - Date.now());
   if (currentView === 'bench' && benchCooldown && Date.now() >= benchCooldown) { benchCooldown = 0; markDirty('bench'); }
 }
-function tick() {
-  const now = Date.now();
-  let dt = (now - lastT) / 1000; lastT = now;
-  if (dt <= 0) return;
+function advanceSimulation(now, dt) {
   if (dt > 60) {
     const off = applyOffline(now - dt * 1000);
     if (off && off.earned > 0) toast('欢迎回来', `离开 ${fmtDur(off.sec)}，按 ${Math.round(off.rate * 100)}% 效率获得 ${fmt(off.earned)} Token`);
     dt = 0.1;
   }
-  const nb = buffs.length; buffs = buffs.filter(b => b.until > now); if (buffs.length !== nb) markDirty('pull', 'models');
+  if (buffs.some(b => b.until <= now)) {
+    buffs = buffs.filter(b => b.until > now); invalidateProduction(); markDirty('pull', 'models');
+  }
   lastYield = computeYield();
   addTokens(lastYield * dt);
   if (S.auto) {
@@ -2750,9 +2847,15 @@ function tick() {
   if (S.autoBench && S.tech.autoBench && now >= nextAutoBench) { nextAutoBench = now + 8000; runBench(true); }
   if (!news && now >= nextNewsAt) spawnNews();
   if (news && now > news.expires) { news = null; scheduleNews(); renderNews(); }
-  if (now - lastAch > 1000) { lastAch = now; checkAch(); renderNews(); updateTimers(); }
+  if (now - lastAch > 1000) { lastAch = now; checkAch(); if (!document.hidden) { renderNews(); updateTimers(); } }
+}
+function tick() {
+  const now = Date.now(), dt = (now - lastT) / 1000; lastT = now;
+  if (dt <= 0) return;
+  advanceSimulation(now, dt);
   if (now - lastLocalSave > 5000) { lastLocalSave = now; saveLocal(); }
   if (now - lastCloudTick > 1000) { lastCloudTick = now; cloudTick(false); }
+  if (document.hidden) return;
   renderHUD();
   if (now - lastAfford > 250) { lastAfford = now; refreshAfford(); }
   renderActive(false);
@@ -2763,6 +2866,14 @@ window.addEventListener('pagehide', () => saveLocal());
 
 /* =================== INIT =================== */
 let offlineReport = null;
+function installSave(st) {
+  S = st; buffs = []; lastResults = []; lastResultMeta = null;
+  autoAcc = 0; lastT = Date.now(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
+  news = null; nextNewsAt = lastT + 40000; offlineReport = null; vaultLab = 'all';
+  invalidate(); lastYield = computeYield(); applyTheme(); renderNews();
+  $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
+  $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
+}
 function init() {
   const local = loadLocal();
   if (local) { S = local; offlineReport = applyOffline(S.lastSave); }
@@ -2793,7 +2904,7 @@ function init() {
   initCloud();
 }
 init();
+
 </script>
-<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"78694dd907a245f5a9176ee8479b2a13","r":1,"spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
