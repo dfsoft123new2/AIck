@@ -164,6 +164,10 @@ button.hud-chip:hover { border-color: var(--line-2); }
 
 .panel { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-l); padding: 16px; box-shadow: var(--shadow); }
 .panel + .panel { margin-top: 14px; }
+.patch-notes summary { cursor: pointer; font-size: 16px; font-weight: 700; }
+.patch-notes h4 { margin: 16px 0 4px; font-size: 14px; }
+.patch-notes ul { margin: 0; padding-inline-start: 1.4em; font-size: 13.5px; line-height: 1.65; color: var(--ink-2); }
+.patch-notes li + li { margin-top: 4px; }
 .grid-2 > .panel, .world-top > .panel { margin-top: 0; }
 .panel-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
 .panel-h h3 { margin: 0; font-size: 16px; font-weight: 700; }
@@ -263,7 +267,7 @@ button.hud-chip:hover { border-color: var(--line-2); }
 button.card:hover { transform: translateY(-2px); }
 button.card { transition: transform .12s; }
 .card .art { position: relative; aspect-ratio: 1 / 1; width: 100%; display: block; }
-.card .art svg { width: 100%; height: 100%; display: block; }
+.card .art svg, .card .art img { width: 100%; height: 100%; display: block; }
 .card .tier { position: absolute; left: 6px; top: 6px; font-family: var(--font-num); font-weight: 700; font-size: 12px; padding: 0 6px; border-radius: 4px; background: var(--tc); color: #0B1412; line-height: 18px; z-index: 2; }
 .card .var { position: absolute; right: 6px; top: 6px; font-size: 11px; font-weight: 900; padding: 0 6px; border-radius: 4px; line-height: 18px; z-index: 2; }
 .card .body { padding: 7px 8px 8px; display: flex; flex-direction: column; gap: 1px; min-height: 52px; background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)); border-top: 1px solid rgba(255,255,255,.08); }
@@ -300,7 +304,7 @@ button.card { transition: transform .12s; }
 @keyframes sheen { 0%,100% { background-position: 120% 0; } 50% { background-position: -20% 0; } }
 @keyframes holo { to { background-position: 300% 300%; } }
 .card.locked { filter: grayscale(1) brightness(.55); opacity: .7; }
-.card.locked .art svg { opacity: .35; }
+.card.locked .art svg, .card.locked .art img { opacity: .35; }
 .card.fly { animation: flyIn .38s cubic-bezier(.2,.9,.3,1.2) both; }
 @keyframes flyIn { from { opacity: 0; transform: translateY(14px) scale(.9) rotateY(70deg); } to { opacity: 1; transform: none; } }
 .card.mini .body { min-height: 46px; padding: 5px 7px 6px; }
@@ -318,6 +322,7 @@ button.card { transition: transform .12s; }
 .chipsel .sw { width: 9px; height: 9px; border-radius: 2px; }
 .vault { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
 .vault-item { display: flex; flex-direction: column; gap: 6px; }
+.vault-item.offscreen .card::before, .vault-item.offscreen .card::after, .vault-item.offscreen .art::after, .vault-item.offscreen .card { animation-play-state: paused; }
 .vault-item > .card { flex: 1; }
 .vault-item > .card .body { flex: 1; }
 .vault-stat { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-2); padding: 0 2px; }
@@ -810,6 +815,24 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
       <section class="view" id="view-prefs" aria-labelledby="h-prefs">
         <div class="view-head"><div><h2 class="view-title" id="h-prefs">设置</h2></div></div>
         <div class="panel" id="prefList"></div>
+        <details class="panel patch-notes">
+          <summary>更新日志</summary>
+          <h4><time datetime="2026-11-22">2026-11-22</time> · 开局赠卡与性能优化</h4>
+          <ul>
+            <li>新档和手动重置改送一张标准版 N「ELIZA」，不再送 LR「Transformer」。初始 1,000 Token 不变，已有存档保留原卡。</li>
+            <li>图鉴随滚动加载卡图；挂机复用产出计算，连抽只刷新需要更新的结果和保底计数。卡池概率与保底规则未改。</li>
+          </ul>
+          <h4><time datetime="2026-11-23">2026-11-23</time> · 新卡与养成数值调整</h4>
+          <ul>
+            <li>图鉴新增 UR「GLM-5.4」和未知稀有度卡「?」。抽到「?」有专属揭晓动画，并解锁同名成就。</li>
+            <li>只有黑洞计算机可抽到「?」：未触发权重泄露或保底时，概率为百万分之一。基础保底仍是 600 抽出 ℵ，不保「?」。</li>
+            <li>RTX 工作站仍为每抽 100 Token；A100 实验集群从 2 万涨至 10 万。戴森球算力环和黑洞计算机降价，部分卡池出率调整，各池基础保底不变。</li>
+            <li>MR、Ω、ℵ 的单卡基础产出提高；图鉴、系列收藏和实验室羁绊的产出加成下调。</li>
+            <li>首关评测战力从 20 提至 100，升级与微调涨价；首次版本迭代从 5,000 万升至 100 亿 Token，后续费用倍率从 ×25 调为 ×12。</li>
+          </ul>
+          <h4><time datetime="2026-11-23">2026-11-23</time> · 后期性能优化</h4>
+          <ul><li>连续抽到重复卡时只更新对应模型的产出。模型页保留已有卡片，随滚动加载卡图；连抽结果复用卡图。抽卡、保底、收益公式和存档格式不变。</li></ul>
+        </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
           <div class="pref"><div><div class="n">导出存档</div><div class="d">把进度复制为一段文本，可在其他设备导入。</div></div><button class="btn ghost small" id="exportBtn">复制存档</button></div>
@@ -1689,15 +1712,29 @@ function bestVar(c) { return c[3] > 0 ? 3 : c[2] > 0 ? 2 : c[1] > 0 ? 1 : 0; }
 // Inventory, training and lab buffs affect the subtotal. Global multipliers
 // stay live so world milestones, benchmarks and timed events apply immediately.
 function production() {
-  if (caches.production) return caches.production;
-  let sum = 0, best = 0;
-  for (const m of MODELS) {
-    const c = S.cards[m.id]; if (!total(c)) continue;
-    const unit = perCard(m);
-    sum += rawUnits(c) * unit;
-    best = Math.max(best, unit * VARIANTS[bestVar(c)].mul);
+  let p = caches.production;
+  if (!p) {
+    p = caches.production = { sum: 0, best: 0, dirty: true,
+      units: new Float64Array(MODELS.length), amounts: new Float64Array(MODELS.length) };
+    for (const m of MODELS) {
+      const c = S.cards[m.id]; if (!total(c)) continue;
+      const i = m.idx - 1, unit = perCard(m);
+      p.units[i] = unit; p.amounts[i] = rawUnits(c) * unit;
+      p.best = Math.max(p.best, unit * VARIANTS[bestVar(c)].mul);
+    }
   }
-  return caches.production = { sum, best };
+  // Sum in catalogue order, exactly like the original. Adding rounded deltas to a
+  // lifetime accumulator would eventually drift for large endgame inventories.
+  if (p.dirty) {
+    let sum = 0; for (let i = 0; i < p.amounts.length; i++) sum += p.amounts[i];
+    p.sum = sum; p.dirty = false;
+  }
+  return p;
+}
+function updateDuplicate(m, c) {
+  const p = caches.production; if (!p) return;
+  const i = m.idx - 1;
+  p.amounts[i] = rawUnits(c) * p.units[i]; p.dirty = true;
 }
 function bestSingle() { return production().best; }
 function computeYield() {
@@ -1709,7 +1746,6 @@ function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
 function rebirthCost() { return 1e10 * Math.pow(12, S.rebirths); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
 function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
-
 
 /* =================== PULL =================== */
 function settlePull(p) {
@@ -1723,7 +1759,7 @@ function settlePull(p) {
   let structural = false;
   for (let i = 0; i < n; i++) {
     S.stats.pulls++;
-    if (Math.random() < leak) { S.leaks++; structural = true; res.push({ leak: true, t: 7, v: 3, prob: leak, n: 1 }); continue; }
+    if (Math.random() < leak) { if (!S.leaks) structural = true; S.leaks++; res.push({ leak: true, t: 7, v: 3, prob: leak, n: 1 }); continue; }
     const pc = (S.pity[p.id] || 0) + 1;
     let t, viaPity = false;
     if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p);
@@ -1734,13 +1770,13 @@ function settlePull(p) {
     if (!c) c = S.cards[m.id] = [0, 0, 0, 0];
     if (c[v] === 0) structural = true;
     c[v] += clone;
+    if (!structural) updateDuplicate(m, c);
     S.stats.byTier[t]++;
     if (t > S.stats.maxTier) S.stats.maxTier = t;
     if (v > S.stats.maxVar) S.stats.maxVar = v;
     res.push({ id: m.id, v, t, isNew, prob: tierRate(p, t) * variants[v], pity: viaPity, n: clone });
   }
   if (structural) invalidate();
-  else invalidateProduction();
   return { res, structural };
 }
 
@@ -1898,7 +1934,6 @@ function checkAch() {
   if (got) { playRare(false); markDirty('feats', 'research', 'hud'); }
 }
 
-
 /* =================== SAVE =================== */
 function saveLocal() {
   S.lastSave = Date.now();
@@ -2018,13 +2053,23 @@ function cardArt(m) {
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
 function modelOrLeak(id) { return id === 'leak' ? LEAK_MODEL : MODEL_BY_ID[id]; }
+// The catalogue is fixed: at most one in-memory image URL per model for the
+// lifetime of the page. No shared SVG document to invalidate on every new card.
+const artUrls = new Map();
+function sharedArt(m) {
+  if (!artUrls.has(m.id)) {
+    const svg = cardArt(m).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    artUrls.set(m.id, URL.createObjectURL(new Blob([svg], {type:'image/svg+xml'})));
+  }
+  return `<img alt="" decoding="async" width="100" height="100" src="${artUrls.get(m.id)}">`;
+}
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
   const tierId = m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
   const cls = `card t-${m.id === 'leak' ? 'AGI' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
-  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${cardArt(m)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
+  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
 }
 const RATING_KEYS = ['能力', '影响力', '调用量'];
 function ratingHTML(m) {
@@ -2036,7 +2081,6 @@ function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' 
 function statusTag(st) { return STATUS[st] ? `<span class="tag st-${st}">${STATUS[st].name}</span>` : ''; }
 function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; }
 function tierTag(t) { return `<span class="tag tier-text${t === 9 ? ' tier-q' : ''}" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
-
 
 /* =================== TOAST / MODAL / FX =================== */
 function toast(title, desc, isPull) {
@@ -2110,7 +2154,6 @@ function playRare(big) {
   if (!S.set.rareSfx || !actx) return;
   try { const t = actx.currentTime; const f = big ? [261.6, 329.6, 392, 523.3, 659.3, 784, 1046.5] : [523.3, 659.3, 784, 1046.5]; f.forEach((x, i) => tone(x, t + i * 0.07, big ? 0.9 : 0.4, i === f.length - 1 ? 'sawtooth' : 'triangle', 0.07)); } catch (e) {}
 }
-
 
 let lastResults = [];
 let lastResultMeta = null;
@@ -2243,12 +2286,36 @@ function renderPullBox() {
   $('#metaSpeed').textContent = interval().toFixed(3) + 's';
   $('#metaPulls').textContent = fmt(S.stats.pulls);
 }
+let resultNodes = new Map();
 function renderResults() {
   const box = $('#results');
   if (!lastResults.length) return;
   const show = lastResults.slice(0, 24);
   const fly = lastResultMeta && lastResultMeta.fly && S.set.fx;
-  box.innerHTML = show.map((r, i) => cardHTML(modelOrLeak(r.leak ? 'leak' : r.id), r.v, { mini: true, count: r.n, isNew: r.isNew, fly, delay: fly ? i * 35 : 0, button: !r.leak })).join('');
+  const html = (r,i) => cardHTML(modelOrLeak(r.leak ? 'leak' : r.id), r.v, {mini:true, count:r.n, isNew:r.isNew, fly, delay:fly ? i*35 : 0, button:!r.leak});
+  const keys = show.map(r => (r.leak ? 'leak' : r.id) + ':' + r.v);
+  if (fly || !resultNodes.size || !box.firstElementChild?.classList.contains('card')) {
+    box.innerHTML = show.map(html).join('');
+    resultNodes = new Map(keys.map((key,i) => [key, box.children[i]]));
+  } else {
+    const nextNodes = new Map(), template = document.createElement('template');
+    template.innerHTML = show.map((r,i) => resultNodes.has(keys[i]) ? '' : html(r,i)).join('');
+    for (let i=0; i<show.length; i++) {
+      const key=keys[i], r=show[i]; let el=resultNodes.get(key);
+      if (!el) { el=template.content.firstElementChild; el.remove(); }
+      else {
+        textIfChanged(el.querySelector('.cnt'), '×'+fmt(r.n));
+        if (!r.isNew) el.querySelector('.newb')?.remove();
+        else if (!el.querySelector('.newb')) el.querySelector('.body').insertAdjacentHTML('beforebegin','<span class="newb">NEW</span>');
+        if (el.classList.contains('fly')) { el.classList.remove('fly'); el.style.removeProperty('animation-delay'); }
+      }
+      nextNodes.set(key,el);
+    }
+    for (const [key,el] of resultNodes) if (!nextNodes.has(key)) el.remove();
+    let cursor=box.firstElementChild;
+    for (const el of nextNodes.values()) { if (el!==cursor) box.insertBefore(el,cursor); cursor=el.nextElementSibling; }
+    resultNodes=nextNodes;
+  }
   const more = lastResults.length - show.length;
   $('#resultSide').textContent = `${lastResultMeta.auto ? '自动' : '手动'} · ${lastResultMeta.count} 张${more > 0 ? `，另有 ${more} 种未显示` : ''}`;
   if (lastResultMeta) lastResultMeta.fly = false;
@@ -2269,20 +2336,63 @@ function renderLog() {
 
 /* =================== RENDER: MODELS =================== */
 let vaultSort = 'out', vaultLab = 'all';
+let filterKey = '', vaultObserver;
+const vaultRows = new Map();
+function vaultVisibility(item, near) {
+  item.classList.toggle('offscreen', !near);
+  const art = item.querySelector('.art');
+  if (near && !art.firstChild) art.innerHTML = sharedArt(modelOrLeak(item.dataset.id));
+  if (!near && art.firstChild) art.replaceChildren();
+}
+function makeVaultRow(m, v, count) {
+  const el = document.createElement('div'); el.className = 'vault-item offscreen'; el.dataset.id = m.id;
+  el.innerHTML = cardHTML(m, v, {count, button:m !== LEAK_MODEL, deferArt:true}) + '<div class="vault-stat"><span></span><b></b></div>';
+  if (typeof IntersectionObserver === 'function') {
+    vaultObserver ??= new IntersectionObserver(entries => {
+      for (const e of entries) if (e.target.isConnected) vaultVisibility(e.target, e.isIntersecting);
+    }, {rootMargin:'160px'});
+    vaultObserver.observe(el);
+  } else vaultVisibility(el, true);
+  return {el, v, count, badge:el.querySelector('.cnt'), label:el.querySelector('.vault-stat span'), rate:el.querySelector('.vault-stat b')};
+}
 function renderModels() {
-  const labs = Object.keys(LABS).filter(k => LAB_MODELS[k].some(owned));
-  $('#labFilter').innerHTML = `<button data-lab="all" aria-pressed="${vaultLab === 'all'}">全部</button>` + labs.map(k => `<button data-lab="${k}" aria-pressed="${vaultLab === k}"><span class="sw" style="background:${LABS[k].hue}"></span>${esc(LABS[k].name)}</button>`).join('');
+  const grid = $('#vault'), labs = Object.keys(LABS).filter(k => labStats()[k].own);
+  const key = labs.join('|') + ':' + vaultLab;
+  if (filterKey !== key) {
+    filterKey = key;
+    $('#labFilter').innerHTML = `<button data-lab="all" aria-pressed="${vaultLab === 'all'}">全部</button>` + labs.map(k => `<button data-lab="${k}" aria-pressed="${vaultLab === k}"><span class="sw" style="background:${LABS[k].hue}"></span>${esc(LABS[k].name)}</button>`).join('');
+  }
   let list = MODELS.filter(owned).filter(m => vaultLab === 'all' || m.lab === vaultLab);
-  const out = new Map(list.map(m => [m.id, modelOut(m)]));
-  if (vaultSort === 'out') list.sort((a, b) => out.get(b.id) - out.get(a.id));
+  const prod = production(), mul = globalMul();
+  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : prod.amounts[m.idx-1]) * mul;
+  if (vaultSort === 'out') list.sort((a, b) => output(b) - output(a));
   else if (vaultSort === 'tier') list.sort((a, b) => b.t - a.t || bestVar(S.cards[b.id]) - bestVar(S.cards[a.id]));
   else list.sort((a, b) => total(S.cards[b.id]) - total(S.cards[a.id]));
-  const leakItem = S.leaks > 0 && vaultLab === 'all' ? `<div class="vault-item">${cardHTML(LEAK_MODEL, 3, { count: S.leaks })}<div class="vault-stat"><span>复制</span><b>+${fmt(S.leaks * bestSingle() * globalMul())}/s</b></div></div>` : '';
-  if (!list.length && !leakItem) { $('#vault').innerHTML = '<div class="empty" style="grid-column:1/-1">这里还空着。去“抽卡”页抽几张吧。</div>'; return; }
-  $('#vault').innerHTML = leakItem + list.map(m => {
-    const c = S.cards[m.id];
-    return `<div class="vault-item">${cardHTML(m, bestVar(c), { count: total(c), button: true })}<div class="vault-stat"><span>Lv.${trainLv(m.id)}${S.sig === m.id ? ' · 镇馆' : ''}</span><b>+${fmt(out.get(m.id))}/s</b></div></div>`;
-  }).join('');
+  if (S.leaks > 0 && vaultLab === 'all') list.unshift(LEAK_MODEL);
+  const wanted = new Set(list.map(m => m.id));
+  for (const [id,row] of vaultRows) if (!wanted.has(id)) {
+    vaultObserver?.unobserve(row.el); row.el.remove(); vaultRows.delete(id);
+  }
+  if (!list.length) {
+    if (!grid.firstChild) grid.innerHTML = '<div class="empty" style="grid-column:1/-1">这里还空着。去“抽卡”页抽几张吧。</div>';
+    return;
+  }
+  if (grid.firstElementChild?.classList.contains('empty')) grid.replaceChildren();
+  let next = grid.firstElementChild;
+  for (const m of list) {
+    const c = S.cards[m.id], leak = m === LEAK_MODEL, v = leak ? 3 : bestVar(c), count = leak ? S.leaks : total(c);
+    let row = vaultRows.get(m.id);
+    if (!row || row.v !== v) {
+      const old = row; row = makeVaultRow(m, v, count); vaultRows.set(m.id, row);
+      if (old) { vaultObserver?.unobserve(old.el); old.el.replaceWith(row.el); if (old.el === next) next = row.el; }
+    }
+    if (row.count !== count) { row.count = count; textIfChanged(row.badge, '×' + fmt(count)); }
+    const rate = output(m);
+    if (row.output !== rate) { row.output = rate; textIfChanged(row.rate, '+' + fmt(rate) + '/s'); }
+    textIfChanged(row.label, leak ? '复制' : `Lv.${trainLv(m.id)}${S.sig === m.id ? ' · 镇馆' : ''}`);
+    if (row.el !== next) grid.insertBefore(row.el, next);
+    next = row.el.nextElementSibling;
+  }
 }
 function openDetail(id) {
   const m = MODEL_BY_ID[id]; if (!m) return;
