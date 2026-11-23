@@ -322,6 +322,7 @@ button.card { transition: transform .12s; }
 .chipsel .sw { width: 9px; height: 9px; border-radius: 2px; }
 .vault { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
 .vault-item { display: flex; flex-direction: column; gap: 6px; }
+.vault-item.offscreen { content-visibility: auto; contain-intrinsic-block-size: auto 212px; }
 .vault-item.offscreen .card::before, .vault-item.offscreen .card::after, .vault-item.offscreen .art::after, .vault-item.offscreen .card { animation-play-state: paused; }
 .vault-item > .card { flex: 1; }
 .vault-item > .card .body { flex: 1; }
@@ -573,6 +574,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .packs { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .results { grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 8px; }
   .vault { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 9px; }
+  .vault-item.offscreen { contain-intrinsic-block-size: auto 180px; }
   .detail { grid-template-columns: minmax(0,1fr); }
   .detail > .card { width: 170px; margin: 0 auto; }
   .bench-stage { font-size: 44px; }
@@ -832,6 +834,14 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           </ul>
           <h4><time datetime="2026-11-23">2026-11-23</time> · 后期性能优化</h4>
           <ul><li>连续抽到重复卡时只更新对应模型的产出。模型页保留已有卡片，随滚动加载卡图；连抽结果复用卡图。抽卡、保底、收益公式和存档格式不变。</li></ul>
+          <h4><time datetime="2026-11-23">2026-11-23</time> · 模型档案与终局评测</h4>
+          <ul>
+            <li>DeepSeek 三组首发与快照分别入池：V4-Pro／0813、V4-Flash／0731、V4.1-Flash／1017。原代号 1017 的卡仍归 1017；字节语言模型显示为 Seed。图鉴现有 329 张卡。</li>
+            <li>详情新增日期与来源，区分上线、限量开放和研究记录，资料不足时标记待核实。</li>
+            <li>问号卡扩为五张，黑洞池非泄露、非保底抽取各占百万分之一；保底仍为 ℵ。问号卡微调战力每级 ×1.3，挂机产出不变。</li>
+            <li>评测第 25 关起门槛每关 ×1.3，第 16 次迭代起费用每次 ×5。高光日志改为批量写入，评测选队不再全库排序。</li>
+            <li>满卡库时跳过屏外卡片的排版与绘制。连抽复用高光日志行，卡池概率区间只计算一次。</li>
+          </ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -976,15 +986,15 @@ const MODELS = [
   { id: 'luna6', n: 'GPT-6 Luna', c: 'Luna', lab: 'openai', a: [6, 4, 7], s: 'ef', d: 'GPT-6 家族里最省钱的型号，面向高频批量任务。' },
   { id: 'flash38', n: 'Gemini 3.8 Flash', c: 'Flash', lab: 'google', a: [7, 4, 8], s: 'ef', d: '主打速度与性价比的 Flash 系列。' },
   { id: 'ember', n: 'Muse Ember', c: 'Ember', lab: 'meta', a: [6, 3, 4], s: 'ef', d: 'Muse 家族最轻量、成本最低的型号。' },
-  { id: 'dsv4flash', n: 'DeepSeek V4 Flash', c: '284B / 13B', lab: 'deepseek', a: [6, 5, 6], s: 'ef', d: '284B 总参数、13B 激活，支持百万上下文。' },
+  { id: 'dsv4flash', n: 'DeepSeek-V4-Flash', c: '284B / 13B', lab: 'deepseek', a: [6, 5, 6], s: 'ef', d: '284B 总参数、13B 激活，支持百万上下文。' },
   { id: 'qwenfn', n: 'Qwen3.8 Flash Next', c: '125B / 6B', lab: 'qwen', a: [6, 3, 5], s: 'cd', d: '仅 6B 激活参数的高效 MoE。' },
   { id: 'glm53f', n: 'GLM-5.3-Flash', c: '320B / 18B', lab: 'zhipu', a: [6, 3, 5], s: 'mm', d: 'MIT 许可的高性价比多模态模型。' },
   { id: 'grokimg', n: 'Grok Imagine Video', c: 'Imagine', lab: 'xai', a: [6, 5, 6], s: 'mm', d: 'xAI 的视频生成模型。' },
   { id: 'sora2', n: 'Sora 2', c: 'Sora', lab: 'openai', a: [6, 8, 7], s: 'mm', d: 'OpenAI 视频生成模型，API 已于 2026 年 9 月停止服务。', st: 'retired' },
   { id: 'wan27', n: 'Wan 2.7', c: '通义万相', lab: 'qwen', a: [7, 4, 5], s: 'mm', d: '阿里通义万相系列视频模型。' },
   // SSR 旗舰
-  { id: 'dsv4pro', n: 'DeepSeek V4 Pro', c: '1.6T / 49B', lab: 'deepseek', a: [8, 7, 6], s: 'cd', d: '1.6T 总参数、49B 激活，MIT 许可的全能选手。' },
-  { id: 'dsv41f', n: 'DeepSeek V4.1 Flash', c: '1017', lab: 'deepseek', a: [8, 6, 8], s: 'ag', d: 'MIT 许可模型中智能体表现最强的之一。' },
+  { id: 'dsv4pro', n: 'DeepSeek-V4-Pro', c: '1.6T / 49B', lab: 'deepseek', a: [8, 7, 6], s: 'cd', d: '1.6T 总参数、49B 激活，MIT 许可的全能选手。' },
+  { id: 'dsv41f', n: 'DeepSeek-V4.1-Flash-1017', c: '1017', lab: 'deepseek', a: [8, 6, 8], s: 'ag', d: 'MIT 许可模型中智能体表现最强的之一。' },
   { id: 'glm53', n: 'GLM-5.3', c: '编码智能体', lab: 'zhipu', a: [8, 5, 6], s: 'cd', d: '智谱面向软件工程与编码智能体的旗舰。' },
   { id: 'k27code', n: 'Kimi K2.7 Code', c: 'K2 Code', lab: 'moonshot', a: [7, 4, 5], s: 'cd', d: '为编码与连续工具调用调优的 K2 分支。' },
   { id: 'k3', n: 'Kimi K3', c: '2.8T / 104B', lab: 'moonshot', a: [8, 7, 5], s: 'rs', d: '2.8T 参数的开放权重巨兽，长文档理解出色。' },
@@ -1048,7 +1058,7 @@ const MODELS = [
   { id: 'claude3opus', n: 'Claude 3 Opus', c: 'Opus 初代', lab: 'anthropic', a: [4, 7, 5], s: 'rs', d: '2024 年 3 月发布，Haiku、Sonnet、Opus 三档命名从 Claude 3 开始。' },
   { id: 'sonnet45', n: 'Claude Sonnet 4.5', c: '4.5', lab: 'anthropic', a: [6, 6, 8], s: 'cd', d: '2025 年 9 月 29 日发布的编码与智能体模型。' },
   { id: 'haiku45', n: 'Claude Haiku 4.5', c: 'Haiku', lab: 'anthropic', a: [5, 3, 6], s: 'ef', d: '2025 年 10 月发布的轻量型号。' },
-  { id: 'opus46', n: 'Claude Opus 4.6', c: '4.6', lab: 'anthropic', a: [7, 5, 6], s: 'cd', d: 'Claude 4 世代后期的旗舰。字节发布 Doubao 2.1 Pro 时，拿它做价格对比。' },
+  { id: 'opus46', n: 'Claude Opus 4.6', c: '4.6', lab: 'anthropic', a: [7, 5, 6], s: 'cd', d: 'Claude 4 世代后期的旗舰。字节发布 Seed 2.1 Pro 时，拿它做价格对比。' },
   { id: 'gemini25pro', n: 'Gemini 2.5 Pro', c: '思考模型', lab: 'google', a: [6, 7, 7], s: 'rs', d: '2025 年发布，曾长期位居 LMArena 文本榜第一。' },
   { id: 'gemini3pro', n: 'Gemini 3 Pro', c: 'Gemini 3', lab: 'google', a: [6, 8, 7], s: 'rs', d: '2025 年 11 月发布，逼得 OpenAI 拉响“红色警报”。' },
   { id: 'nanobanana', n: 'Nano Banana', c: '2.5 Flash Image', lab: 'google', a: [5, 8, 8], s: 'mm', d: '2025 年 8 月先以匿名代号在竞技场走红的图像编辑模型。' },
@@ -1094,7 +1104,7 @@ const MODELS = [
   { id: 'qwen37max', n: 'Qwen3.7 Max', c: 'Max', lab: 'qwen', a: [7, 4, 4], s: 'rs', d: '2026 年 5 月发布的闭源旗舰。' },
   { id: 'qwen4plus', n: 'Qwen4-Plus', c: 'Qwen4', lab: 'qwen', a: [8, 3, 1], s: 'ag', d: 'Qwen4 家族的中坚型号，名字已经公开，还没有上线。', st: 'soon' },
   { id: 'happyhorse', n: 'HappyHorse 1.1', c: '快乐马', lab: 'qwen', a: [8, 6, 5], s: 'mm', d: '阿里的视频模型，1.0 版曾以匿名身份登顶视频竞技场。' },
-  { id: 'doubao21', n: 'Doubao 2.1 Pro', c: '豆包', lab: 'bytedance', a: [8, 5, 8], s: 'rs', d: '字节新一代语言模型，官方称价格比 Claude Opus 4.6 低约八成。' },
+  { id: 'doubao21', n: 'Seed 2.1 Pro', c: '豆包', lab: 'bytedance', a: [8, 5, 8], s: 'rs', d: '字节新一代语言模型，官方称价格比 Claude Opus 4.6 低约八成。' },
   { id: 'genie4', n: 'Genie 4', c: '世界模型', lab: 'google', a: [8, 6, 3], s: 'mm', d: '能生成可交互世界的世界模型，2026 年 11 月开放 API。' },
   { id: 'robotics25', n: 'Gemini Robotics 2.5', c: '机器人', lab: 'google', a: [7, 5, 2], s: 'ag', d: '让机器人理解并执行物理世界任务的模型。' },
   { id: 'sparkopen', n: 'Muse Spark Open', c: '816B / 42B', lab: 'meta', a: [7, 6, 5], s: 'mm', d: '美国最强的开放权重模型之一，能直接输入文本、图像、视频和音频。' },
@@ -1104,7 +1114,7 @@ const MODELS = [
   { id: 'sol62', n: 'GPT-6.2 Sol', c: 'Sol', lab: 'openai', a: [9, 6, 8], s: 'cd', d: '2026 年 11 月 17 日发布的日常主力，比 6.1 Sol 更省 token，还能开 Ultrafast 模式。' },
   { id: 'fable5', n: 'Claude Fable 5', c: 'Fable', lab: 'anthropic', a: [9, 8, 5], s: 'ag', d: '2026 年 6 月 9 日发布，在 Opus 之上开出了全新档位。' },
   { id: 'grok48', n: 'Grok 4.8', c: '2.5T', lab: 'xai', a: [8, 4, 2], s: 'cd', d: '马斯克称有 2.5T 参数，目前只向部分 Grok Bot 用户小范围推送。', st: 'limited' },
-  { id: 'dsv41pro', n: 'DeepSeek V4.1 Pro', c: 'V4.1', lab: 'deepseek', a: [9, 4, 1], s: 'rs', d: 'DeepSeek 说它会接在 V4.1 Flash 之后推出，还没有日期。', st: 'soon' },
+  { id: 'dsv41pro', n: 'DeepSeek-V4.1-Pro', c: 'V4.1', lab: 'deepseek', a: [9, 4, 1], s: 'rs', d: 'DeepSeek 说它会接在 V4.1 Flash 之后推出，还没有日期。', st: 'soon' },
   { id: 'seedance25', n: 'Seedance 2.5', c: '30 秒长镜头', lab: 'bytedance', a: [9, 6, 6], s: 'mm', d: '单次生成 30 秒原生 4K 的音画视频，还能多轮续写。' },
   { id: 'omni12', n: 'Gemini Omni 1.2 Flash', c: 'Omni', lab: 'google', a: [9, 4, 5], s: 'mm', d: '2026 年 11 月 5 日发布，Omni Flash 的升级版。' },
   // LR 榜首
@@ -1194,7 +1204,7 @@ const MODELS = [
   { id: 'erniebot', n: '文心一言', c: 'ERNIE Bot', lab: 'baidu', a: [2, 7, 7], s: 'ag', d: '2023 年 3 月发布，国内大厂第一个公开亮相的对话大模型。' },
   { id: 'xfspark', n: '讯飞星火', c: 'Spark', lab: 'iflytek', a: [2, 4, 5], s: 'ag', d: '2023 年 5 月发布的科大讯飞大模型，主打教育和办公场景。' },
   { id: 'yi34b', n: 'Yi-34B', c: '零一万物', lab: 'lingyi', a: [2, 5, 4], s: 'ef', d: '2023 年 11 月开源，一度登顶 Hugging Face 开源模型榜。' },
-  { id: 'doubao15', n: 'Doubao-1.5-pro', c: '豆包', lab: 'bytedance', a: [5, 6, 10], s: 'ag', d: '豆包 App 背后的模型。豆包是中国用户最多的 AI 应用之一。' },
+  { id: 'doubao15', n: 'Seed 1.5 Pro', c: '豆包', lab: 'bytedance', a: [5, 6, 10], s: 'ag', d: '豆包 App 背后的模型。豆包是中国用户最多的 AI 应用之一。' },
   { id: 'grok2', n: 'Grok 2', c: '2024', lab: 'xai', a: [3, 5, 5], s: 'mm', d: '2024 年 8 月发布，内置的生图功能尺度宽松，引发争议。' },
   { id: 'grokcodefast', n: 'Grok Code Fast 1', c: '编码', lab: 'xai', a: [5, 5, 9], s: 'cd', d: '2025 年 8 月发布，靠便宜和快冲上 OpenRouter 调用量榜首。' },
   { id: 'magistral', n: 'Magistral', c: 'Medium', lab: 'mistral', a: [4, 4, 3], s: 'rs', d: '2025 年 6 月发布，Mistral 的第一个推理模型。' },
@@ -1297,8 +1307,12 @@ const MODELS = [
   { id: 'bel', n: 'Bel', c: '10T 参数', lab: 'openai', t: 6, s: 'all', d: '爆料称 OpenAI 已完成这次 10 万亿参数级的预训练，接替 Doug，作为后 GPT-6 时代的底座。官方从未确认。', st: 'rumor' },
   // ===== 2026.11.23 新增 =====
   { id: 'glm54', n: 'GLM-5.4', c: 'Loop Transformer', lab: 'zhipu', a: [9, 6, 6], s: 'cd', d: '2026 年 11 月 23 日上线智谱 Coding Plan，新增视觉能力、支持百万上下文。据报道是国内首款采用 Loop Transformer 架构的旗舰模型，官方跑分暂未公布。' },
-  // ? 未知：只有一张
-  { id: 'qm', n: '?', c: '?', lab: 'unknown', t: 9, s: 'all', g: '?', k: '? ? ?', d: '?' }
+  // Append only: preserve existing card numbers and save keys.
+  { id: 'qm', n: '?', c: '?', lab: 'unknown', t: 9, s: 'all', g: '?', k: '? ? ?', d: '?' },
+  { id: 'dsv4pro0813', n: 'DeepSeek-V4-Pro-0813', c: '0813', lab: 'deepseek', a: [8, 6, 7], s: 'ag', d: 'V4-Pro 的八月正式版，强化了智能体能力。在线接口沿用 V4-Pro 名称，图鉴按快照分别收藏。' },
+  { id: 'dsv41flash', n: 'DeepSeek-V4.1-Flash', c: 'V4.1 首发版', lab: 'deepseek', a: [8, 6, 7], s: 'mm', d: 'V4.1 首发的原生多模态模型。与 V4-Flash 和后续 1017 快照分别收藏。' },
+  { id: 'dsv4flash0731', n: 'DeepSeek-V4-Flash-0731', c: '0731', lab: 'deepseek', a: [7, 5, 6], s: 'ag', d: 'V4-Flash 的七月快照，提升了智能体任务表现。它仍属于 V4，不是九月首发的 V4.1-Flash。' },
+  ...[2, 3, 4, 5].map(i => { const q = '?'.repeat(i); return { id: 'qm'+i, n:q, c:q, lab:'unknown', t:9, s:'all', g:q, k:q, d:q }; })
 ];
 // Rarity = 能力 + 影响力 + 调用量 (each 1–10). TIER_CUTS[t] is the lowest total for tier t.
 const TIER_CUTS = [0, 13, 16, 19, 21, 23];
@@ -1360,7 +1374,7 @@ const PACKS = [
   { id: 11, name: '轨道算力星座', hw: '近地轨道', cost: 1.5e17, r: [[4,0.22],[5,0.6],[6,0.1795],[7,0.0005]], pt: 7, pn: 4000 },
   { id: 7, name: '吉瓦数据中心', hw: '自建电厂', cost: 7e17, r: [[5,0.3],[6,0.685],[7,0.015]], pt: 7, pn: 1500 },
   { id: 8, name: '戴森球算力环', hw: '恒星供能', cost: 5e18, r: [[5,0.1],[6,0.82],[7,0.078],[8,0.002]], pt: 7, pn: 150 },
-  { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019999],[9,1e-06]], pt: 8, pn: 600 }
+  { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600 }
 ];
 
 const UPGRADES = [
@@ -1440,7 +1454,7 @@ const ACH = [
   { id: 'omegaAll', n: '奇点之后', d: '集齐全部 Ω 奇点级卡', r: 20, ok: () => MODELS_BY_TIER[7].every(owned) },
   { id: 'tAleph', n: '超越奇点', d: '抽到任意 ℵ 超限级卡', r: 30, ok: () => S.stats.maxTier >= 8 },
   { id: 'alephAll', n: '宇宙尽头', d: '集齐全部 ℵ 超限级卡', r: 50, ok: () => MODELS_BY_TIER[8].every(owned) },
-  { id: 'tQ', n: '?', d: '抽到“?”', r: 50, ok: () => S.stats.maxTier >= 9 },
+  { id: 'tQ', n: '?', d: '抽到任意未知档卡', r: 50, ok: () => S.stats.maxTier >= 9 },
   { id: 'legends', n: '传奇收藏家', d: '集齐全部 LR 模型', r: 10, ok: () => MODELS_BY_TIER[5].every(owned) },
   { id: 'mr20', n: '解封进行时', d: '集齐 20 张 MR 封印卡', r: 10, ok: () => MODELS_BY_TIER[6].filter(owned).length >= 20 },
   { id: 'mrAll', n: '封印全解', d: '集齐全部 MR 封印卡', r: 25, ok: () => MODELS_BY_TIER[6].every(owned) },
@@ -1489,6 +1503,141 @@ const ACH = [
   { id: 'daily7', n: '七日打卡', d: '连续 7 天领取补给', r: 3, ok: () => S.daily.streak >= 7 },
   { id: 'sig', n: '镇馆之宝', d: '设置一个镇馆模型', r: 1, ok: () => !!S.sig }
 ];
+
+// Each date describes an evidenced event, never inferred from a model suffix.
+const RELEASE_DATES = {
+  nova: ["2024-12-03","首批模型上线","https://www.aboutamazon.com/news/aws/amazon-nova-artificial-intelligence-bedrock-aws"],
+  qwen3coder: ["2025-07-22","开放权重","https://qwenlm.github.io/blog/qwen3-coder/"],
+  vicuna: ["2023-03-30","演示开放","https://www.lmsys.org/blog/2023-03-30-vicuna/"],
+  flux1: ["2024-08-01","上线","https://bfl.ai/blog/24-08-01-bfl"],
+  llama31: ["2024-07-23","开放权重","https://about.fb.com/news/2024/07/open-source-ai-is-the-path-forward/"],
+  transformer: ["2017-06-12","预印本首次提交","https://arxiv.org/abs/1706.03762"],
+  bert: ["2018-10-11","预印本首次提交","https://arxiv.org/abs/1810.04805"],
+  gpt2: ["2019-02-14","首批权重","https://openai.com/index/better-language-models"],
+  llama1: ["2023-02-27","预印本首次提交","https://arxiv.org/abs/2302.13971"],
+  chatgpt: ["2022-11-30","上线","https://openai.com/index/chatgpt"],
+  claude1: ["2023-03-14","限量开放","https://www.anthropic.com/news/introducing-claude"],
+  gpt4o: ["2024-05-13","上线","https://openai.com/index/hello-gpt-4o"],
+  o1: ["2024-12-05","上线","https://openai.com/index/introducing-chatgpt-pro"],
+  gemini15: ["2024-03-08","预印本首次提交","https://arxiv.org/abs/2403.05530"],
+  r1: ["2025-01-20","上线","https://api-docs.deepseek.com/updates/#date-2025-01-20"],
+  qwen25: ["2024-09-19","上线","https://qwenlm.github.io/blog/qwen2.5/"],
+  haiku55: ["2026-10-07","上线","https://www.anthropic.com/claude-haiku-5-5"],
+  luna6: ["2026-09-22","上线","https://openai.com/index/introducing-gpt-6-sol-and-luna"],
+  dsv4flash: ["2026-04-24","上线","https://api-docs.deepseek.com/updates/#date-2026-04-24"],
+  sora2: ["2025-09-30","上线","https://openai.com/index/sora-2"],
+  dsv4pro: ["2026-04-24","上线","https://api-docs.deepseek.com/updates/#date-2026-04-24"],
+  dsv41f: ["2026-10-17","上线","https://api-docs.deepseek.com/updates/#date-2026-10-17"],
+  seedance2: ["2026-02-12","上线","https://seed.bytedance.com/en/seed_model_portfolio"],
+  veo31: ["2025-10-15","上线","https://blog.google/technology/ai/veo-updates-flow/"],
+  sol56: ["2026-07-09","上线","https://openai.com/index/gpt-5-6"],
+  opus5: ["2026-07-24","上线","https://www.anthropic.com/news/claude-opus-5"],
+  sol6: ["2026-09-22","上线","https://openai.com/index/introducing-gpt-6-sol-and-luna"],
+  sol61: ["2026-09-29","上线","https://openai.com/index/introducing-gpt-6-1-sol"],
+  sonnet55: ["2026-09-28","上线","https://www.anthropic.com/claude-sonnet-5-5"],
+  opus55: ["2026-09-22","上线","https://www.anthropic.com/claude-opus-5-5"],
+  fable52: ["2026-11-09","上线","https://www.anthropic.com/claude-fable-and-mythos-5-2"],
+  astra: ["2026-09-03","上线","https://openai.com/index/gpt-6-astra"],
+  mythos: ["2026-04-07","限量开放","https://www.anthropic.com/glasswing"],
+  eliza: ["1966-01","论文发表","https://doi.org/10.1145/365153.365168"],
+  word2vec: ["2013-01-16","预印本首次提交","https://arxiv.org/abs/1301.3781"],
+  resnet: ["2015-12-10","预印本首次提交","https://arxiv.org/abs/1512.03385"],
+  gpt3: ["2020-06-11","限量开放","https://openai.com/index/openai-api"],
+  dalle: ["2021-01-05","研究公开","https://openai.com/index/dall-e"],
+  whisper: ["2022-09-21","上线","https://openai.com/index/whisper"],
+  palm: ["2022-04-05","预印本首次提交","https://arxiv.org/abs/2204.02311"],
+  gpt4: ["2023-03-14","上线","https://openai.com/index/gpt-4"],
+  o3: ["2025-04-16","上线","https://openai.com/index/introducing-o3-and-o4-mini"],
+  gpt5: ["2025-08-07","上线","https://openai.com/index/introducing-gpt-5"],
+  gpt52: ["2025-12-11","上线","https://openai.com/index/introducing-gpt-5-2"],
+  gptoss: ["2025-08-05","上线","https://openai.com/index/introducing-gpt-oss"],
+  claude3opus: ["2024-03-04","上线","https://www.anthropic.com/news/claude-3-family"],
+  sonnet45: ["2025-09-29","上线","https://www.anthropic.com/news/claude-sonnet-4-5"],
+  haiku45: ["2025-10-15","上线","https://www.anthropic.com/news/claude-haiku-4-5"],
+  opus46: ["2026-02-05","上线","https://www.anthropic.com/news/claude-opus-4-6"],
+  gemini3pro: ["2025-11-18","上线","https://blog.google/products/gemini/gemini-3/"],
+  mixtral: ["2024-01-08","预印本首次提交","https://arxiv.org/abs/2401.04088"],
+  dsv3: ["2024-12-26","上线","https://api-docs.deepseek.com/updates/#date-2024-12-26"],
+  qwen3: ["2025-04-29","上线","https://qwenlm.github.io/blog/qwen3/"],
+  k25: ["2026-02-02","预印本首次提交","https://arxiv.org/abs/2602.02276"],
+  glm45: ["2025-08-08","预印本首次提交","https://arxiv.org/abs/2508.06471"],
+  seed20: ["2026-02-14","上线","https://seed.bytedance.com/en/blog/seed2-0-%E6%AD%A3%E5%BC%8F%E5%8F%91%E5%B8%83"],
+  mimo1: ["2025-05-12","预印本首次提交","https://arxiv.org/abs/2505.07608"],
+  phi4: ["2024-12-12","预印本首次提交","https://arxiv.org/abs/2412.08905"],
+  terra56: ["2026-07-09","上线","https://openai.com/index/gpt-5-6"],
+  seedream5: ["2026-07-08","上线","https://seed.bytedance.com/en/seed_model_portfolio"],
+  terra61: ["2026-10-26","上线","https://openai.com/index/introducing-gpt-6-1-terra"],
+  doubao21: ["2026-06-23","上线","https://seed.bytedance.com/en/blog/seed2-1-officially-released-advancing-ai-productivity"],
+  minimaxm3: ["2026-06-01","上线","https://www.minimax.io/blog/minimax-m3"],
+  sol62: ["2026-11-17","上线","https://openai.com/index/introducing-gpt-6-2-astra-sol"],
+  fable5: ["2026-06-09","上线","https://www.anthropic.com/news/claude-fable-5-mythos-5"],
+  seedance25: ["2026-07-31","上线","https://seed.bytedance.com/en/seed_model_portfolio"],
+  astra62: ["2026-11-17","上线","https://openai.com/index/introducing-gpt-6-2-astra-sol"],
+  gpt1: ["2018-06-11","研究公开","https://openai.com/index/language-unsupervised"],
+  instructgpt: ["2022-01-27","上线","https://openai.com/index/instruction-following"],
+  clip: ["2021-01-05","研究公开","https://openai.com/index/clip"],
+  codex21: ["2021-08-10","限量开放","https://openai.com/index/openai-codex"],
+  dalle3: ["2023-10-19","上线","https://openai.com/index/dall-e-3-is-now-available-in-chatgpt-plus-and-enterprise"],
+  gpt4omini: ["2024-07-18","上线","https://openai.com/index/gpt-4o-mini-advancing-cost-efficient-intelligence"],
+  gpt4oimg: ["2025-03-25","上线","https://openai.com/index/introducing-4o-image-generation"],
+  sora1: ["2024-12-09","上线","https://openai.com/index/sora-is-here"],
+  o3mini: ["2025-01-31","上线","https://openai.com/index/openai-o3-mini"],
+  o4mini: ["2025-04-16","上线","https://openai.com/index/introducing-o3-and-o4-mini"],
+  gpt41: ["2025-04-14","上线","https://openai.com/index/gpt-4-1"],
+  gpt45: ["2025-02-27","公开预览","https://openai.com/index/gpt-4-5-system-card/"],
+  openaifive: ["2018-06-25","研究公开","https://openai.com/index/openai-five"],
+  operator: ["2025-01-23","上线","https://openai.com/index/introducing-operator"],
+  deepresearch: ["2025-02-02","上线","https://openai.com/index/introducing-deep-research"],
+  lamda: ["2022-01-20","预印本首次提交","https://arxiv.org/abs/2201.08239"],
+  t5: ["2019-10-23","预印本首次提交","https://arxiv.org/abs/1910.10683"],
+  alphazero: ["2017-12-05","预印本首次提交","https://arxiv.org/abs/1712.01815"],
+  sonnet37: ["2025-02-24","上线","https://www.anthropic.com/news/claude-3-7-sonnet"],
+  sonnet4: ["2025-05-22","上线","https://www.anthropic.com/news/claude-4"],
+  opus4: ["2025-05-22","上线","https://www.anthropic.com/news/claude-4"],
+  claudecode: ["2025-02-24","限量开放","https://www.anthropic.com/news/claude-3-7-sonnet"],
+  sam: ["2023-04-05","预印本首次提交","https://arxiv.org/abs/2304.02643"],
+  galactica: ["2022-11-16","预印本首次提交","https://arxiv.org/abs/2211.09085"],
+  nemotron: ["2024-06-14","上线","https://blogs.nvidia.com/blog/nemotron-4-synthetic-data-generation-llm-training/"],
+  bloom: ["2022-11-09","预印本首次提交","https://arxiv.org/abs/2211.05100"],
+  sdxl: ["2023-07-04","预印本首次提交","https://arxiv.org/abs/2307.01952"],
+  hyvideo: ["2024-12-03","预印本首次提交","https://arxiv.org/abs/2412.03603"],
+  wan21: ["2025-03-26","预印本首次提交","https://arxiv.org/abs/2503.20314"],
+  minimaxm2: ["2025-10-27","上线","https://www.minimax.io/news/minimax-m2"],
+  dsv2: ["2024-05-07","预印本首次提交","https://arxiv.org/abs/2405.04434"],
+  dsv31: ["2025-08-21","上线","https://api-docs.deepseek.com/updates/#date-2025-08-21"],
+  dsv32: ["2025-09-29","上线","https://api-docs.deepseek.com/updates/#date-2025-09-29"],
+  qwen7b: ["2023-09-28","预印本首次提交","https://arxiv.org/abs/2309.16609"],
+  qwq: ["2025-03-06","上线","https://qwenlm.github.io/blog/qwq-32b/"],
+  yi34b: ["2024-03-07","预印本首次提交","https://arxiv.org/abs/2403.04652"],
+  doubao15: ["2025-01-22","上线","https://seed.bytedance.com/en/seed_model_portfolio"],
+  gpt55: ["2026-04-23","上线","https://openai.com/index/introducing-gpt-5-5"],
+  gptimage26: ["2026-11-04","上线","https://openai.com/index/introducing-images-2-6"],
+  opus48: ["2026-05-28","上线","https://www.anthropic.com/news/claude-opus-4-8"],
+  alphacode: ["2022-02-08","预印本首次提交","https://arxiv.org/abs/2203.07814"],
+  gato: ["2022-05-12","预印本首次提交","https://arxiv.org/abs/2205.06175"],
+  seedream55: ["2026-11-09","上线","https://seed.bytedance.com/en/blog/more-realistic-images-more-stable-editing-across-100-rounds-introducing-seedream-5-5"],
+  lenet: ["1998-11","论文发表","https://doi.org/10.1109/5.726791"],
+  gan: ["2014-06-10","预印本首次提交","https://arxiv.org/abs/1406.2661"],
+  yolo: ["2015-06-08","预印本首次提交","https://arxiv.org/abs/1506.02640"],
+  ddpm: ["2020-06-19","预印本首次提交","https://arxiv.org/abs/2006.11239"],
+  gpt6cyber: ["2026-11-05","限量开放","https://openai.com/index/introducing-gpt-6-cyber"],
+  mythos5: ["2026-06-09","限量开放","https://www.anthropic.com/news/claude-fable-5-mythos-5"],
+  mythos52: ["2026-11-09","限量开放","https://www.anthropic.com/claude-fable-and-mythos-5-2"],
+  dsv4pro0813: ["2026-08-13","上线","https://api-docs.deepseek.com/updates/#date-2026-08-13"],
+  dsv41flash: ["2026-09-10","上线","https://api-docs.deepseek.com/updates/#date-2026-09-10"],
+  dsv4flash0731: ["2026-07-31","上线","https://api-docs.deepseek.com/updates/#date-2026-07-31"],
+};
+function releaseDateRow(m) {
+  if (['humanity','cosmos','unknown'].includes(m.lab)) return '';
+  const record = RELEASE_DATES[m.id];
+  if (!record) {
+    const unreleased = ['soon','training','internal','rumor','canceled'].includes(m.st);
+    const label = unreleased ? '未发布' : m.st === 'limited' ? '限量开放 · 日期待核实' : '日期待核实';
+    return '<dt>发布日期</dt><dd class="plain">'+label+'</dd>';
+  }
+  const [date, kind, url] = record;
+  return '<dt>日期档案</dt><dd class="plain"><time datetime="'+esc(date)+'">'+esc(date)+'</time> · '+esc(kind)+' · <a target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">来源</a></dd>';
+}
 
 /* =================== UTIL =================== */
 const $ = (s, r = document) => r.querySelector(s);
@@ -1635,11 +1784,17 @@ function rollVariant(p = variantProbs()) {
   const r = Math.random();
   if (r < p[3]) return 3; if (r < p[3] + p[2]) return 2; if (r < p[3] + p[2] + p[1]) return 1; return 0;
 }
-function tierRate(p, t) { const x = p.r.find(a => a[0] === t); return x ? x[1] : 0; }
-function rollTier(p) {
-  const r = Math.random(); let a = 0;
-  for (const [t, pr] of p.r) { a += pr; if (r < a) return t; }
-  return p.r[p.r.length - 1][0];
+const drawTables = new Map(PACKS.map(p => {
+  let sum = 0;
+  const rates = Array(TIERS.length).fill(0), limits = [], tiers = [];
+  for (const [t, pr] of p.r) { rates[t] = pr; limits.push(sum += pr); tiers.push(t); }
+  return [p, { rates, limits, tiers }];
+}));
+function tierRate(p, t) { return drawTables.get(p).rates[t] || 0; }
+function rollTier(p, table = drawTables.get(p)) {
+  const { limits, tiers } = table, r = Math.random();
+  for (let i=0; i<limits.length-1; i++) if (r < limits[i]) return tiers[i];
+  return tiers[tiers.length-1];
 }
 function curPack() { return PACKS.find(p => p.id === S.pack) || PACKS[0]; }
 function upChance() { return 0.5 + 0.08 * S.tech.upfocus; }
@@ -1743,7 +1898,7 @@ function computeYield() {
 }
 function modelOut(m) { const c = S.cards[m.id]; return total(c) ? rawUnits(c) * perCard(m) * globalMul() : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
-function rebirthCost() { return 1e10 * Math.pow(12, S.rebirths); }
+function rebirthCost() { return 1e10 * 12 ** Math.min(14, S.rebirths) * 5 ** Math.max(0, S.rebirths - 14); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
 function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
@@ -1753,7 +1908,7 @@ function settlePull(p) {
   if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
-  const clone = cloneN();
+  const clone = cloneN(), table = drawTables.get(p);
   const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
   const res = [];
   let structural = false;
@@ -1762,7 +1917,7 @@ function settlePull(p) {
     if (Math.random() < leak) { if (!S.leaks) structural = true; S.leaks++; res.push({ leak: true, t: 7, v: 3, prob: leak, n: 1 }); continue; }
     const pc = (S.pity[p.id] || 0) + 1;
     let t, viaPity = false;
-    if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p);
+    if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p, table);
     S.pity[p.id] = t >= p.pt ? 0 : pc;
     const m = pickModel(t), v = rollVariant(variants);
     let c = S.cards[m.id];
@@ -1774,7 +1929,7 @@ function settlePull(p) {
     S.stats.byTier[t]++;
     if (t > S.stats.maxTier) S.stats.maxTier = t;
     if (v > S.stats.maxVar) S.stats.maxVar = v;
-    res.push({ id: m.id, v, t, isNew, prob: tierRate(p, t) * variants[v], pity: viaPity, n: clone });
+    res.push({ id: m.id, v, t, isNew, prob: table.rates[t] * variants[v], pity: viaPity, n: clone });
   }
   if (structural) invalidate();
   return { res, structural };
@@ -1830,10 +1985,11 @@ function trainModel(id) {
 /* =================== BENCH =================== */
 function benchInfo(stage) {
   const b = BENCHES[stage % BENCHES.length], round = Math.floor(stage / BENCHES.length);
-  return { name: b.n + (round ? ' ' + (ROMAN[round] || '#' + (round + 1)) : ''), s: b.s, req: 100 * Math.pow(3.2, stage), gpu: 1 + Math.floor(stage / 4) };
+  return { name: b.n + (round ? ' ' + (ROMAN[round] || '#' + (round + 1)) : ''), s: b.s, req: 100 * 3.2 ** Math.min(stage, 23) * 1.3 ** Math.max(0, stage - 23), gpu: 1 + Math.floor(stage / 4) };
 }
+function benchTrainMul(m) { return m.t === 9 ? 1.3 ** trainLv(m.id) : trainMul(m.id); }
 function cardPower(m, v, count, spec) {
-  return TIERS[m.t].base * VARIANTS[v].mul * trainMul(m.id) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
+  return TIERS[m.t].base * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
 }
 function bestTeam(spec) {
   const cand = [];
@@ -1841,10 +1997,14 @@ function bestTeam(spec) {
     const c = S.cards[m.id]; if (!total(c)) continue;
     let best = null;
     for (let v = 0; v < 4; v++) if (c[v] > 0) { const pw = cardPower(m, v, c[v], spec); if (!best || pw > best.pw) best = { m, v, pw, match: m.s === spec || m.s === 'all' }; }
-    cand.push(best);
+    // Only five models can enter; on ties keep the earlier catalogue entry.
+    if (cand.length === 5 && best.pw <= cand[4].pw) continue;
+    let i = cand.length;
+    while (i > 0 && best.pw > cand[i - 1].pw) i--;
+    cand.splice(i, 0, best);
+    if (cand.length > 5) cand.pop();
   }
-  cand.sort((a, b) => b.pw - a.pw);
-  return cand.slice(0, 5);
+  return cand;
 }
 let benchCooldown = 0, lastBench = null;
 function runBench(auto) {
@@ -1994,9 +2154,11 @@ function cardArt(m) {
     let noise = '';
     for (let i = 0; i < 70; i++) { const w = 1 + r3() * 9, x = r3() * 100, y = r3() * 100; noise += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${(0.6 + r3() * 1.4).toFixed(1)}" fill="${['#ffffff', '#FF2D55', '#00E5FF'][i % 3]}" fill-opacity="${(0.08 + r3() * 0.3).toFixed(2)}"/>`; }
     s = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#000"/>${noise}`;
-    s += `<text x="48" y="70" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="62" font-weight="700" fill="#FF2D55" fill-opacity=".85">?</text>`;
-    s += `<text x="52" y="70" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="62" font-weight="700" fill="#00E5FF" fill-opacity=".85">?</text>`;
-    s += `<text x="50" y="70" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="62" font-weight="700" fill="#fff">?</text></svg>`;
+    const size = Math.min(62, 125 / m.g.length);
+    for (const [x, fill] of [[48, '#FF2D55'], [52, '#00E5FF'], [50, '#fff']]) {
+      s += `<text x="${x}" y="${50 + size / 3}" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="${size}" font-weight="700" fill="${fill}">${m.g}</text>`;
+    }
+    s += '</svg>';
     artCache.set(m.id, s); return s;
   }
   if (m.t === 8) {
@@ -2180,15 +2342,19 @@ function afterPull(res, auto, p, originEl) {
   lastResults = Array.from(map.values()).sort((a, b) => resultScore(b) - resultScore(a));
   lastResultMeta = { auto, pack: p.id, count: res.length, at: now, fly: !auto };
   // log & rare broadcast
-  let rareChanged = false;
+  const logBatch = [], rareBatch = [];
   for (const r of lastResults) {
-    if (r.leak) { S.log.unshift({ id: 'leak', v: 3, ts: now }); S.rare.unshift({ id: 'leak', v: 3, ts: now }); rareChanged = true; continue; }
-    if (r.t >= 3 || r.v >= 2) S.log.unshift({ id: r.id, v: r.v, ts: now, n: r.n });
-    if (r.t >= 5 || (r.v === 3 && r.t >= 2)) { S.rare.unshift({ id: r.id, v: r.v, ts: now }); rareChanged = true; }
+    if (!r.leak && r.t < 3 && r.v < 2) continue;
+    const entry = r.leak ? { id: 'leak', v: 3, ts: now } : { id: r.id, v: r.v, ts: now, n: r.n };
+    logBatch.push(entry);
+    if (r.leak || r.t >= 5 || (r.v === 3 && r.t >= 2)) rareBatch.push({ id: entry.id, v: entry.v, ts: now });
   }
-  if (S.log.length > 60) S.log.length = 60;
-  if (S.rare.length > 8) S.rare.length = 8;
-  if (rareChanged) cloudBump(true);
+  // Match sequential unshift order, without shifting the previous log once per card.
+  if (logBatch.length) S.log = logBatch.reverse().concat(S.log).slice(0, 60);
+  if (rareBatch.length) {
+    S.rare = rareBatch.reverse().concat(S.rare).slice(0, 8);
+    cloudBump(true);
+  }
   // reveal decision
   const best = lastResults[0];
   let cine = false;
@@ -2268,7 +2434,7 @@ function renderPull() {
   const pc = S.pity[p.id] || 0, pn = pityN(p);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。</div>`;
+    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${tierRate(p, 9) ? '未触发泄露或保底时，未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
@@ -2327,11 +2493,25 @@ function renderLog() {
   if (previousLogHead === S.log[0] && previousLogMinute === minute) return;
   previousLogHead = S.log[0]; previousLogMinute = minute;
   if (!S.log.length) { el.innerHTML = '<div class="muted" style="padding:6px 2px">还没有高光时刻。SSR 以上的模型会记录在这里。</div>'; return; }
-  el.innerHTML = S.log.slice(0, 30).map(l => {
-    const m = modelOrLeak(l.id); if (!m) return '';
-    const t = l.id === 'leak' ? 7 : m.t;
-    return `<div class="log-row">${l.id === 'leak' ? '<span class="tag">LEAK</span>' : tierTag(t)}<span>${l.v && l.id !== 'leak' ? VARIANTS[l.v].name + '版 ' : ''}${esc(m.n)}</span><span class="when">${ago(l.ts)}</span></div>`;
-  }).join('');
+  if (el.firstElementChild?.classList.contains('muted')) el.replaceChildren();
+  let i = 0;
+  for (const l of S.log.slice(0, 30)) {
+    const m = modelOrLeak(l.id); if (!m) continue;
+    let row = el.children[i++];
+    if (!row) {
+      row=document.createElement('div'); row.className='log-row';
+      row.innerHTML='<span></span><span></span><span class="when"></span>'; el.append(row);
+    }
+    const leak=l.id==='leak', key=leak?'leak':String(m.t);
+    if (row.dataset.tier!==key) {
+      row.dataset.tier=key; const tag=row.children[0];
+      tag.className=leak?'tag':'tag tier-text'+(m.t===9?' tier-q':'');
+      tag.style.color=leak?'':tierColor(m.t); tag.textContent=leak?'LEAK':TIERS[m.t].id;
+    }
+    textIfChanged(row.children[1], (l.v && !leak ? VARIANTS[l.v].name+'版 ' : '')+m.n);
+    textIfChanged(row.children[2], ago(l.ts));
+  }
+  while (el.childElementCount>i) el.lastElementChild.remove();
 }
 
 /* =================== RENDER: MODELS =================== */
@@ -2389,7 +2569,8 @@ function renderModels() {
     if (row.count !== count) { row.count = count; textIfChanged(row.badge, '×' + fmt(count)); }
     const rate = output(m);
     if (row.output !== rate) { row.output = rate; textIfChanged(row.rate, '+' + fmt(rate) + '/s'); }
-    textIfChanged(row.label, leak ? '复制' : `Lv.${trainLv(m.id)}${S.sig === m.id ? ' · 镇馆' : ''}`);
+    const label = leak ? '复制' : `Lv.${trainLv(m.id)}${S.sig === m.id ? ' · 镇馆' : ''}`;
+    if (row.lastLabel !== label) { row.lastLabel = label; row.label.textContent = label; }
     if (row.el !== next) grid.insertBefore(row.el, next);
     next = row.el.nextElementSibling;
   }
@@ -2410,11 +2591,12 @@ function openDetail(id) {
         ${ratingHTML(m)}
         <dl class="kv">
           <dt>代号</dt><dd>${esc(m.c)}</dd>
+          ${releaseDateRow(m)}
           ${m.st ? `<dt>状态</dt><dd class="plain">${esc(STATUS[m.st].desc)}</dd>` : ''}
           ${SERIES_OF[m.id] ? `<dt>所属系列</dt><dd class="plain">${SERIES_OF[m.id].map(se => esc(se.n)).join('、')}</dd>` : ''}
           <dt>单卡基础产出</dt><dd>${fmt(TIERS[m.t].base)}/s</dd>
           <dt>实验室羁绊</dt><dd>×${fmtMul(ls.mul)}（${ls.own}/${ls.total}${ls.full ? '，已集齐' : ''}）</dd>
-          <dt>微调等级</dt><dd>Lv.${trainLv(m.id)}，×${fmtMul(trainMul(m.id))}</dd>
+          <dt>微调等级</dt><dd>Lv.${trainLv(m.id)} · 产出 ×${fmtMul(trainMul(m.id))} · 战力 ×${fmtMul(benchTrainMul(m))}</dd>
           <dt>当前总产出</dt><dd style="color:var(--ok)">+${fmt(modelOut(m))}/s</dd>
         </dl>
         <div class="vars">${VARIANTS.map((v, i) => `<div class="vcell${c[i] > 0 ? '' : ' off'}"><span>${v.name}</span><b>${fmt(c[i])}</b></div>`).join('')}</div>
@@ -2422,7 +2604,7 @@ function openDetail(id) {
           <button class="btn" data-act="train" data-cost="${tc}" ${!has || S.tokens < tc ? 'disabled' : ''}>微调至 Lv.${trainLv(m.id) + 1}<span class="cost">${fmt(tc)}</span></button>
           <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${S.sig === m.id ? '已是镇馆模型' : '设为镇馆模型'}</button>
         </div>
-        <p class="note" style="margin-top:8px">每级微调让该模型全部变体的产出与评测战力 +30%。</p>
+        <p class="note" style="margin-top:8px">${m.t === 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
       </div>
     </div>`;
   };
