@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -28,7 +29,7 @@
   --trace: rgba(15,42,36,0.07);
   --shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 8px 24px -16px rgba(15,42,36,.35);
   --t-N: #707C77; --t-R: #23955A; --t-SR: #1F74C9; --t-SSR: #7B47D6;
-  --t-UR: #B67A06; --t-LR: #D8431F; --t-MR: #C21C9E; --t-AGI: #0F2A24; --t-AL: #5A3FD0;
+  --t-UR: #B67A06; --t-LR: #D8431F; --t-MR: #C21C9E; --t-AGI: #0F2A24; --t-AL: #5A3FD0; --t-Q: #111111;
   --s-rs: #6B4FD8; --s-cd: #0E86A8; --s-ag: #C46A12; --s-mm: #C0367A; --s-ef: #23874F;
   --font-ui: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-num: "Chakra Petch", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
@@ -59,7 +60,7 @@
     --trace: rgba(230,240,234,0.045);
     --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 30px -18px rgba(0,0,0,.8);
     --t-N: #9AA6A1; --t-R: #5CCB8C; --t-SR: #58A9FA; --t-SSR: #B48BFF;
-    --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF;
+    --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF; --t-Q: #FFFFFF;
     --s-rs: #A890FF; --s-cd: #4FD0EE; --s-ag: #F3A04A; --s-mm: #FF7EB6; --s-ef: #6FDC9C;
   }
 }
@@ -73,7 +74,7 @@
   --trace: rgba(230,240,234,0.045);
   --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 30px -18px rgba(0,0,0,.8);
   --t-N: #9AA6A1; --t-R: #5CCB8C; --t-SR: #58A9FA; --t-SSR: #B48BFF;
-  --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF;
+  --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF; --t-Q: #FFFFFF;
   --s-rs: #A890FF; --s-cd: #4FD0EE; --s-ag: #F3A04A; --s-mm: #FF7EB6; --s-ef: #6FDC9C;
 }
 *, *::before, *::after { box-sizing: inherit; }
@@ -281,6 +282,11 @@ button.card { transition: transform .12s; }
 .card.t-ALEPH::before { content: ""; position: absolute; inset: -2px; z-index: -1; border-radius: 12px; background: conic-gradient(from var(--ang, 0deg), #6B4FD8, #8FD3FF, #FFFFFF, #FF9DE6, #6B4FD8); animation: spinAng 2.6s linear infinite; }
 .card.t-ALEPH .body { background: #070A16; }
 .card.t-ALEPH .tier { background: #E9E2FF; }
+.card.t-Q { --tc: #FFFFFF; border-color: transparent; background: #000 padding-box; box-shadow: -4px 0 18px -8px rgba(255,45,85,.9), 4px 0 18px -8px rgba(0,229,255,.9); }
+.card.t-Q::before { content: ""; position: absolute; inset: -2px; z-index: -1; border-radius: 12px; background: conic-gradient(from var(--ang, 0deg), #FF2D55, #000 15%, #FFFFFF 33%, #000 48%, #00E5FF 66%, #000 82%, #FF2D55); animation: spinAng 1.8s steps(16) infinite; }
+.card.t-Q .body { background: #000; }
+.card.t-Q .tier { background: #fff; color: #000; text-shadow: -1px 0 #FF2D55, 1px 0 #00E5FF; }
+.tier-text.tier-q { text-shadow: -1px 0 #FF2D55, 1px 0 #00E5FF; }
 .card.t-AGI .body { background: #0E1A18; }
 .detail > .card { align-self: start; }
 @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -513,6 +519,10 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .cine.agi { background: radial-gradient(circle at 50% 45%, #fff 0%, #ffe9f5 18%, #1a1030 60%, #050308 100%); }
 .cine.aleph { background: radial-gradient(circle at 50% 45%, #E9E2FF 0%, #7B5CFF 16%, #160F3A 52%, #020106 100%); }
 .cine.aleph .rays { background: repeating-conic-gradient(from 0deg, rgba(190,170,255,.4) 0deg 3deg, transparent 3deg 9deg); opacity: .8; }
+.cine.qm { background: radial-gradient(circle at 50% 45%, #2a2a2a 0%, #080808 45%, #000 100%); }
+.cine.qm .rays { background: repeating-conic-gradient(from 0deg, rgba(255,45,85,.35) 0deg 2deg, transparent 2deg 7deg, rgba(0,229,255,.3) 7deg 9deg, transparent 9deg 15deg); opacity: .8; }
+.cine.qm .wafer { opacity: .15; }
+.cine.qm .title, .cine.qm .kicker { color: #fff; text-shadow: -2px 0 #FF2D55, 2px 0 #00E5FF; }
 .cine.agi .rays { background: repeating-conic-gradient(from 0deg, rgba(255,120,180,.4) 0deg 5deg, rgba(120,220,255,.35) 5deg 10deg, transparent 10deg 18deg); opacity: .7; }
 .flash { position: fixed; inset: 0; z-index: 96; background: #fff; pointer-events: none; opacity: 0; }
 .flash.go { animation: flash .9s ease-out; }
@@ -677,10 +687,10 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
             <div><div class="muted">图鉴加成</div><div class="big" id="dexBonus" style="color:var(--ok)">×1.00</div></div>
             <div><div class="muted">系列加成</div><div class="big" id="dexSetBonus" style="color:var(--gold)">×1.00</div></div>
             <div class="legend">
-              <span><i style="background:#9AA6A1"></i>标准 +2%</span>
-              <span><i style="background:#F2C94C"></i>思考 +5%</span>
-              <span><i style="background:#7FE3FF"></i>满血 +12%</span>
-              <span><i style="background:linear-gradient(90deg,#ff7aa8,#7cc9ff)"></i>全息 +30%</span>
+              <span><i style="background:#9AA6A1"></i>标准 +0.5%</span>
+              <span><i style="background:#F2C94C"></i>思考 +1%</span>
+              <span><i style="background:#7FE3FF"></i>满血 +2%</span>
+              <span><i style="background:linear-gradient(90deg,#ff7aa8,#7cc9ff)"></i>全息 +4%</span>
               <span><i style="background:var(--ink)"></i>权重泄露 +50%</span>
             </div>
           </div>
@@ -830,23 +840,25 @@ const TIERS = [
   { id: 'SR',  name: '热门', base: 40 },
   { id: 'SSR', name: '明星', base: 300 },
   { id: 'UR',  name: '顶流', base: 2500 },
-  { id: 'LR',  name: '传奇', base: 25000 },
-  { id: 'MR',  name: '封印', base: 3e5 },
-  { id: 'Ω',   name: '奇点', base: 5e6, css: 'AGI' },
-  { id: 'ℵ',   name: '超限', base: 1e8, css: 'ALEPH' }
+  { id: 'LR',  name: '传奇', base: 2.5e4 },
+  { id: 'MR',  name: '封印', base: 4e5 },
+  { id: 'Ω',   name: '奇点', base: 1e7, css: 'AGI' },
+  { id: 'ℵ',   name: '超限', base: 5e8, css: 'ALEPH' },
+  { id: '?',   name: '未知', base: 1e12, css: 'Q' }
 ];
-const TIER_HEX = ['#8C9894', '#4CC383', '#4BA2F8', '#A97CFF', '#F2B533', '#FF6A46', '#FF4FD8', '#FFFFFF', '#CDBEFF'];
+const TIER_HEX = ['#8C9894', '#4CC383', '#4BA2F8', '#A97CFF', '#F2B533', '#FF6A46', '#FF4FD8', '#FFFFFF', '#CDBEFF', '#F2F2F2'];
 const TIER_RULE = {
   6: '封印卡不按评分定级：凡是还没公开发布的模型都在这里，包括传闻、泄露、已官宣未上线、仍在训练、被叫停、只在内部使用或受限开放。',
   7: '奇点卡是游戏虚构的未来设想，不按评分定级。',
-  8: '超限卡描绘的是远在奇点之后的设想，不按评分定级。'
+  8: '超限卡描绘的是远在奇点之后的设想，不按评分定级。',
+  9: '?'
 };
 
 const VARIANTS = [
-  { key: 'std',   name: '标准', mul: 1,  p: 0.889, dex: 0.02 },
-  { key: 'think', name: '思考', mul: 3,  p: 0.10,  dex: 0.05 },
-  { key: 'max',   name: '满血', mul: 10, p: 0.01,  dex: 0.12 },
-  { key: 'holo',  name: '全息', mul: 50, p: 0.001, dex: 0.30 }
+  { key: 'std',   name: '标准', mul: 1,  p: 0.889, dex: 0.005 },
+  { key: 'think', name: '思考', mul: 3,  p: 0.10,  dex: 0.01 },
+  { key: 'max',   name: '满血', mul: 10, p: 0.01,  dex: 0.02 },
+  { key: 'holo',  name: '全息', mul: 50, p: 0.001, dex: 0.04 }
 ];
 
 const SPECS = {
@@ -902,6 +914,7 @@ const LABS = {
   sakana:    { name: 'Sakana AI',         sym: 'Sk', no: 45, hue: '#FF8FB1' },
   reflection:{ name: 'Reflection AI',     sym: 'Rf', no: 46, hue: '#A0E7FF' },
   cosmos:    { name: '宇宙尺度',           sym: 'ℵ',  no: '∞', hue: '#CDBEFF' },
+  unknown:   { name: '?',                 sym: '?',  no: '?', hue: '#F2F2F2' },
   humanity:  { name: '人类文明',            sym: 'Ω',  no: 0,  hue: '#FFFFFF' }
 };
 
@@ -1259,7 +1272,11 @@ const MODELS = [
   { id: 'mythos52', n: 'Claude Mythos 5.2', c: 'Mythos', lab: 'anthropic', t: 6, s: 'cd', d: '和 Fable 5.2 是同一个模型，只向通过验证的机构开放。', st: 'limited' },
   { id: 'astra61', n: 'GPT-6.1 Astra', c: '未发布', lab: 'openai', t: 6, s: 'rs', d: '原定 2026 年 10 月发布，内部测试没有达到安全与对齐标准，被 OpenAI 叫停。', st: 'canceled' },
   { id: 'doug', n: 'Doug', c: '预训练代号', lab: 'openai', t: 6, s: 'rs', d: '传闻中 OpenAI 自 GPT-4o 以来规模最大的一次预训练。也有说法称它就是 GPT-6 Astra 的底座。', st: 'rumor' },
-  { id: 'bel', n: 'Bel', c: '10T 参数', lab: 'openai', t: 6, s: 'all', d: '爆料称 OpenAI 已完成这次 10 万亿参数级的预训练，接替 Doug，作为后 GPT-6 时代的底座。官方从未确认。', st: 'rumor' }
+  { id: 'bel', n: 'Bel', c: '10T 参数', lab: 'openai', t: 6, s: 'all', d: '爆料称 OpenAI 已完成这次 10 万亿参数级的预训练，接替 Doug，作为后 GPT-6 时代的底座。官方从未确认。', st: 'rumor' },
+  // ===== 2026.11.23 新增 =====
+  { id: 'glm54', n: 'GLM-5.4', c: 'Loop Transformer', lab: 'zhipu', a: [9, 6, 6], s: 'cd', d: '2026 年 11 月 23 日上线智谱 Coding Plan，新增视觉能力、支持百万上下文。据报道是国内首款采用 Loop Transformer 架构的旗舰模型，官方跑分暂未公布。' },
+  // ? 未知：只有一张
+  { id: 'qm', n: '?', c: '?', lab: 'unknown', t: 9, s: 'all', g: '?', k: '? ? ?', d: '?' }
 ];
 // Rarity = 能力 + 影响力 + 调用量 (each 1–10). TIER_CUTS[t] is the lowest total for tier t.
 const TIER_CUTS = [0, 13, 16, 19, 21, 23];
@@ -1278,57 +1295,57 @@ const UP_LABS = ['anthropic', 'openai', 'google', 'meta', 'deepseek', 'qwen', 'x
 
 // Series: cross-lab collections. Each completed series adds b to the global multiplier.
 const SERIES = [
-  { id: 'gpt6', n: 'GPT-6 全家福', d: 'GPT-6 世代的每一个型号', b: 0.25, ids: ['luna6', 'sol6', 'sol61', 'terra61', 'astra', 'sol62', 'astra62'] },
-  { id: 'gem4', n: 'Gemini 4 元素周期表', d: '氢、氖、碳、氩', b: 0.2, ids: ['hydrogen', 'neon', 'carbon', 'argon'] },
-  { id: 'claude5', n: 'Claude 5 诗集', d: 'Haiku、Sonnet、Opus、Fable 的 5 世代型号', b: 0.3, ids: ['haiku55', 'sonnet5', 'sonnet55', 'opus5', 'opus55', 'fable5', 'fable51', 'fable52'] },
-  { id: 'muse', n: 'Muse 群星', d: 'Meta 超级智能实验室的 Muse 家族', b: 0.2, ids: ['ember', 'glimmer', 'spark', 'sparkopen', 'wonder', 'wonderfull'] },
-  { id: 'trillion', n: '万亿开源俱乐部', d: '总参数过万亿、权重公开的模型', b: 0.25, ids: ['kimik2', 'dsv4pro', 'k3', 'k31pro', 'q38max', 'mistrall4'] },
-  { id: 'video', n: '视频竞技场', d: '历代顶尖的视频生成模型', b: 0.3, ids: ['veo3', 'sora2', 'veo31', 'seedance2', 'seedance25', 'kling3', 'minimaxh3', 'omniflash', 'omni12', 'happyhorse', 'wan27', 'grokimg'] },
-  { id: 'history', n: 'AI 编年史', d: '从 1966 年到 2017 年的里程碑', b: 0.15, ids: ['eliza', 'deepblue', 'watson', 'alexnet', 'word2vec', 'resnet', 'alphago', 'transformer'] },
-  { id: 'reason', n: '先想再答', d: '推理范式的开拓者', b: 0.15, ids: ['o1', 'o3', 'r1', 'k2thinking', 'gemini25pro', 'minimaxm1'] },
-  { id: 'small', n: '小钢炮', d: '体量不大、口碑很好的开放权重模型', b: 0.15, ids: ['mistral7b', 'llama2', 'mixtral', 'phi4', 'gptoss', 'glimmer', 'qwen38_27b'] },
-  { id: 'china', n: '百模大战', d: '中国实验室的当家模型', b: 0.2, ids: ['dsv41f', 'k31pro', 'glm53', 'q38max', 'mimo', 'minimaxm3', 'doubao21', 'hy4', 'ernie45', 'step5'] },
-  { id: 'omega', n: '奇点之路', d: '从通用智能到超级智能的整条设想链', b: 1.0, ids: ['agi', 'seedai', 'rsi', 'boom', 'asi', 'singularity'] },
-  { id: 'thought', n: '思想实验', d: '关于超级智能的经典设想', b: 0.8, ids: ['autoresearcher', 'wbe', 'friendly', 'paperclip', 'oracle', 'embodied'] },
-  { id: 'cosmos', n: '超限档案', d: '远在奇点之后的宇宙尺度智能', b: 2.0, ids: ['jupiterbrain', 'matrioshka', 'computronium', 'ultimatelaptop', 'laplace', 'boltzmann', 'omegapoint'] },
-  { id: 'periodic', n: '传闻周期表', d: '只在泄露里出现过的元素代号，按原子序数排', b: 0.6, ids: ['gemhelium', 'gemlithium', 'gemoxygen', 'gemsodium', 'magnesium', 'gempotassium', 'gemcobalt', 'zinc', 'gemkrypton', 'gemxenon', 'gembarium'] },
-  { id: 'mythosline', n: 'Mythos 全系', d: 'Mythos 级的每一个版本，含传闻', b: 0.5, ids: ['mythos', 'mythos5', 'mythos51', 'mythos52', 'mythos55'] },
-  { id: 'claudeleak', n: 'Claude 代号档案', d: '泄露过、却没以这个名字发布的 Claude', b: 0.4, ids: ['capybara', 'onigiri', 'fable55', 'model4'] },
-  { id: 'nextgen', n: '下一代预定', d: '各家已经被点名、还没上线的下一代', b: 0.4, ids: ['gpt65', 'grok49', 'dsv5', 'kimik4', 'glm6', 'minimaxm4', 'composer3'] },
-  { id: 'roots', n: '深度学习之根', d: '今天所有模型都站在它们肩上', b: 0.2, ids: ['perceptron', 'lenet', 'gan', 'alexnet', 'resnet', 'yolo', 'ddpm', 'transformer'] },
-  { id: 'flash', n: 'Flash 编年史', d: 'Gemini 快速档的每一代', b: 0.15, ids: ['gemini25flash', 'gemini35flash', 'gemini35fl', 'flash38', 'hydrogen'] },
-  { id: 'traffic', n: '调用量之王', d: '巅峰调用量最高的一批模型', b: 0.25, ids: ['chatgpt', 'gpt4o', 'gpt4omini', 'doubao15', 'gemini25flash', 'hydrogen', 'dsv41f', 'grokcodefast'] },
-  { id: 'games', n: '棋盘与科学', d: '在游戏和科学里战胜难题的 AI', b: 0.25, ids: ['deepblue', 'alphago', 'alphazero', 'alphastar', 'openaifive', 'cicero', 'alphafold2', 'alphafold3', 'alphaproof', 'deepthink'] },
-  { id: 'painter', n: '画师工坊', d: '改变了图像创作的模型', b: 0.25, ids: ['dalle', 'dalle2', 'dalle3', 'sd15', 'sdxl', 'mjv5', 'mjv7', 'flux1', 'nanobanana', 'nanobananapro', 'gpt4oimg', 'seedream5'] },
-  { id: 'coder', n: '编程搭子', d: '程序员每天在用的 AI', b: 0.2, ids: ['codex21', 'copilot', 'claudecode', 'composer', 'grokcodefast', 'qwen3coder', 'devstral2', 'k27code'] },
-  { id: 'pioneer', n: '开源先驱', d: '开放权重运动的早期功臣', b: 0.15, ids: ['gptj', 'bloom', 'llama1', 'alpaca', 'vicuna', 'falcon', 'chatglm6b', 'yi34b'] },
-  { id: 'oops', n: '翻车现场', d: '因为出糗而被记住的 AI', b: 0.15, ids: ['tay', 'galactica', 'bard', 'sydney'] },
-  { id: 'voice', n: '语音与陪伴', d: '大模型之前就走进日常的助手', b: 0.12, ids: ['siri', 'alexa', 'xiaoice', 'characterai'] },
-  { id: 'sealed', n: '封印档案', d: '受限、叫停、训练中和只存在于传闻里的模型', b: 0.5, ids: ['mythos', 'mythos52', 'grok5', 'astra61', 'doug', 'bel'] }
+  { id: 'gpt6', n: 'GPT-6 全家福', d: 'GPT-6 世代的每一个型号', b: 0.125, ids: ['luna6', 'sol6', 'sol61', 'terra61', 'astra', 'sol62', 'astra62'] },
+  { id: 'gem4', n: 'Gemini 4 元素周期表', d: '氢、氖、碳、氩', b: 0.1, ids: ['hydrogen', 'neon', 'carbon', 'argon'] },
+  { id: 'claude5', n: 'Claude 5 诗集', d: 'Haiku、Sonnet、Opus、Fable 的 5 世代型号', b: 0.15, ids: ['haiku55', 'sonnet5', 'sonnet55', 'opus5', 'opus55', 'fable5', 'fable51', 'fable52'] },
+  { id: 'muse', n: 'Muse 群星', d: 'Meta 超级智能实验室的 Muse 家族', b: 0.1, ids: ['ember', 'glimmer', 'spark', 'sparkopen', 'wonder', 'wonderfull'] },
+  { id: 'trillion', n: '万亿开源俱乐部', d: '总参数过万亿、权重公开的模型', b: 0.125, ids: ['kimik2', 'dsv4pro', 'k3', 'k31pro', 'q38max', 'mistrall4'] },
+  { id: 'video', n: '视频竞技场', d: '历代顶尖的视频生成模型', b: 0.15, ids: ['veo3', 'sora2', 'veo31', 'seedance2', 'seedance25', 'kling3', 'minimaxh3', 'omniflash', 'omni12', 'happyhorse', 'wan27', 'grokimg'] },
+  { id: 'history', n: 'AI 编年史', d: '从 1966 年到 2017 年的里程碑', b: 0.075, ids: ['eliza', 'deepblue', 'watson', 'alexnet', 'word2vec', 'resnet', 'alphago', 'transformer'] },
+  { id: 'reason', n: '先想再答', d: '推理范式的开拓者', b: 0.075, ids: ['o1', 'o3', 'r1', 'k2thinking', 'gemini25pro', 'minimaxm1'] },
+  { id: 'small', n: '小钢炮', d: '体量不大、口碑很好的开放权重模型', b: 0.075, ids: ['mistral7b', 'llama2', 'mixtral', 'phi4', 'gptoss', 'glimmer', 'qwen38_27b'] },
+  { id: 'china', n: '百模大战', d: '中国实验室的当家模型', b: 0.1, ids: ['dsv41f', 'k31pro', 'glm53', 'q38max', 'mimo', 'minimaxm3', 'doubao21', 'hy4', 'ernie45', 'step5'] },
+  { id: 'omega', n: '奇点之路', d: '从通用智能到超级智能的整条设想链', b: 0.5, ids: ['agi', 'seedai', 'rsi', 'boom', 'asi', 'singularity'] },
+  { id: 'thought', n: '思想实验', d: '关于超级智能的经典设想', b: 0.4, ids: ['autoresearcher', 'wbe', 'friendly', 'paperclip', 'oracle', 'embodied'] },
+  { id: 'cosmos', n: '超限档案', d: '远在奇点之后的宇宙尺度智能', b: 1, ids: ['jupiterbrain', 'matrioshka', 'computronium', 'ultimatelaptop', 'laplace', 'boltzmann', 'omegapoint'] },
+  { id: 'periodic', n: '传闻周期表', d: '只在泄露里出现过的元素代号，按原子序数排', b: 0.3, ids: ['gemhelium', 'gemlithium', 'gemoxygen', 'gemsodium', 'magnesium', 'gempotassium', 'gemcobalt', 'zinc', 'gemkrypton', 'gemxenon', 'gembarium'] },
+  { id: 'mythosline', n: 'Mythos 全系', d: 'Mythos 级的每一个版本，含传闻', b: 0.25, ids: ['mythos', 'mythos5', 'mythos51', 'mythos52', 'mythos55'] },
+  { id: 'claudeleak', n: 'Claude 代号档案', d: '泄露过、却没以这个名字发布的 Claude', b: 0.2, ids: ['capybara', 'onigiri', 'fable55', 'model4'] },
+  { id: 'nextgen', n: '下一代预定', d: '各家已经被点名、还没上线的下一代', b: 0.2, ids: ['gpt65', 'grok49', 'dsv5', 'kimik4', 'glm6', 'minimaxm4', 'composer3'] },
+  { id: 'roots', n: '深度学习之根', d: '今天所有模型都站在它们肩上', b: 0.1, ids: ['perceptron', 'lenet', 'gan', 'alexnet', 'resnet', 'yolo', 'ddpm', 'transformer'] },
+  { id: 'flash', n: 'Flash 编年史', d: 'Gemini 快速档的每一代', b: 0.075, ids: ['gemini25flash', 'gemini35flash', 'gemini35fl', 'flash38', 'hydrogen'] },
+  { id: 'traffic', n: '调用量之王', d: '巅峰调用量最高的一批模型', b: 0.125, ids: ['chatgpt', 'gpt4o', 'gpt4omini', 'doubao15', 'gemini25flash', 'hydrogen', 'dsv41f', 'grokcodefast'] },
+  { id: 'games', n: '棋盘与科学', d: '在游戏和科学里战胜难题的 AI', b: 0.125, ids: ['deepblue', 'alphago', 'alphazero', 'alphastar', 'openaifive', 'cicero', 'alphafold2', 'alphafold3', 'alphaproof', 'deepthink'] },
+  { id: 'painter', n: '画师工坊', d: '改变了图像创作的模型', b: 0.125, ids: ['dalle', 'dalle2', 'dalle3', 'sd15', 'sdxl', 'mjv5', 'mjv7', 'flux1', 'nanobanana', 'nanobananapro', 'gpt4oimg', 'seedream5'] },
+  { id: 'coder', n: '编程搭子', d: '程序员每天在用的 AI', b: 0.1, ids: ['codex21', 'copilot', 'claudecode', 'composer', 'grokcodefast', 'qwen3coder', 'devstral2', 'k27code'] },
+  { id: 'pioneer', n: '开源先驱', d: '开放权重运动的早期功臣', b: 0.075, ids: ['gptj', 'bloom', 'llama1', 'alpaca', 'vicuna', 'falcon', 'chatglm6b', 'yi34b'] },
+  { id: 'oops', n: '翻车现场', d: '因为出糗而被记住的 AI', b: 0.075, ids: ['tay', 'galactica', 'bard', 'sydney'] },
+  { id: 'voice', n: '语音与陪伴', d: '大模型之前就走进日常的助手', b: 0.06, ids: ['siri', 'alexa', 'xiaoice', 'characterai'] },
+  { id: 'sealed', n: '封印档案', d: '受限、叫停、训练中和只存在于传闻里的模型', b: 0.25, ids: ['mythos', 'mythos52', 'grok5', 'astra61', 'doug', 'bel'] }
 ];
 
 // Packs: r = [tierIdx, prob], pt = pity tier, pn = pity count
 // Packs are listed in price order; id is the save key, so new packs get new ids.
 const PACKS = [
-  { id: 1, name: 'RTX 工作站', hw: '单卡起步', cost: 100,  r: [[0,.62],[1,.30],[2,.07],[3,.01]], pt: 3, pn: 80 },
-  { id: 2, name: 'A100 实验集群', hw: '8 卡节点', cost: 2e4, r: [[0,.25],[1,.45],[2,.245],[3,.05],[4,.005]], pt: 4, pn: 150 },
-  { id: 9, name: 'TPU Ironwood 舱', hw: '自研芯片', cost: 2e5, r: [[0,.12],[1,.40],[2,.35],[3,.12],[4,.0098],[5,.0002]], pt: 4, pn: 100 },
-  { id: 3, name: 'H100 训练机柜', hw: '整机柜', cost: 2e6, r: [[1,.30],[2,.46],[3,.20],[4,.0395],[5,.0005]], pt: 5, pn: 1500 },
-  { id: 4, name: 'B200 超节点', hw: '72 卡互联', cost: 4e8, r: [[2,.35],[3,.45],[4,.17],[5,.0299],[6,.0001]], pt: 6, pn: 6000 },
-  { id: 10, name: 'Vera Rubin 机柜', hw: '下一代 GPU', cost: 1e10, r: [[2,.20],[3,.48],[4,.28],[5,.0395],[6,.0005]], pt: 6, pn: 2000 },
-  { id: 5, name: 'GB300 算力舱', hw: '液冷机房', cost: 1e11, r: [[3,.40],[4,.44],[5,.158],[6,.001999],[7,.000001]], pt: 6, pn: 400 },
-  { id: 6, name: '十万卡超算', hw: '园区级', cost: 1e13, r: [[4,.45],[5,.52],[6,.02995],[7,.00005]], pt: 7, pn: 15000 },
-  { id: 11, name: '轨道算力星座', hw: '近地轨道', cost: 1e14, r: [[4,.30],[5,.62],[6,.0798],[7,.0002]], pt: 7, pn: 4000 },
-  { id: 7, name: '吉瓦数据中心', hw: '自建电厂', cost: 1e16, r: [[5,.55],[6,.4495],[7,.0005]], pt: 7, pn: 1500 },
-  { id: 8, name: '戴森球算力环', hw: '恒星供能', cost: 2e19, r: [[5,.25],[6,.744],[7,.0059],[8,.0001]], pt: 7, pn: 150 },
-  { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e22, r: [[6,.90],[7,.095],[8,.005]], pt: 8, pn: 600 }
+  { id: 1, name: 'RTX 工作站', hw: '单卡起步', cost: 100, r: [[0,0.62],[1,0.3],[2,0.07],[3,0.01]], pt: 3, pn: 80 },
+  { id: 2, name: 'A100 实验集群', hw: '8 卡节点', cost: 1e5, r: [[0,0.4],[1,0.42],[2,0.15],[3,0.027],[4,0.003]], pt: 4, pn: 150 },
+  { id: 9, name: 'TPU Ironwood 舱', hw: '自研芯片', cost: 7e6, r: [[0,0.12],[1,0.4],[2,0.35],[3,0.12],[4,0.0098],[5,0.0002]], pt: 4, pn: 100 },
+  { id: 3, name: 'H100 训练机柜', hw: '整机柜', cost: 5e8, r: [[1,0.25],[2,0.46],[3,0.23],[4,0.058],[5,0.002]], pt: 5, pn: 1500 },
+  { id: 4, name: 'B200 超节点', hw: '72 卡互联', cost: 5e10, r: [[2,0.42],[3,0.45],[4,0.115],[5,0.0149],[6,0.0001]], pt: 6, pn: 6000 },
+  { id: 10, name: 'Vera Rubin 机柜', hw: '下一代 GPU', cost: 1e13, r: [[2,0.15],[3,0.46],[4,0.33],[5,0.059],[6,0.001]], pt: 6, pn: 2000 },
+  { id: 5, name: 'GB300 算力舱', hw: '液冷机房', cost: 1e15, r: [[3,0.36],[4,0.44],[5,0.193],[6,0.006999],[7,1e-06]], pt: 6, pn: 400 },
+  { id: 6, name: '十万卡超算', hw: '园区级', cost: 1.5e16, r: [[4,0.45],[5,0.52],[6,0.02995],[7,5e-05]], pt: 7, pn: 15000 },
+  { id: 11, name: '轨道算力星座', hw: '近地轨道', cost: 1.5e17, r: [[4,0.22],[5,0.6],[6,0.1795],[7,0.0005]], pt: 7, pn: 4000 },
+  { id: 7, name: '吉瓦数据中心', hw: '自建电厂', cost: 7e17, r: [[5,0.3],[6,0.685],[7,0.015]], pt: 7, pn: 1500 },
+  { id: 8, name: '戴森球算力环', hw: '恒星供能', cost: 5e18, r: [[5,0.1],[6,0.82],[7,0.078],[8,0.002]], pt: 7, pn: 150 },
+  { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019999],[9,1e-06]], pt: 8, pn: 600 }
 ];
 
 const UPGRADES = [
-  { key: 'multi', name: '并行推理', desc: '每次抽卡多抽 1 张，费用同比增加。', base: 200, g: 3, max: 49, eff: lv => `每次 ${lv + 1} 张` },
-  { key: 'speed', name: '推理加速', desc: '自动抽卡间隔 ×0.95。', base: 100, g: 2.2, max: 50, eff: lv => `间隔 ${Math.pow(0.95, lv).toFixed(3)}s` },
-  { key: 'clone', name: '数据增强', desc: '抽到的每张卡数量 +1。', base: 1e6, g: 20, max: null, eff: lv => `每张 ×${lv + 1}` },
-  { key: 'price', name: 'API 商业化', desc: '全局产出 ×1.2。', base: 1e5, g: 12, max: null, eff: lv => `产出 ×${fmtMul(Math.pow(1.2, lv))}` }
+  { key: 'multi', name: '并行推理', desc: '每次抽卡多抽 1 张，费用同比增加。', base: 1e8, g: 20, max: 49, eff: lv => `每次 ${lv + 1} 张` },
+  { key: 'speed', name: '推理加速', desc: '自动抽卡间隔 ×0.95。', base: 1e6, g: 12, max: 50, eff: lv => `间隔 ${Math.pow(0.95, lv).toFixed(3)}s` },
+  { key: 'clone', name: '数据增强', desc: '抽到的每张卡数量 +1。', base: 1e12, g: 100, max: null, eff: lv => `每张 ×${lv + 1}` },
+  { key: 'price', name: 'API 商业化', desc: '全局产出 ×1.2。', base: 1e9, g: 20, max: null, eff: lv => `产出 ×${fmtMul(Math.pow(1.2, lv))}` }
 ];
 
 const TECH = [
@@ -1341,7 +1358,7 @@ const TECH = [
   { key: 'autoBench', name: '自动评测', desc: '解锁自动评测开关，每 8 秒自动挑战一次。', max: 1, cost: () => 8, eff: lv => lv ? '已解锁' : '未解锁' },
   { key: 'autoReb', name: '自动迭代', desc: '解锁自动版本迭代开关，Token 足够时自动迭代。', max: 1, cost: () => 12, eff: lv => lv ? '已解锁' : '未解锁' },
   { key: 'curate', name: '策展研究', desc: '系列收藏的加成提高 20%。', max: 5, cost: lv => 4 + 3 * lv, eff: lv => `系列加成 ×${(1 + 0.2 * lv).toFixed(1)}` },
-  { key: 'bond', name: '生态合作', desc: '实验室羁绊里每款模型的加成 +3%。', max: 5, cost: lv => 3 + 2 * lv, eff: lv => `每款 +${15 + 3 * lv}%` },
+  { key: 'bond', name: '生态合作', desc: '实验室羁绊里每款模型的加成 +1%。', max: 5, cost: lv => 3 + 2 * lv, eff: lv => `每款 +${3 + lv}%` },
   { key: 'upfocus', name: '定向邀约', desc: 'UP 实验室的优先概率 +8%。', max: 5, cost: lv => 3 + 2 * lv, eff: lv => `UP 优先 ${50 + 8 * lv}%` },
   { key: 'distill', name: '知识蒸馏', desc: '微调费用 −8%。', max: 5, cost: lv => 2 + 2 * lv, eff: lv => `微调费用 −${8 * lv}%` },
   { key: 'redteam', name: '红队演练', desc: '评测战力 ×1.25。', max: 8, cost: lv => 3 + 2 * lv, eff: lv => `战力 ×${fmtMul(Math.pow(1.25, lv))}` },
@@ -1401,6 +1418,7 @@ const ACH = [
   { id: 'omegaAll', n: '奇点之后', d: '集齐全部 Ω 奇点级卡', r: 20, ok: () => MODELS_BY_TIER[7].every(owned) },
   { id: 'tAleph', n: '超越奇点', d: '抽到任意 ℵ 超限级卡', r: 30, ok: () => S.stats.maxTier >= 8 },
   { id: 'alephAll', n: '宇宙尽头', d: '集齐全部 ℵ 超限级卡', r: 50, ok: () => MODELS_BY_TIER[8].every(owned) },
+  { id: 'tQ', n: '?', d: '抽到“?”', r: 50, ok: () => S.stats.maxTier >= 9 },
   { id: 'legends', n: '传奇收藏家', d: '集齐全部 LR 模型', r: 10, ok: () => MODELS_BY_TIER[5].every(owned) },
   { id: 'mr20', n: '解封进行时', d: '集齐 20 张 MR 封印卡', r: 10, ok: () => MODELS_BY_TIER[6].filter(owned).length >= 20 },
   { id: 'mrAll', n: '封印全解', d: '集齐全部 MR 封印卡', r: 25, ok: () => MODELS_BY_TIER[6].every(owned) },
@@ -1617,13 +1635,13 @@ function pickModel(t) {
 }
 function total(c) { return c ? c[0] + c[1] + c[2] + c[3] : 0; }
 function owned(m) { return total(S.cards[m.id]) > 0; }
-function bondRate() { return 0.15 + 0.03 * S.tech.bond; }
+function bondRate() { return 0.03 + 0.01 * S.tech.bond; }
 function labStats() {
   if (caches.lab) return caches.lab;
   const res = {};
   for (const [lab, ms] of Object.entries(LAB_MODELS)) {
     const own = ms.filter(owned).length, full = own === ms.length;
-    res[lab] = { own, total: ms.length, full, mul: (1 + bondRate() * own) * (full ? 1 + 0.1 * ms.length : 1) };
+    res[lab] = { own, total: ms.length, full, mul: (1 + bondRate() * own) * (full ? 1 + 0.03 * ms.length : 1) };
   }
   return caches.lab = res;
 }
@@ -1650,7 +1668,7 @@ function dexInfo() {
 function dexCount() { return dexInfo().n; }
 function trainLv(id) { return S.train[id] || 0; }
 function trainMul(id) { return 1 + 0.3 * trainLv(id); }
-function trainCost(m) { return TIERS[m.t].base * 1500 * Math.pow(2.2, trainLv(m.id)) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
+function trainCost(m) { return TIERS[m.t].base * 1e4 * Math.pow(3, trainLv(m.id)) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
 function benchMul() { return Math.pow(1.15, S.stage); }
 function priceMul() { return Math.pow(1.2, S.up.price); }
 function compoundMul() { return Math.pow(1.5, S.tech.compound); }
@@ -1689,7 +1707,7 @@ function computeYield() {
 }
 function modelOut(m) { const c = S.cards[m.id]; return total(c) ? rawUnits(c) * perCard(m) * globalMul() : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
-function rebirthCost() { return 5e7 * Math.pow(25, S.rebirths); }
+function rebirthCost() { return 1e10 * Math.pow(12, S.rebirths); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
 function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
@@ -1777,7 +1795,7 @@ function trainModel(id) {
 /* =================== BENCH =================== */
 function benchInfo(stage) {
   const b = BENCHES[stage % BENCHES.length], round = Math.floor(stage / BENCHES.length);
-  return { name: b.n + (round ? ' ' + (ROMAN[round] || '#' + (round + 1)) : ''), s: b.s, req: 20 * Math.pow(2.6, stage), gpu: 1 + Math.floor(stage / 4) };
+  return { name: b.n + (round ? ' ' + (ROMAN[round] || '#' + (round + 1)) : ''), s: b.s, req: 100 * Math.pow(3.2, stage), gpu: 1 + Math.floor(stage / 4) };
 }
 function cardPower(m, v, count, spec) {
   return TIERS[m.t].base * VARIANTS[v].mul * trainMul(m.id) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
@@ -1937,6 +1955,16 @@ function cardArt(m) {
     s += `<text x="50" y="58" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="13" font-weight="700" fill="#E6F0EA">.safetensors</text>`;
     s += `</svg>`; artCache.set(m.id, s); return s;
   }
+  if (m.t === 9) {
+    const r3 = rngFrom(hashStr('qm#' + m.id));
+    let noise = '';
+    for (let i = 0; i < 70; i++) { const w = 1 + r3() * 9, x = r3() * 100, y = r3() * 100; noise += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${(0.6 + r3() * 1.4).toFixed(1)}" fill="${['#ffffff', '#FF2D55', '#00E5FF'][i % 3]}" fill-opacity="${(0.08 + r3() * 0.3).toFixed(2)}"/>`; }
+    s = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#000"/>${noise}`;
+    s += `<text x="48" y="70" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="62" font-weight="700" fill="#FF2D55" fill-opacity=".85">?</text>`;
+    s += `<text x="52" y="70" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="62" font-weight="700" fill="#00E5FF" fill-opacity=".85">?</text>`;
+    s += `<text x="50" y="70" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="62" font-weight="700" fill="#fff">?</text></svg>`;
+    artCache.set(m.id, s); return s;
+  }
   if (m.t === 8) {
     const r2 = rngFrom(hashStr('aleph#' + m.id));
     let stars = '';
@@ -2005,10 +2033,10 @@ function ratingHTML(m) {
   return `<div class="rating">${m.a.map((v, i) => `<div class="rt"><span>${RATING_KEYS[i]}</span><span class="pips">${Array.from({ length: 10 }, (_, k) => `<i class="${k < v ? 'on' : ''}"></i>`).join('')}</span><b class="num">${v}</b></div>`).join('')}
     <div class="rt-sum">综合 <b class="num">${m.score}</b> 分，定为 ${TIERS[m.t].id}（${TIERS[m.t].name}）</div></div>`;
 }
-function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' : TIER_HEX[t]; }
+function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' : t === 9 ? 'var(--t-Q)' : TIER_HEX[t]; }
 function statusTag(st) { return STATUS[st] ? `<span class="tag st-${st}">${STATUS[st].name}</span>` : ''; }
 function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; }
-function tierTag(t) { return `<span class="tag tier-text" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
+function tierTag(t) { return `<span class="tag tier-text${t === 9 ? ' tier-q' : ''}" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
 
 
 /* =================== TOAST / MODAL / FX =================== */
@@ -2054,7 +2082,8 @@ function showCine(r) {
   const c = $('#cine');
   c.style.setProperty('--cc', color);
   c.classList.toggle('agi', !r.leak && r.t === 7);
-  c.classList.toggle('aleph', !r.leak && r.t >= 8);
+  c.classList.toggle('aleph', !r.leak && r.t === 8);
+  c.classList.toggle('qm', !r.leak && r.t >= 9);
   $('#cineKicker').textContent = r.leak ? '异常文件' : (r.t >= 7 ? (m.k || '检测到通用智能') : r.isNew ? `${TIERS[r.t].id} 级新模型入库` : `${TIERS[r.t].id} · ${VARIANTS[r.v].name}`);
   $('#cineCard').innerHTML = cardHTML(m, r.v, { count: r.n });
   $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
@@ -2377,7 +2406,7 @@ function renderTierRules() {
   el.dataset.done = '1';
   el.innerHTML = `<div class="panel-h"><h3>定级规则</h3><span class="side">游戏内的主观评分，各项 1–10 分</span></div>
     <p class="note" style="margin:0 0 10px;max-width:72ch">稀有度看三项总分：<b>能力</b>是放在今天看的水平，<b>影响力</b>是对行业和大众的冲击，<b>调用量</b>是巅峰时期的使用规模。所以 ChatGPT、DeepSeek-R1 这样的老模型也能进 LR。点开任意一张卡可以看到它的三项分数。</p>
-    <div class="tier-rules">${TIERS.map((T, t) => `<div class="tr">${tierTag(t)}<span>${T.name}</span><span class="rg num">${t < 6 ? tierRange(t) : t === 6 ? '未公开发布' : t === 7 ? '虚构未来' : '远未来设想'}</span><span class="ct num">${MODELS_BY_TIER[t].length} 款</span></div>`).join('')}</div>`;
+    <div class="tier-rules">${TIERS.map((T, t) => `<div class="tr">${tierTag(t)}<span>${T.name}</span><span class="rg num">${t < 6 ? tierRange(t) : t === 6 ? '未公开发布' : t === 7 ? '虚构未来' : t === 8 ? '远未来设想' : '无法定级'}</span><span class="ct num">${MODELS_BY_TIER[t].length} 款</span></div>`).join('')}</div>`;
 }
 function renderSeries() {
   const si = seriesInfo(), boost = seriesBoost();
