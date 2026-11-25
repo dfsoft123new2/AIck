@@ -29,6 +29,7 @@
   --shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 8px 24px -16px rgba(15,42,36,.35);
   --t-N: #707C77; --t-R: #23955A; --t-SR: #1F74C9; --t-SSR: #7B47D6;
   --t-UR: #B67A06; --t-LR: #D8431F; --t-MR: #C21C9E; --t-AGI: #0F2A24; --t-AL: #5A3FD0; --t-Q: #111111;
+  --t-BANG: #993b26;
   --s-rs: #6B4FD8; --s-cd: #0E86A8; --s-ag: #C46A12; --s-mm: #C0367A; --s-ef: #23874F;
   --font-ui: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-num: "Chakra Petch", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
@@ -60,6 +61,7 @@
     --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 30px -18px rgba(0,0,0,.8);
     --t-N: #9AA6A1; --t-R: #5CCB8C; --t-SR: #58A9FA; --t-SSR: #B48BFF;
     --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF; --t-Q: #FFFFFF;
+    --t-BANG: #ffb68a;
     --s-rs: #A890FF; --s-cd: #4FD0EE; --s-ag: #F3A04A; --s-mm: #FF7EB6; --s-ef: #6FDC9C;
   }
 }
@@ -74,6 +76,7 @@
   --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 30px -18px rgba(0,0,0,.8);
   --t-N: #9AA6A1; --t-R: #5CCB8C; --t-SR: #58A9FA; --t-SSR: #B48BFF;
   --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF; --t-Q: #FFFFFF;
+  --t-BANG: #ffb68a;
   --s-rs: #A890FF; --s-cd: #4FD0EE; --s-ag: #F3A04A; --s-mm: #FF7EB6; --s-ef: #6FDC9C;
 }
 *, *::before, *::after { box-sizing: inherit; }
@@ -321,6 +324,9 @@ button.card { transition: transform .12s; }
 .card.t-Q .body { background: #000; }
 .card.t-Q .tier { background: #fff; color: #000; text-shadow: -1px 0 #FF2D55, 1px 0 #00E5FF; }
 .tier-text.tier-q { text-shadow: -1px 0 #FF2D55, 1px 0 #00E5FF; }
+.card.t-BANG { --tc: #ffb68a; border-color: #d85f51; background: #100a11; box-shadow: 0 8px 24px -12px #d85f51; }
+.card.t-BANG .tier { background: #ffe5cc; color: #611b21; }
+.card.t-BANG .body { background: #140c13; }
 .card.t-AGI .body { background: #0E1A18; }
 .detail > .card { align-self: start; }
 @property --ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -584,6 +590,15 @@ button.card { transition: transform .12s; }
 .chat-compose #chatText { flex:1 0 8ch; }
 .chat-tool { padding-inline:9px; }
 .chat-tool svg { display:block; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; }
+.community-wide { flex:1 1 100%; }
+.community-wide input { width:100%; }
+#communitySubject { overflow-wrap:anywhere; }
+.community-attachment { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-block:8px; }
+.community-attachment img { max-width:120px; max-height:88px; border-radius:var(--r-s); }
+.community-media { margin:6px 0; }
+.community-media img { display:block; width:auto; max-width:100%; max-height:280px; border-radius:var(--r-s); }
+.community-packet { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; border-inline-start:1px solid var(--copper); padding-inline-start:8px; }
+#chatPacketButton { margin-top:8px; }
 #chatStatus { min-height:1.2em; margin:6px 0; }
 .lab-name { font-weight:750; color:var(--role-color); }
 .lab-name-admin,.role-admin { --role-color:light-dark(#145ab2,#8ec5ff); --role-light:light-dark(#007d9c,#c3eaff); }
@@ -671,6 +686,61 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .cine.qm .rays { background: repeating-conic-gradient(from 0deg, rgba(255,45,85,.35) 0deg 2deg, transparent 2deg 7deg, rgba(0,229,255,.3) 7deg 9deg, transparent 9deg 15deg); opacity: .8; }
 .cine.qm .wafer { opacity: .15; }
 .cine.qm .title, .cine.qm .kicker { color: #fff; text-shadow: -2px 0 #FF2D55, 2px 0 #00E5FF; }
+.bang-scene, .bang-continue { display: none; }
+.cine.bang {
+  --bang-impact-at: .68s;
+  isolation: isolate; gap: clamp(5px, 1.7dvh, 14px); padding: 12px 16px 64px;
+  background: radial-gradient(ellipse at 51% 39%, #29131b, #0a1018 42%, #04060a 77%);
+}
+.cine.bang :is(.rays, .wafer, .kicker, .hint) { display: none; }
+.cine.bang .bang-scene { display: block; position: absolute; z-index: -1; left: 50%; top: 0; width: max(100%, 740px); height: 100%; transform: translateX(-50%); pointer-events: none; }
+.cine.bang .bang-stars { opacity: .62; }
+.cine.bang .bang-infall { opacity: 0; animation: horizon-infall var(--bang-impact-at) cubic-bezier(.3,.04,.77,.72) both; }
+.cine.bang .bang-hole { opacity: .78; animation: horizon-lens 1.5s both; }
+.cine.bang :is(.bang-impact, .bang-flare) { opacity: 0; }
+.cine.bang .bang-impact { animation: horizon-shock .62s var(--bang-impact-at) cubic-bezier(.08,.65,.19,1) both; }
+.cine.bang .bang-flare { animation: horizon-flare .47s var(--bang-impact-at) cubic-bezier(.12,.67,.21,1) both; }
+.cine.bang .holder { width: min(234px, 60vw, 40dvh); animation: horizon-reveal .64s calc(var(--bang-impact-at) + .09s) cubic-bezier(.16,.84,.27,1) both; }
+.cine.bang .card.t-BANG { border-color: #e6a680; box-shadow: 0 18px 40px -21px #ef765b; }
+.cine.bang .title { color: #fff2d9; font-size: clamp(24px, 5dvh, 44px); animation: horizon-caption .34s 1.02s ease-out both; }
+.cine.bang .sub { color: #f3d6c8; white-space: pre-line; line-height: 1.45; animation: horizon-caption .34s 1.14s ease-out both; }
+.cine.bang .bang-continue {
+  display: block; position: absolute; inset-inline-end: max(16px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
+  min-width: 64px; min-height: 44px; padding: 0 12px; border-radius: 6px; color: #d5ecf2; border: 1px solid #385160; background: #0b121c;
+}
+.cine.bang .bang-continue:hover { border-color: #99d7e5; color: #fff; }
+.cine.bang .bang-continue:focus-visible { outline: 2px solid #99d7e5; outline-offset: 3px; }
+@keyframes horizon-infall {
+  0% { transform: scale(1.42); opacity: .12; }
+  42% { opacity: .8; }
+  100% { transform: scale(.19); opacity: 0; }
+}
+@keyframes horizon-lens {
+  0% { transform: scale(1.25) rotate(5deg); opacity: .42; animation-timing-function: cubic-bezier(.58,.06,.83,.7); }
+  44% { transform: scale(.33) rotate(-8deg); opacity: .88; animation-timing-function: cubic-bezier(.1,.74,.21,1); }
+  61% { transform: scale(1.11) rotate(1deg); opacity: 1; }
+  100% { transform: none; opacity: .78; }
+}
+@keyframes horizon-shock {
+  0% { transform: scale(.34); opacity: 0; }
+  13% { transform: scale(.96); opacity: .9; }
+  100% { transform: scale(2.25); opacity: 0; }
+}
+@keyframes horizon-flare {
+  0% { transform: scale(.19,.64); opacity: 0; }
+  26% { opacity: .92; }
+  100% { transform: scale(1.45,.63); opacity: 0; }
+}
+@keyframes horizon-reveal {
+  0% { transform: translateY(22px) scale(.69) rotate(-7deg); clip-path: inset(46% 0); opacity: 0; }
+  46% { clip-path: inset(0); opacity: 1; }
+  100% { transform: none; clip-path: inset(-25%); opacity: 1; }
+}
+@keyframes horizon-caption { from { opacity: 0; } }
+@media (max-height: 420px) {
+  .cine.bang { padding-bottom: 36px; }
+  .cine.bang .holder { width: min(166px, 37dvh); }
+}
 .cine.agi .rays { background: repeating-conic-gradient(from 0deg, rgba(255,120,180,.4) 0deg 5deg, rgba(120,220,255,.35) 5deg 10deg, transparent 10deg 18deg); opacity: .7; }
 .flash { position: fixed; inset: 0; z-index: 96; background: #fff; pointer-events: none; opacity: 0; }
 .flash.go { animation: flash .9s ease-out; }
@@ -728,6 +798,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+  .cine.bang *, .cine.bang *::after { animation: none !important; }
 }
 </style>
 </head>
@@ -976,9 +1047,13 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         <form id="chatSend" class="chat-compose">
           <button class="btn ghost chat-tool" id="chatMentionButton" type="button" title="提到玩家" aria-label="提到玩家" aria-expanded="false" aria-controls="chatMentions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4.5 8.35"/></svg></button>
           <button class="btn ghost chat-tool" id="chatEmojiButton" type="button" title="表情" aria-label="表情" aria-expanded="false" aria-controls="chatEmojis"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14a4 4 0 0 0 8 0M9 9h.01M15 9h.01"/></svg></button>
+          <button class="btn ghost chat-tool" id="chatChooseImage" type="button" title="添加图片" aria-label="添加图片"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></button>
+          <input id="chatImage" type="file" accept="image/png,image/jpeg,image/webp" hidden>
           <input class="input" id="chatText" maxlength="240" aria-label="聊天消息" placeholder="输入消息" required>
           <button class="btn" type="submit">发送</button>
         </form>
+        <div class="community-attachment" id="chatImageDraft" hidden><img id="chatImagePreview" alt="待发送的图片"><button class="btn ghost small" id="chatRemoveImage" type="button">移除图片</button></div>
+        <button class="btn ghost small" type="button" id="chatPacketButton" hidden>发红包</button>
       </section>
 
       <section class="view" id="view-feats" aria-labelledby="h-feats">
@@ -1088,6 +1163,30 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   <header><h2 id="adminTitle">全服管理</h2><form method="dialog"><button class="x-btn" aria-label="关闭全服管理">×</button></form></header>
   <div class="world-dialog-body" id="adminBody"></div>
 </dialog>
+<dialog id="communityNotice" class="world-dialog notice-dialog" aria-labelledby="communityNoticeTitle">
+  <header><h2 id="communityNoticeTitle">全服通知</h2></header>
+  <div class="world-dialog-body">
+    <h3 id="communitySubject"></h3><p class="note" id="communityTime"></p><p class="notice-message" id="communityBody"></p>
+    <div id="communityNoticeImage"></div><p id="communityReward" class="notice-message" hidden></p>
+    <p class="note notice-status" id="communityNoticeStatus" role="status"></p>
+    <div class="world-tools"><button class="btn" id="claimWorldGift" type="button" hidden>领取福利</button><button class="btn ghost" id="readWorldNotice" type="button">确认已读</button></div>
+  </div>
+</dialog>
+<dialog id="communityComposer" class="world-dialog" aria-labelledby="communityComposeTitle">
+  <header><h2 id="communityComposeTitle"></h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
+  <form id="communityForm" class="world-dialog-body">
+    <div class="admin-tools">
+      <label class="community-wide" id="communityTitleField">标题<input class="input" name="title" maxlength="60"></label>
+      <label class="admin-note-input">正文<textarea class="input" name="message" rows="3" maxlength="500"></textarea></label>
+      <label class="community-wide" id="communityImageField">附图<input class="input" type="file" name="image" accept="image/png,image/jpeg,image/webp"></label>
+      <label>奖励<select class="input" name="kind"><option value="">不发放</option><option value="tokens">Token</option><option value="gpu">GPU</option></select></label>
+      <label id="communityAmountField" hidden>每人数量<input class="input" name="amount" type="number" min="1" step="1"></label>
+      <label id="communityPacketSlots" hidden>红包份数<input class="input" name="slots" type="number" min="1" max="200" step="1" value="10"></label>
+    </div>
+    <p class="note" id="communityComposeStatus" role="status"></p>
+    <button class="btn" type="submit">确认发布</button>
+  </form>
+</dialog>
 <dialog id="bulkCards" class="world-dialog" aria-labelledby="bulkCardsTitle">
   <header><h2 id="bulkCardsTitle">一键增加全部卡</h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
   <form id="bulkCardsForm" class="world-dialog-body">
@@ -1101,7 +1200,49 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   </form>
 </dialog>
 <div class="modal-back" id="modalBack"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
-<div class="cine" id="cine"><div class="rays"></div><div class="wafer"></div><div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div><div class="hint">点击任意处继续</div></div>
+<div class="cine" id="cine">
+  <div class="rays"></div><div class="wafer"></div>
+  <svg class="bang-scene" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="bang-disk" x2="100%" y2="0%"><stop stop-color="#832833" stop-opacity="0"/><stop offset=".18" stop-color="#e04f35"/><stop offset=".39" stop-color="#ffb867"/><stop offset=".57" stop-color="#fff1cb"/><stop offset=".82" stop-color="#e66042"/><stop offset="1" stop-color="#8e303c" stop-opacity="0"/></linearGradient>
+      <linearGradient id="bang-lens" x1="0%" y1="100%" x2="100%" y2="0%"><stop stop-color="#115964" stop-opacity="0"/><stop offset=".38" stop-color="#74dbec"/><stop offset=".57" stop-color="#c6f7fa"/><stop offset=".86" stop-color="#317d8f" stop-opacity=".2"/><stop offset="1" stop-color="#317d8f" stop-opacity="0"/></linearGradient>
+      <radialGradient id="bang-flare"><stop stop-color="#fff2d8"/><stop offset=".15" stop-color="#ffd09b" stop-opacity=".86"/><stop offset=".42" stop-color="#f57b52" stop-opacity=".3"/><stop offset="1" stop-color="#e35041" stop-opacity="0"/></radialGradient>
+      <radialGradient id="bang-aura"><stop offset=".48" stop-color="#05070c" stop-opacity="0"/><stop offset=".69" stop-color="#981e26" stop-opacity=".64"/><stop offset=".78" stop-color="#552936" stop-opacity=".3"/><stop offset="1" stop-color="#05070c" stop-opacity="0"/></radialGradient>
+    </defs>
+    <path class="bang-stars" d="M123 99h1M180 538h1M211 420h1M278 171h1M343 611h1M370 78h1M397 255h1M409 493h1M445 189h1M457 620h1M467 547h1M483 112h1M501 64h1M508 501h1M531 433h1M551 198h1M566 576h1M601 119h1M629 643h1M654 176h1M685 81h1M710 533h1M747 175h1M756 491h1M771 101h1M794 551h1M797 640h1M818 429h1M885 117h1M924 514h1M967 268h1M1008 624h1M1041 157h1M1089 444h1" fill="none" stroke="#a4d7df" stroke-width="1.6" stroke-linecap="round"/>
+    <g transform="translate(600 322)">
+      <g class="bang-infall" fill="none" stroke-linecap="round">
+        <path d="M-540 -220l305 131M-590 93l332 -59M-378 351l210 -190M358 -330l-169 153M580 -74l-316 35M505 234l-276 -122M221 418l-112 -202M-154 -413l76 205" stroke="#8be0ef" stroke-width="2.4"/>
+        <path d="M-440 -75l160 26M-500 248l253 -131M-209 399l84 -177M453 -214l-197 97M498 69l-223 -35M222 -388l-109 181" stroke="#e9885b" stroke-width="1.6"/>
+      </g>
+      <g class="bang-hole">
+        <circle r="220" fill="url(#bang-aura)"/>
+        <g transform="rotate(-21)" fill="none">
+          <ellipse rx="515" ry="93" stroke="url(#bang-lens)" stroke-width="1.5" opacity=".44"/>
+          <ellipse rx="480" ry="75" stroke="url(#bang-disk)" stroke-width="14" opacity=".24"/>
+          <ellipse rx="452" ry="65" stroke="url(#bang-disk)" stroke-width="3.2"/>
+          <ellipse rx="409" ry="54" stroke="url(#bang-disk)" stroke-width="1.4" opacity=".68"/>
+        </g>
+        <circle r="147" fill="#05070c" stroke="url(#bang-lens)" stroke-width="2.3"/>
+        <g transform="rotate(-21)" fill="none">
+          <path d="M-452 0a452 64 0 0 0 904 0" stroke="url(#bang-disk)" stroke-width="16" opacity=".25"/>
+          <path d="M-452 0a452 64 0 0 0 904 0" stroke="url(#bang-disk)" stroke-width="4.6"/>
+          <path d="M-495 0a495 79 0 0 0 990 0" stroke="url(#bang-disk)" stroke-width="1.7"/>
+        </g>
+      </g>
+      <g class="bang-impact" fill="none">
+        <circle r="218" stroke="url(#bang-lens)" stroke-width="2.5"/>
+        <circle r="171" stroke="url(#bang-disk)" stroke-width="1.3"/>
+        <path d="M-201 -27l-21 -2m33 130l-24 13m90 -276l-7 -18m200 365l9 21m126 -276l21 -7m-71 -94l13 -15m-4 251l19 9" stroke="#a8edf3" stroke-width="1.7"/>
+      </g>
+      <g transform="rotate(-21)">
+        <g class="bang-flare"><ellipse rx="486" ry="95" fill="url(#bang-flare)"/><path d="M-482 0H482" stroke="url(#bang-disk)" stroke-width="2"/></g>
+      </g>
+    </g>
+  </svg>
+  <div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div>
+  <div class="hint">点击任意处继续</div><button class="bang-continue" type="button" id="bangContinue">继续</button>
+</div>
 <div class="flash" id="flash"></div>
 <script>/* MIT License
 
@@ -1141,6 +1282,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 const WORLD_CONFIG = {"url":"https://oovwnjjuzdelajikfodr.supabase.co","key":"sb_publishable_hw4Ht-cNifTYGE2mawgAmQ_yzMlYpnq"};
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
+const EXCLAMATION_TIER = 10;
 const TIERS = [
   { id: 'N',   name: '小众', base: 1 },
   { id: 'R',   name: '知名', base: 6 },
@@ -1151,14 +1293,16 @@ const TIERS = [
   { id: 'MR',  name: '封印', base: 4e5 },
   { id: 'Ω',   name: '奇点', base: 1e7, css: 'AGI' },
   { id: 'ℵ',   name: '超限', base: 5e8, css: 'ALEPH' },
-  { id: '?',   name: '未知', base: 1e12, css: 'Q' }
+  { id: '?',   name: '未知', base: 1e12, css: 'Q' },
+  { id: '!',   name: '越界', base: 1e16, css: 'BANG' }
 ];
-const TIER_HEX = ['#8C9894', '#4CC383', '#4BA2F8', '#A97CFF', '#F2B533', '#FF6A46', '#FF4FD8', '#FFFFFF', '#CDBEFF', '#F2F2F2'];
+const TIER_HEX = ['#8C9894', '#4CC383', '#4BA2F8', '#A97CFF', '#F2B533', '#FF6A46', '#FF4FD8', '#FFFFFF', '#CDBEFF', '#F2F2F2', '#FFB68A'];
 const TIER_RULE = {
   6: '封印卡不按评分定级：凡是还没公开发布的模型都在这里，包括传闻、泄露、已官宣未上线、仍在训练、被叫停、只在内部使用或受限开放。',
   7: '奇点卡是游戏虚构的未来设想，不按评分定级。',
   8: '超限卡描绘的是远在奇点之后的设想，不按评分定级。',
-  9: '?'
+  9: '?',
+  [EXCLAMATION_TIER]: '黑洞计算机专属。任意变体合计单抽一亿分之一，不受保底、UP 或泄露概率影响。'
 };
 
 const VARIANTS = [
@@ -1222,6 +1366,7 @@ const LABS = {
   reflection:{ name: 'Reflection AI',     sym: 'Rf', no: 46, hue: '#A0E7FF' },
   cosmos:    { name: '宇宙尺度',           sym: 'ℵ',  no: '∞', hue: '#CDBEFF' },
   unknown:   { name: '?',                 sym: '?',  no: '?', hue: '#F2F2F2' },
+  horizon:   { name: '事件视界',           sym: '!',  no: '!', hue: '#FFB68A' },
   humanity:  { name: '人类文明',            sym: 'Ω',  no: 0,  hue: '#FFFFFF' }
 };
 
@@ -1652,7 +1797,8 @@ const MODELS = [
   { id: 'mt5', n: 'mT5', c: '多语种文本到文本', lab: 'google', a: [2, 7, 6], s: 'ef', d: 'Google 将 T5 的文本到文本框架扩展到多语种，用覆盖 101 种语言的 mC4 语料训练。' },
   { id: 'byt5', n: 'ByT5', c: '字节到字节', lab: 'google', a: [2, 5, 4], s: 'ef', d: '不依赖专用子词词表，直接把 UTF-8 字节作为序列，研究词表无关输入对噪声与拼写的影响。' },
   { id: 'ul2', n: 'UL2', c: '混合去噪目标', lab: 'google', a: [3, 6, 4], s: 'rs', d: 'Google 将不同的掩码和补全任务混合到一个训练框架，让同一个模型兼顾多类语言任务。' },
-  { id: 'flant5', n: 'Flan-T5', c: '指令微调', lab: 'google', a: [3, 8, 7], s: 'rs', d: 'Google 在 T5 架构上进行多任务指令微调，让同一模型能按自然语言指令处理更多任务。' }
+  { id: 'flant5', n: 'Flan-T5', c: '指令微调', lab: 'google', a: [3, 8, 7], s: 'rs', d: 'Google 在 T5 架构上进行多任务指令微调，让同一模型能按自然语言指令处理更多任务。' },
+  { id: 'exclamation', n: '!', c: '视界回波', lab: 'horizon', t: EXCLAMATION_TIER, s: 'all', g: '!', k: '事件视界 · 异常回波', d: '游戏虚构卡。黑洞计算机停止回答，视界外只留下一个符号。' }
 ];
 // Rarity = 能力 + 影响力 + 调用量 (each 1–10). TIER_CUTS[t] is the lowest total for tier t.
 const TIER_CUTS = [0, 13, 16, 19, 21, 23];
@@ -1728,7 +1874,8 @@ const PACKS = [
   { id: 11, name: '轨道算力星座', hw: '近地轨道', cost: 1.5e17, r: [[4,0.22],[5,0.6],[6,0.1795],[7,0.0005]], pt: 7, pn: 4000 },
   { id: 7, name: '吉瓦数据中心', hw: '自建电厂', cost: 7e17, r: [[5,0.3],[6,0.685],[7,0.015]], pt: 7, pn: 1500 },
   { id: 8, name: '戴森球算力环', hw: '恒星供能', cost: 5e18, r: [[5,0.1],[6,0.82],[7,0.078],[8,0.002]], pt: 7, pn: 150 },
-  { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600 }
+  { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600,
+    special: { t: EXCLAMATION_TIER, chance: 1e-8 } }
 ];
 
 const UPGRADES = [
@@ -2370,6 +2517,8 @@ function settlePull(p, compact = false) {
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
   const clone = cloneN(), table = drawTables.get(p);
   const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
+  const special = p.special, specialChance = special?.chance ?? 0;
+  const specialCutoff = 1 - specialChance, normalChance = 1 - leak - specialChance;
   const res = [], stats = S.stats, cards = S.cards, focus = upChance();
   const now = Date.now(), rotation = upInfo(now);
   // At the rotation boundary retain the regular per-roll clock check.
@@ -2377,7 +2526,8 @@ function settlePull(p, compact = false) {
   const hits = compact ? [] : null;
   let structural = false;
   for (let i = 0; i < n; i++) {
-    if (Math.random() < leak) {
+    const ticket = Math.random();
+    if (ticket < leak) {
       if (!S.leaks) structural = true;
       S.leaks++;
       if (compact && drawSlots[0]) drawSlots[0].n++;
@@ -2388,13 +2538,19 @@ function settlePull(p, compact = false) {
       if (compact && isBroadcastHit(leak)) hits.push({leak:true, v:3, hitProb:leak});
       continue;
     }
-    const pc = (S.pity[p.id] || 0) + 1;
+    // Use the opposite end of the leak roll: neither branch consumes pity.
+    const specialHit = ticket >= specialCutoff;
     let t, viaPity = false;
-    if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p, table);
-    S.pity[p.id] = t >= p.pt ? 0 : pc;
+    if (specialHit) t = special.t;
+    else {
+      const pc = (S.pity[p.id] || 0) + 1;
+      if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p, table);
+      S.pity[p.id] = t >= p.pt ? 0 : pc;
+    }
     const up = odds ? rotation.lab : upInfo().lab;
     const m = pickModel(t, up, focus), v = rollVariant(variants);
-    const hitProb = (1 - leak) * (viaPity ? 1 : table.rates[t]) * (odds ? odds[m.idx] : modelChance(m, up, focus)) * variants[v];
+    const prob = (specialHit ? specialChance : table.rates[t]) * variants[v];
+    const hitProb = specialHit ? prob : normalChance * (viaPity ? 1 : table.rates[t]) * (odds ? odds[m.idx] : modelChance(m, up, focus)) * variants[v];
     let c = cards[m.id];
     if (!c) c = cards[m.id] = [0, 0, 0, 0];
     const isNew = c[v] === 0 && !total(c);
@@ -2407,7 +2563,7 @@ function settlePull(p, compact = false) {
     const slot = m.idx * 4 + v;
     if (compact && drawSlots[slot]) drawSlots[slot].n += clone;
     else {
-      const r = { id: m.id, v, t, isNew, prob: table.rates[t] * variants[v], hitProb, pity: viaPity, n: clone };
+      const r = { id: m.id, v, t, isNew, prob, hitProb, pity: viaPity, n: clone };
       res.push(r); if (compact) drawSlots[slot] = r;
     }
     if (compact && isBroadcastHit(hitProb)) hits.push({id:m.id, v, hitProb});
@@ -2474,7 +2630,7 @@ function benchInfo(stage) {
   const b = BENCHES[stage % BENCHES.length], round = Math.floor(stage / BENCHES.length);
   return { name: b.n + (round ? ' ' + (ROMAN[round] || '#' + (round + 1)) : ''), s: b.s, req: 100 * 3.2 ** Math.min(stage, 23) * 1.3 ** Math.max(0, stage - 23), gpu: 1 + Math.floor(stage / 4) };
 }
-function benchTrainMul(m) { return m.t === 9 ? 1.3 ** trainLv(m.id) : trainMul(m.id); }
+function benchTrainMul(m) { return m.t >= 9 ? 1.3 ** trainLv(m.id) : trainMul(m.id); }
 function cardPower(m, v, count, spec) {
   return TIERS[m.t].base * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
 }
@@ -2727,6 +2883,20 @@ function cardArt(m) {
     s += `<text x="50" y="58" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="13" font-weight="700" fill="#E6F0EA">.safetensors</text>`;
     s += `</svg>`; artCache.set(m.id, s); return s;
   }
+  if (m.t === EXCLAMATION_TIER) {
+    s = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect width="100" height="100" fill="#100a11"/>
+      <g transform="rotate(-24 50 50)" fill="none">
+        <ellipse cx="50" cy="50" rx="46" ry="19" stroke="#712738" stroke-width="1.4"/>
+        <ellipse cx="50" cy="50" rx="42" ry="16" stroke="#d85f51" stroke-width="1.6" stroke-dasharray="64 12 12 14"/>
+        <ellipse cx="50" cy="50" rx="38" ry="12" stroke="#ffb68a" stroke-width="1.5"/>
+      </g>
+      <circle cx="50" cy="50" r="25" fill="#060509" stroke="#d85f51" stroke-width="1.2"/>
+      <path d="M15 27h6m-3-3v6m62 39h4m-2-2v4M79 21h3m-1.5-1.5v3" stroke="#ffb68a" opacity=".65"/>
+      <path d="M45 30h10l-1.7 27h-6.6z" fill="#fff2d9"/><circle cx="50" cy="65" r="4" fill="#ffb68a"/>
+    </svg>`;
+    artCache.set(m.id, s); return s;
+  }
   if (m.t === 9) {
     const r3 = rngFrom(hashStr('qm#' + m.id));
     let noise = '';
@@ -2817,7 +2987,7 @@ function ratingHTML(m) {
   return `<div class="rating">${m.a.map((v, i) => `<div class="rt"><span>${RATING_KEYS[i]}</span><span class="pips">${Array.from({ length: 10 }, (_, k) => `<i class="${k < v ? 'on' : ''}"></i>`).join('')}</span><b class="num">${v}</b></div>`).join('')}
     <div class="rt-sum">综合 <b class="num">${m.score}</b> 分，定为 ${TIERS[m.t].id}（${TIERS[m.t].name}）</div></div>`;
 }
-function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' : t === 9 ? 'var(--t-Q)' : TIER_HEX[t]; }
+function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' : t === 9 ? 'var(--t-Q)' : t === EXCLAMATION_TIER ? 'var(--t-BANG)' : TIER_HEX[t]; }
 function statusTag(st) { return STATUS[st] ? `<span class="tag st-${st}">${STATUS[st].name}</span>` : ''; }
 function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; }
 function tierTag(t) { return `<span class="tag tier-text${t === 9 ? ' tier-q' : ''}" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
@@ -2858,41 +3028,90 @@ function burstAt(el, color) {
     document.body.appendChild(p); setTimeout(() => p.remove(), 750);
   }
 }
-let cineOpen = false;
+let cineOpen = false, cineCloseTimer, bangReturnFocus;
 function showCine(r) {
-  if (!S.set.fx || cineOpen) return;
+  const bang = isExclamationResult(r);
+  if (!S.set.fx || (cineOpen && !bang)) return;
   const m = r.leak ? LEAK_MODEL : MODEL_BY_ID[r.id];
-  const color = r.leak ? '#E6F0EA' : (r.t >= 7 ? '#ffffff' : TIER_HEX[r.t]);
+  const color = r.leak ? '#E6F0EA' : (bang || r.t < 7 ? TIER_HEX[r.t] : '#ffffff');
   const c = $('#cine');
+  clearTimeout(cineCloseTimer);
+  if (bang && c.classList.contains('open')) {
+    c.classList.remove('open'); void c.offsetWidth;
+  }
   c.style.setProperty('--cc', color);
   c.classList.toggle('agi', !r.leak && r.t === 7);
   c.classList.toggle('aleph', !r.leak && r.t === 8);
-  c.classList.toggle('qm', !r.leak && r.t >= 9);
+  c.classList.toggle('qm', !r.leak && r.t === 9);
+  c.classList.toggle('bang', bang);
   $('#cineKicker').textContent = r.leak ? '异常文件' : (r.t >= 7 ? (m.k || '检测到通用智能') : r.isNew ? `${TIERS[r.t].id} 级新模型入库` : `${TIERS[r.t].id} · ${VARIANTS[r.v].name}`);
   $('#cineCard').innerHTML = cardHTML(m, r.v, { count: r.n });
   $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
-  $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出' : `${LABS[m.lab].name} · 代号 ${m.c}${m.st ? ' · ' + STATUS[m.st].name : ''} · 出现概率 ${fmtProb(r.prob)}${r.pity ? '（保底）' : ''}`;
+  $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出'
+    : bang ? `黑洞计算机 · ${VARIANTS[r.v].name}版约 ${fmtProb(r.hitProb)}\n基础产出 ${fmt(TIERS[r.t].base)} Token/s`
+    : `${LABS[m.lab].name} · 代号 ${m.c}${m.st ? ' · ' + STATUS[m.st].name : ''} · 出现概率 ${fmtProb(r.prob)}${r.pity ? '（保底）' : ''}`;
   c.classList.add('open'); cineOpen = true;
-  if (r.t >= 6 || r.leak) { const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+  if (bang) {
+    const next = $('#bangContinue');
+    if (document.activeElement !== next) bangReturnFocus = document.activeElement;
+    c.setAttribute('role', 'dialog'); c.setAttribute('aria-modal', 'true');
+    c.setAttribute('aria-labelledby', 'cineTitle'); c.setAttribute('aria-describedby', 'cineSub');
+    $('#flash').classList.remove('go'); next.focus({preventScroll:true});
+  }
+  if (!bang && (r.t >= 6 || r.leak)) { const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
 }
-function closeCine() { $('#cine').classList.remove('open'); setTimeout(() => { cineOpen = false; }, 300); }
+function closeCine() {
+  const c = $('#cine'), restoreFocus = document.activeElement === $('#bangContinue');
+  c.classList.remove('open');
+  if (c.classList.contains('bang')) {
+    for (const attr of ['role','aria-modal','aria-labelledby','aria-describedby']) c.removeAttribute(attr);
+    if (restoreFocus) bangReturnFocus?.focus({preventScroll:true});
+    bangReturnFocus = null;
+    stopBangSound();
+  }
+  clearTimeout(cineCloseTimer); cineCloseTimer = setTimeout(() => { cineOpen = false; }, 300);
+}
 
 /* =================== AUDIO =================== */
-let actx = null;
+let actx = null, bangSound;
 function initAudio() {
   if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
   if (actx && actx.state === 'suspended') actx.resume();
 }
-function tone(freq, t0, dur, type, vol) {
+function tone(freq, t0, dur, type, vol, output = actx.destination, endFreq = freq) {
   const o = actx.createOscillator(), g = actx.createGain();
   o.type = type; o.frequency.setValueAtTime(freq, t0);
+  if (freq !== endFreq) o.frequency.exponentialRampToValueAtTime(endFreq, t0 + dur);
   g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+  o.connect(g); g.connect(output); o.start(t0); o.stop(t0 + dur + 0.02);
+  return o;
+}
+function stopBangSound() {
+  const bus = bangSound;
+  if (!bus) return;
+  bangSound = null;
+  bus.gain.setTargetAtTime(0, actx.currentTime, .012);
+  setTimeout(() => bus.disconnect(), 64);
+}
+function playBangSound() {
+  stopBangSound();
+  const bus = bangSound = actx.createGain();
+  bus.connect(actx.destination);
+  const t = actx.currentTime, impact = t + .68; // Matches --bang-impact-at.
+  tone(148, t, .64, 'sine', .12, bus, 48);
+  tone(96, impact, .72, 'sine', .23, bus, 41);
+  tone(180, impact + .012, .22, 'triangle', .09, bus, 79);
+  tone(220, impact + .09, .59, 'triangle', .055, bus);
+  tone(329.6, impact + .19, .64, 'triangle', .046, bus);
+  tone(440, impact + .29, .71, 'sine', .05, bus).onended = () => {
+    if (bangSound === bus) { bangSound = null; bus.disconnect(); }
+  };
 }
 function playPull() { if (!S.set.sfx || !actx) return; try { const t = actx.currentTime; tone(520, t, 0.09, 'square', 0.04); tone(780, t + 0.05, 0.1, 'triangle', 0.06); } catch (e) {} }
 function playTick() { if (!S.set.sfx || !actx) return; try { tone(1100, actx.currentTime, 0.06, 'triangle', 0.05); } catch (e) {} }
-function playRare(big) {
+function playRare(big, bang = false) {
   if (!S.set.rareSfx || !actx) return;
+  if (bang) { try { playBangSound(); } catch { stopBangSound(); } return; }
   try { const t = actx.currentTime; const f = big ? [261.6, 329.6, 392, 523.3, 659.3, 784, 1046.5] : [523.3, 659.3, 784, 1046.5]; f.forEach((x, i) => tone(x, t + i * 0.07, big ? 0.9 : 0.4, i === f.length - 1 ? 'sawtooth' : 'triangle', 0.07)); } catch (e) {}
 }
 
@@ -2910,7 +3129,8 @@ function doPull(auto, originEl, paced = false) {
   afterPull(draw.res, auto, p, originEl, paced, draw.hits, draw.count);
   return true;
 }
-function resultScore(r) { return r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
+function isExclamationResult(r) { return !r.leak && TIERS[r.t]?.id === '!'; }
+function resultScore(r) { return isExclamationResult(r) ? 2e9 + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
 function cinePick(sorted, auto) {
   if (auto && !S.set.autoCine) return;
   const prefs = S.set.cine;
@@ -2953,7 +3173,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   // reveal decision
   const best = lastResults[0];
   const cine = cinePick(lastResults, auto);
-  if (cine) { if (!paced || !cineOpen) { playRare(cine.t >= 7); showCine(cine); } }
+  if (cine) { if (!paced || !cineOpen || isExclamationResult(cine)) { playRare(cine.t >= 7, isExclamationResult(cine)); showCine(cine); } }
   else {
     if (!auto) playPull();
     for (const r of lastResults.slice(0, 3)) {
@@ -3077,7 +3297,7 @@ function renderPull() {
     <div><strong>本期 UP：${esc(LABS[up.lab].name)}</strong><div class="muted" style="font-size:12.5px">抽中某个稀有度时，有 ${Math.round(upChance() * 100)}% 概率优先给出该实验室的模型。全服同步轮换。</div></div>
     <span class="timer" id="upTimer">${clock(up.ends - Date.now())}</span>`;
   $('#packs').innerHTML = PACKS.map((p, pi) => {
-    const top = p.r[p.r.length - 1];
+    const top = p.special ? [p.special.t, p.special.chance] : p.r[p.r.length - 1];
     const cost = pullCost(p);
     return `<button class="pack${S.tokens < cost ? ' locked' : ''}" aria-pressed="${S.pack === p.id}" data-pack="${p.id}" data-cost="${cost}">
       <span class="leds">${Array.from({ length: PACKS.length }, (_, i) => `<i class="${i <= pi ? 'on' : ''}"></i>`).join('')}</span>
@@ -3090,12 +3310,14 @@ function renderPull() {
   $('#packTitle').textContent = p.name;
   $('#packSide').textContent = p.hw + '，单张 ' + fmt(packCost(p));
   const maxP = Math.max(...p.r.map(x => x[1]));
-  $('#rates').innerHTML = p.r.slice().reverse().map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${fmtProb(pr)}</span></div>`).join('');
+  const rates = p.r.slice().reverse();
+  if (p.special) rates.unshift([p.special.t, p.special.chance]);
+  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${fmtProb(pr)}</span></div>`).join('');
   const vp = variantProbs();
   const pc = S.pity[p.id] || 0, pn = pityN(p);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${tierRate(p, 9) ? '未触发泄露或保底时，未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
@@ -3290,6 +3512,7 @@ function openDetail(id) {
       <div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
         <p class="desc">${esc(m.d)}</p>
+        ${m.t === EXCLAMATION_TIER ? `<p class="note">${esc(TIER_RULE[m.t])}</p>` : ''}
         ${ratingHTML(m)}
         <dl class="kv">
           <dt>代号</dt><dd>${esc(m.c)}</dd>
@@ -3307,7 +3530,7 @@ function openDetail(id) {
           <button class="btn ghost" data-act="train-max">一键微调<span class="cost"></span></button>
           <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${S.sig === m.id ? '已是镇馆模型' : '设为镇馆模型'}</button>
         </div>
-        <p class="note" style="margin-top:8px">${m.t === 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
+        <p class="note" style="margin-top:8px">${m.t >= 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
       </div>
     </div>`;
   };
@@ -3767,6 +3990,7 @@ function initLeaderboard(config) {
   } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
   cloud.board.presence = setupPresence(cloud.board.client);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
+  startInbox(cloud.board);
   boardTick(false);
 }
 function unwrap({data, error}) { if (error) throw error; return data; }
@@ -3804,7 +4028,13 @@ async function boardTick(force = false) {
     const uid = await boardIdentity(b);
     await syncModeration(b, force);
     if (moderation.level === 2) return;
-    if (writeScore && !moderation.level) {
+    const beforeMilestones = worldMilestones;
+    if (!b.totals || Date.now() >= b.nextTotals) {
+      b.totals = unwrap(await b.client.rpc('leaderboard_totals'));
+      b.nextTotals = Date.now() + 60000;
+      recomputeWorld();
+    }
+    if ((writeScore || worldMilestones !== beforeMilestones) && !moderation.level) {
       const p = sanitizePlayer(uid, playerDoc());
       cloud.priority = false;
       const base = {player_id:uid, name:p.name, sig:p.sig, sig_variant:p.sigV, tps:p.tps, dex:Math.floor(p.dex), stage:Math.floor(p.stage), pulls:Math.floor(p.pulls)};
@@ -3836,9 +4066,6 @@ async function boardTick(force = false) {
       unwrap(await b.client.from('leaderboard_hits').upsert(batch.map(r => ({player_id: uid, event_id: r.event, name: r.name,
         pack: r.pack, model: r.id, variant: r.v, chance: r.chance, drawn_at: r.ts})), {onConflict: 'player_id,event_id', ignoreDuplicates: true}));
       b.pending = b.pending.filter(r => !ids.has(r.event)); b.changed = true; persistHits(b); b.nextHits = now + 4000;
-    }
-    if (now >= b.nextTotals) {
-      b.totals = unwrap(await b.client.rpc('leaderboard_totals')); b.nextTotals = now + 60000; recomputeWorld();
     }
     if (readBoard) {
       if (now < b.legacyUntil && EXTRA_SCORES.includes(mode)) b.boards[mode] = {at:now, migrating:true};
@@ -3933,7 +4160,7 @@ function applyModerationStatus(data) {
     cloud.board.pending = []; cloud.board.changed = true; persistHits(cloud.board);
   }
   if (before !== level && cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
-  renderModerationLock(); renderModerationNotice(); renderBulkCardAccess(); markDirty('world');
+  renderModerationLock(); renderModerationNotice(); renderBulkCardAccess(); renderCommunityNotice(); markDirty('world');
 }
 
 function bulkCardInventory(amount, allVariants) {
@@ -3977,9 +4204,29 @@ function applyItemOrder(order) {
   return true;
 }
 
-async function syncModeration(b, force) {
-  if (!force && Date.now() < moderation.next) return;
-  moderation.next = Date.now() + 20000;
+function startInbox(b) {
+  function check(force = false) {
+    if (!cloud.uid || !navigator.onLine || document.hidden) return;
+    syncModeration(b, force).catch(() => {});
+    syncCommunityInbox(b, force).catch(() => {});
+  }
+  setInterval(check, 10000);
+  const wake = () => check(true);
+  window.addEventListener('online', wake);
+  window.addEventListener('pageshow', wake);
+  window.addEventListener('focus', wake);
+  document.addEventListener('visibilitychange', wake);
+}
+
+function syncModeration(b, force) {
+  if (b.inboxBusy) return b.inboxBusy;
+  if (!force && Date.now() < moderation.next) return Promise.resolve();
+  moderation.next = Date.now() + 9500;
+  b.inboxBusy = readModerationStatus(b).finally(() => { b.inboxBusy = null; });
+  return b.inboxBusy;
+}
+
+async function readModerationStatus(b) {
   const revision = moderationRevision;
   const reply = await b.client.rpc('frontier_session');
   if (moderationRevision !== revision) return;
@@ -4258,6 +4505,7 @@ $('#openAdmin').onclick = () => {
     <label>排序<select class="input" name="sort">${PROFILE_STATS.map(([k,n])=>`<option value="${k}"${k==='pulls'?' selected':''}>${n}</option>`).join('')}</select></label>
     <label class="admin-check"><input type="checkbox" name="flagged">仅疑似异常</label><button class="btn small" type="submit">查询</button>
     </form>
+    <div class="world-tools"><button class="btn ghost small" id="openWorldNoticeComposer" type="button">发布全服通知</button></div>
     <details class="admin-notice" id="adminNotice">
       <summary>发送私密通知</summary>
       <form class="admin-tools" id="adminNoticeForm">
@@ -4271,6 +4519,7 @@ $('#openAdmin').onclick = () => {
     <div class="world-tools"><button class="btn ghost small" id="adminPrev" type="button" disabled>上一页</button><button class="btn ghost small" id="adminNext" type="button" disabled>下一页</button></div>
     <section class="admin-detail" id="adminDetail" aria-label="玩家详情"></section>`;
   $('#adminFind').onsubmit = e => { e.preventDefault(); adminOffset = 0; loadAdminList(); };
+  $('#openWorldNoticeComposer').onclick = () => openCommunityComposer('world');
   $('#adminNoticeForm').onsubmit = sendPrivateNotice;
   $('#adminNoticeForm [name=player]').oninput = () => { $('#adminNoticeRecipient').textContent = ''; };
   $('#adminPrev').onclick = () => { adminOffset = Math.max(0,adminOffset-25); loadAdminList(); };
@@ -4432,6 +4681,202 @@ bulkCardsForm.onsubmit = async e => {
   }
 };
 
+const communityDialog = $('#communityNotice'), communityComposer = $('#communityComposer');
+const communityForm = $('#communityForm'), communityNoticeStatus = $('#communityNoticeStatus');
+const community = {notice:null, next:0, busy:false, dismissing:false, owner:null, revision:0};
+const communityBucket = new Map();
+const communityImageURI = base64 => `data:image/webp;base64,${base64}`;
+const giftLabel = (kind, amount) => `${fmt(Number(amount))} ${kind === 'gpu' ? 'GPU' : 'Token'}`;
+const communityClient = () => cloud.board?.client;
+let communityDrain = Promise.resolve(), communityClaiming = false, shownNotice = null;
+let communityChannel = 'world', communitySending = false, communityRequest = null;
+
+async function encodeCommunityImage(file) {
+  if (!file) return null;
+  if (!['image/png','image/jpeg','image/webp'].includes(file.type) || !file.size || file.size > 8 * 1024 * 1024) throw Error('请选择 8 MB 以内的 PNG、JPEG 或 WebP 图片。');
+  const bmp = await createImageBitmap(file).catch(() => null);
+  if (!bmp) throw Error('无法读取这张图片。');
+  try {
+    const canvas = document.createElement('canvas'), ctx = canvas.getContext('2d');
+    for (const limit of [1280, 960, 640]) {
+      const scale = Math.min(1,limit / Math.max(bmp.width,bmp.height));
+      canvas.width = Math.max(1,Math.round(bmp.width*scale)); canvas.height = Math.max(1,Math.round(bmp.height*scale));
+      ctx.drawImage(bmp,0,0,canvas.width,canvas.height);
+      const photo = canvas.toDataURL('image/webp',.8);
+      if (photo.startsWith('data:image/webp;base64,') && photo.length < 349547) return photo.split(',')[1];
+    }
+    throw Error('图片压缩后仍过大，或当前浏览器不支持 WebP 编码。');
+  } finally { bmp.close(); }
+}
+
+const communityMediaHTML = id => `<div class="community-media" data-community-image="${esc(id)}"><span class="note">图片加载中…</span></div>`;
+const mediaObserver = new IntersectionObserver(entries => {
+  for (const entry of entries) if (entry.isIntersecting) {
+    mediaObserver.unobserve(entry.target);
+    loadCommunityImage(entry.target);
+  }
+});
+function watchCommunityImages(root) { for (const node of $$('[data-community-image]',root)) mediaObserver.observe(node); }
+function unwatchCommunityImages(root) { for (const node of $$('[data-community-image]',root)) mediaObserver.unobserve(node); }
+async function loadCommunityImage(node) {
+  const id = node.dataset.communityImage;
+  if (!communityClient()) return;
+  if (!communityBucket.has(id)) {
+    const request = communityClient().rpc('frontier_community_image',{p_id:id}).then(unwrap).catch(() => null);
+    communityBucket.set(id,request);
+    if (communityBucket.size > 16) communityBucket.delete(communityBucket.keys().next().value);
+  }
+  const image = await communityBucket.get(id);
+  if (!node.isConnected) return;
+  if (typeof image !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(image)) {
+    communityBucket.delete(id);
+    const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'btn ghost small'; retry.textContent = '重新加载图片';
+    retry.onclick = () => loadCommunityImage(node); node.replaceChildren(retry); return;
+  }
+  const img = document.createElement('img'); img.alt = '消息图片'; img.decoding = 'async'; img.src = communityImageURI(image);
+  node.replaceChildren(img);
+}
+
+function storeCommunityGift(gift) {
+  const receipt = 'gift:' + gift.id;
+  if (S.itemReceipts.includes(receipt)) return true;
+  const key = gift.kind === 'gpu' ? 'gpu' : gift.kind === 'tokens' ? 'tokens' : '', amount = Number(gift.amount);
+  if (!key || !Number.isInteger(amount) || amount <= 0 || !Number.isFinite(S[key] + amount)) return false;
+  const next = {...S, [key]:S[key]+amount, itemReceipts:[...S.itemReceipts,receipt].slice(-200), lastSave:Date.now()};
+  if (!lsSet(SAVE_KEY,JSON.stringify(next))) return false;
+  S = next; markDirty('hud','pull','research'); cloudBump(true);
+  toast('奖励已到账', giftLabel(gift.kind,amount));
+  return true;
+}
+function applyCommunityGifts(items, uid = cloud.uid) {
+  communityDrain = communityDrain.catch(() => {}).then(async () => {
+    for (const gift of items || []) {
+      if (cloud.uid !== uid || moderation.level === 2) return;
+      if (!storeCommunityGift(gift)) throw Error('无法保存奖励，联网后会再尝试发放。');
+      unwrap(await communityClient().rpc('frontier_community_claim',{p_ack:gift.id}));
+    }
+  });
+  return communityDrain;
+}
+function communityError(error) {
+  if (missingWorldRPC(error)) return '尚未安装全服活动的数据库更新。';
+  if (error?.message === 'FRONTIER_GIFT_EMPTY') return '红包已领完。';
+  if (error?.message === 'FRONTIER_GIFT_UNAVAILABLE') return '奖励已过期或不可领取。';
+  return '未确认操作成功，请联网后重试。';
+}
+async function claimCommunityGift(id) {
+  if (communityClaiming || moderation.level === 2 || !communityClient()) return false;
+  communityClaiming = true;
+  try {
+    const items = unwrap(await communityClient().rpc('frontier_community_claim',{p_id:id}));
+    await applyCommunityGifts(items);
+    return true;
+  } finally { communityClaiming = false; }
+}
+
+function renderCommunityNotice() {
+  const notice = community.notice;
+  if (!notice || moderation.notice) { if (communityDialog.open) communityDialog.close(); return; }
+  if (shownNotice !== notice.id) {
+    shownNotice = notice.id; communityNoticeStatus.textContent = '';
+    textIfChanged($('#communitySubject'),notice.title);
+    textIfChanged($('#communityTime'),new Date(notice.at).toLocaleString('zh-CN'));
+    textIfChanged($('#communityBody'),notice.body || '');
+    const photos = $('#communityNoticeImage');
+    unwatchCommunityImages(photos);
+    photos.innerHTML = notice.has_image ? communityMediaHTML(notice.id) : '';
+    watchCommunityImages(photos);
+  }
+  $('#communityReward').hidden = !notice.kind;
+  textIfChanged($('#communityReward'),notice.kind ? `${notice.mine ? '已领取' : '全服福利'}：${giftLabel(notice.kind,notice.amount)}` : '');
+  $('#claimWorldGift').hidden = !notice.kind || notice.mine || moderation.level === 2;
+  $('#readWorldNotice').textContent = notice.kind && !notice.mine && moderation.level !== 2 ? '不领取' : '确认已读';
+  if (!communityDialog.open) communityDialog.showModal();
+}
+async function syncCommunityInbox(b, force = false) {
+  if (community.owner !== cloud.uid) {
+    community.owner = cloud.uid; community.notice = null; community.next = 0; community.revision++;
+    communityBucket.clear(); renderCommunityNotice();
+  }
+  if (community.busy || community.dismissing || (!force && Date.now() < community.next)) return;
+  community.busy = true; community.next = Date.now() + 9500;
+  const revision = community.revision, uid = cloud.uid;
+  try {
+    const reply = await b.client.rpc('frontier_community_inbox');
+    if (revision !== community.revision || uid !== cloud.uid) return;
+    if (missingWorldRPC(reply.error)) { community.next = Date.now() + 120000; return; }
+    const data = unwrap(reply);
+    community.notice = data.notice; renderCommunityNotice();
+    if (data.pending.length) await applyCommunityGifts(data.pending,uid);
+  } finally { community.busy = false; }
+}
+async function acknowledgeCommunityNotice(id) {
+  const reply = await communityClient().rpc('frontier_community_inbox',{p_seen:id});
+  const data = unwrap(reply); community.notice = data.notice; renderCommunityNotice();
+  if (data.pending.length) await applyCommunityGifts(data.pending);
+}
+async function readCommunityNotice(claim) {
+  const current = community.notice;
+  if (!current || community.dismissing || !communityClient()) return;
+  if (!claim && current.kind && !current.mine && moderation.level !== 2 && !window.confirm('不领取这份福利并关闭通知？')) return;
+  community.dismissing = true; community.revision++;
+  $('#claimWorldGift').disabled = $('#readWorldNotice').disabled = true;
+  try {
+    if (claim && !(await claimCommunityGift(current.id))) return;
+    await acknowledgeCommunityNotice(current.id);
+  } catch (error) { communityNoticeStatus.textContent = communityError(error); }
+  finally { community.dismissing = false; $('#claimWorldGift').disabled = $('#readWorldNotice').disabled = false; }
+}
+communityDialog.addEventListener('cancel',e => e.preventDefault());
+$('#readWorldNotice').onclick = () => readCommunityNotice(false);
+$('#claimWorldGift').onclick = () => readCommunityNotice(true);
+
+function openCommunityComposer(channel) {
+  if (!verifiedAdmin(cloud.uid) || moderation.level === 2 || communityComposer.open || communitySending) return;
+  communityChannel = channel; communityForm.reset();
+  const packet = channel === 'packet', f = communityForm.elements;
+  $('#communityComposeTitle').textContent = packet ? '发聊天室红包' : '发布全服通知';
+  $('#communityComposeStatus').textContent = '';
+  $('#communityTitleField').hidden = $('#communityImageField').hidden = packet;
+  f.title.required = !packet; f.message.maxLength = packet ? 120 : 500;
+  $('#communityPacketSlots').hidden = !packet; f.slots.required = packet;
+  f.kind.options[0].disabled = packet;
+  if (packet) f.kind.value = 'tokens';
+  updateCommunityFields(); communityComposer.showModal();
+  (packet ? f.message : f.title).focus();
+}
+function updateCommunityFields() {
+  const {kind, amount} = communityForm.elements;
+  $('#communityAmountField').hidden = !kind.value;
+  amount.required = !!kind.value;
+  amount.max = kind.value === 'gpu' ? '10000000' : '1e100';
+}
+communityForm.elements.kind.onchange = updateCommunityFields;
+communityForm.onsubmit = async e => {
+  e.preventDefault();
+  if (communitySending || !verifiedAdmin(cloud.uid) || !communityClient()) return;
+  const f = communityForm.elements, status = $('#communityComposeStatus'), packet = communityChannel === 'packet';
+  const data = {p_channel:communityChannel, p_title:packet ? null : f.title.value.trim(), p_body:f.message.value.trim(),
+    p_kind:f.kind.value || null, p_amount:f.kind.value ? f.amount.valueAsNumber : null, p_slots:packet ? f.slots.valueAsNumber : null};
+  const file = packet ? null : f.image.files[0];
+  if (!packet && (!data.p_title || !(data.p_body || data.p_kind || file))) { status.textContent = '请输入标题，并填写正文、图片或福利。'; return; }
+  const controls = [...communityForm.elements].filter(el => !el.disabled);
+  communitySending = true; controls.forEach(el => { el.disabled = true; });
+  try {
+    status.textContent = '正在发布…';
+    try { data.p_image = await encodeCommunityImage(file); }
+    catch (error) { status.textContent = error.message; return; }
+    const snapshot = JSON.stringify(data);
+    if (communityRequest?.snapshot !== snapshot) communityRequest = {snapshot,id:newEventId()};
+    unwrap(await communityClient().rpc('frontier_community_publish',{p_id:communityRequest.id,...data}));
+    communityRequest = null; communityComposer.close();
+    toast(packet ? '红包已发出' : '全服通知已发布', data.p_kind ? giftLabel(data.p_kind,data.p_amount) + '／人' : data.p_title);
+    if (packet) pollChat(); else syncCommunityInbox(cloud.board,true).catch(() => {});
+  } catch (error) { status.textContent = communityError(error); }
+  finally { communitySending = false; controls.forEach(el => { el.disabled = false; }); }
+};
+$('#chatPacketButton').onclick = () => openCommunityComposer('packet');
+
 const chatList = $('#chatMessages'), chatText = $('#chatText'), chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
 const chatMentions = $('#chatMentions'), chatEmojis = $('#chatEmojis'), chatReplyDraft = $('#chatReplyDraft');
 const chatMentionButton = $('#chatMentionButton'), chatEmojiButton = $('#chatEmojiButton');
@@ -4440,10 +4885,11 @@ $('#openChat').classList.toggle('hidden', !WORLD_CONFIG);
 const chatGlyphs = ['😀','😂','🥳','🤔','😮','😭','😎','👍','👏','🙏','🤝','💚','🔥','🎉','🎲','💎','🤖','✨'];
 const chatErrors = {
   FRONTIER_CHAT_RATE:'发得太快，请稍等再试。', FRONTIER_CHAT_RESTRICTED:'封禁期间不能使用聊天室。',
-  FRONTIER_CHAT_NO_LAB:'实验室尚未同步，请联网后再试。', FRONTIER_CHAT_REPLY_GONE:'原消息已不可用，取消回复后可直接发送。'
+  FRONTIER_CHAT_NO_LAB:'实验室尚未同步，请联网后再试。', FRONTIER_CHAT_REPLY_GONE:'原消息已不可用，取消回复后可直接发送。',
+  FRONTIER_IMAGE_RATE:'每小时最多发送 8 张图片，请稍后再试。'
 };
 let chatRead = false, chatWrite = false, chatTimer = null, chatState = null, chatDraftId = null;
-let chatSeq = 0, chatMessages = [], chatReply = null;
+let chatSeq = 0, chatMessages = [], chatReply = null, chatImagePayload = null, chatImageRevision = 0, chatImagePreparing = false, chatCommunityRetry = 0;
 const chatTargets = new Map();
 const chatActive = () => currentView === 'chat' && moderation.level !== 2;
 const chatAvatar = m => {
@@ -4456,18 +4902,23 @@ const chatAvatar = m => {
 };
 function renderChat(messages) {
   const isAdmin = verifiedAdmin(cloud.uid);
+  $('#chatPacketButton').hidden = !isAdmin;
   const state = JSON.stringify([moderation.adminId,cloud.uid,messages]);
   if (state === chatState) return;
   chatMessages = messages;
   const focused = document.activeElement, row = focused?.closest('#chatMessages [data-event]');
   const atBottom = chatList.scrollHeight-chatList.scrollTop-chatList.clientHeight < 48;
+  unwatchCommunityImages(chatList);
   chatList.innerHTML = messages.map(m => {
     const [role,label] = labRole(m.player_id,m.level,m.is_admin === true);
     const who = `<button class="lab-link" data-player="${esc(m.player_id)}" aria-haspopup="dialog">${styledLabName(m.name,role)}</button>`;
     const when = new Date(m.sent_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
     const quote = m.reply_to ? `<blockquote class="chat-quote">${m.reply ? `<strong>${esc(m.reply.name)}：</strong>${esc(m.reply.body)}` : '原消息已不可用'}</blockquote>` : '';
-    return `<li data-event="${esc(m.id)}">${chatAvatar(m)}<div><div class="chat-meta">${who}${label ? `<span class="role-tag role-${role}">${label}</span>` : ''}${m.mentions?.includes(cloud.uid) ? '<span class="chat-mentioned">提到了你</span>' : ''}<time datetime="${esc(m.sent_at)}">${esc(when)}</time><span class="chat-message-actions">${m.player_id === cloud.uid ? '' : `<button class="btn ghost small" type="button" data-act="mention" aria-label="提到${esc(m.name)}" title="提到此玩家">@</button>`}<button class="btn ghost small" type="button" data-act="reply">回复</button>${isAdmin ? '<button class="btn ghost small" type="button" data-act="delete" aria-label="移除消息" title="移除消息">×</button>' : ''}</span></div>${quote}<p>${esc(m.body)}</p></div></li>`;
+    const packet = m.packet, left = packet ? Math.max(0,packet.slots-packet.claimed) : 0;
+    const gift = packet ? `<div class="community-packet"><strong>红包 · ${esc(giftLabel(packet.kind,packet.amount))}／人</strong><small>剩 ${left}／${packet.slots} 份</small>${packet.mine ? '<span>已领取</span>' : left && m.player_id !== cloud.uid ? '<button class="btn small" type="button" data-act="claim">领红包</button>' : ''}</div>` : '';
+    return `<li data-event="${esc(m.id)}">${chatAvatar(m)}<div><div class="chat-meta">${who}${label ? `<span class="role-tag role-${role}">${label}</span>` : ''}${m.mentions?.includes(cloud.uid) ? '<span class="chat-mentioned">提到了你</span>' : ''}<time datetime="${esc(m.sent_at)}">${esc(when)}</time><span class="chat-message-actions">${m.player_id === cloud.uid ? '' : `<button class="btn ghost small" type="button" data-act="mention" aria-label="提到${esc(m.name)}" title="提到此玩家">@</button>`}<button class="btn ghost small" type="button" data-act="reply">回复</button>${isAdmin ? '<button class="btn ghost small" type="button" data-act="delete" aria-label="移除消息" title="移除消息">×</button>' : ''}</span></div>${quote}${m.has_image && m.body === '[图片]' ? '' : `<p>${esc(m.body)}</p>`}${m.has_image ? communityMediaHTML(m.id) : ''}${gift}</div></li>`;
   }).join('');
+  watchCommunityImages(chatList);
   if (atBottom || chatState === null) chatList.scrollTop = chatList.scrollHeight;
   if (row) {
     const replacement = [...chatList.children].find(node => node.dataset.event === row.dataset.event);
@@ -4486,7 +4937,16 @@ async function updateChat(action = 'list', args = {}) {
   const seq = ++chatSeq, client = cloud.board.client;
   const stillHere = () => chatActive() && seq === chatSeq;
   try {
-    let reply = await client.rpc('frontier_chat_v2',{p_action:action,...args});
+    const {p_image,...chatArgs} = args;
+    let reply;
+    if (Date.now() >= chatCommunityRetry || p_image) {
+      reply = await client.rpc('frontier_community_chat',{p_action:action,...chatArgs,...(p_image ? {p_image} : {})});
+      if (missingWorldRPC(reply.error)) {
+        chatCommunityRetry = Date.now() + 120000; reply = null;
+        if (p_image) { if (stillHere()) chatStatus.textContent = '发图片需要更新全服活动数据库。'; return false; }
+      }
+    }
+    reply ??= await client.rpc('frontier_chat_v2',{p_action:action,...chatArgs});
     if (missingWorldRPC(reply.error)) {
       if (args.p_reply_to || args.p_mentions?.length) {
         if (stillHere()) chatStatus.textContent = '回复和 @ 需要更新聊天室数据库。';
@@ -4510,6 +4970,7 @@ async function pollChat() {
   try { await updateChat(); } finally { chatRead = false; }
 }
 function renderChatView() {
+  $('#chatPacketButton').hidden = !verifiedAdmin(cloud.uid);
   if (chatTimer !== null) return;
   chatStatus.textContent = '正在连接…'; pollChat(); chatTimer = setInterval(pollChat, 6000);
 }
@@ -4575,14 +5036,34 @@ $('#view-chat').addEventListener('keydown', e => {
   if (e.key === 'Escape' && (!chatMentions.hidden || !chatEmojis.hidden)) { showChatPicker(null); chatText.focus(); }
 });
 $('#chatCancelReply').onclick = () => { if (!chatWrite) { setChatReply(null); chatText.focus(); } };
+const chatFile = $('#chatImage'), chatChooseImage = $('#chatChooseImage');
+chatChooseImage.onclick = () => { if (!chatWrite) chatFile.click(); };
+function setChatImage(image) {
+  chatImagePayload = image; chatDraftId = null;
+  chatText.required = !image; $('#chatImageDraft').hidden = !image;
+  if (image) $('#chatImagePreview').src = communityImageURI(image);
+  else $('#chatImagePreview').removeAttribute('src');
+}
+$('#chatRemoveImage').onclick = () => { if (!chatWrite) { chatImageRevision++; chatImagePreparing = false; setChatImage(null); } };
+chatFile.onchange = async () => {
+  const file = chatFile.files[0]; chatFile.value = '';
+  if (!file || chatWrite) return;
+  const revision = ++chatImageRevision; chatImagePreparing = true;
+  chatStatus.textContent = '正在处理图片…';
+  try {
+    const image = await encodeCommunityImage(file);
+    if (revision === chatImageRevision) { setChatImage(image); chatStatus.textContent = ''; }
+  } catch (error) { if (revision === chatImageRevision) chatStatus.textContent = error.message; }
+  finally { if (revision === chatImageRevision) chatImagePreparing = false; }
+};
 chatForm.onsubmit = async e => {
   e.preventDefault();
   const message = chatText.value.trim();
-  if (!message || chatWrite) return;
+  if ((!message && !chatImagePayload) || chatWrite || chatImagePreparing) return;
   chatDraftId ??= newEventId(); chatWrite = true; chatSendButton.disabled = true; chatText.readOnly = true;
-  const payload = {p_id:chatDraftId,p_body:message,p_reply_to:chatReply?.id ?? null,p_mentions:chosenMentions(message)};
+  const payload = {p_id:chatDraftId,p_body:message,p_reply_to:chatReply?.id ?? null,p_mentions:chosenMentions(message),p_image:chatImagePayload};
   try {
-    if (await updateChat('send',payload)) { chatText.value = ''; chatTargets.clear(); setChatReply(null); showChatPicker(null); }
+    if (await updateChat('send',payload)) { chatText.value = ''; chatTargets.clear(); setChatImage(null); setChatReply(null); showChatPicker(null); }
   } finally { chatWrite = false; chatSendButton.disabled = false; chatText.readOnly = false; if (chatActive()) chatText.focus(); }
 };
 chatList.onclick = e => {
@@ -4593,6 +5074,12 @@ chatList.onclick = e => {
   if (!message || !action || chatWrite) return;
   if (action === 'mention') insertMention(message);
   if (action === 'reply') { setChatReply(message); chatText.focus(); }
+  if (action === 'claim') {
+    const button = e.target.closest('[data-act="claim"]'); button.disabled = true;
+    claimCommunityGift(message.id).then(pollChat).catch(error => {
+      chatStatus.textContent = communityError(error); pollChat();
+    }).finally(() => { button.disabled = false; });
+  }
   if (action === 'delete' && verifiedAdmin(cloud.uid) && window.confirm('移除这条聊天消息？')) {
     chatWrite = true; updateChat('delete',{p_id:message.id}).finally(() => { chatWrite = false; });
   }
@@ -4735,6 +5222,7 @@ on('#newsSlot', 'focusout', e => { if (!e.currentTarget.contains(e.relatedTarget
 on('#newsInfo', 'click', () => setNewsTip($('#newsTip').hidden));
 document.addEventListener('pointerdown', e => { if (!$('#newsTip').hidden && !e.target.closest('#newsSlot')) setNewsTip(false); });
 on('#cine', 'click', closeCine);
+on('#bangContinue', 'keydown', e => { if (e.key === 'Tab') e.preventDefault(); });
 on('#modalBack', 'click', e => { if (e.target.id === 'modalBack') closeModal(); });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && openBuff) { closeBuffTip(); return; }
