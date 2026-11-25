@@ -1,6 +1,6 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="zh-CN">
-<head>  
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>算力祈愿 · Frontier Pull</title>
@@ -201,6 +201,7 @@ button.hud-chip:hover { border-color: var(--line-2); }
 .switch[aria-checked="true"]::after { transform: translateX(20px); background: var(--copper); }
 .switch:disabled { opacity: .4; cursor: not-allowed; }
 .toggle-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink-2); }
+.toggle-row:has(#autoSw) { flex-wrap: wrap; }
 
 .bar { position: relative; height: 8px; border-radius: 999px; background: var(--bg-sunk); overflow: hidden; border: 1px solid var(--line); }
 .bar > i { position: absolute; inset: 0 auto 0 0; background: var(--copper); border-radius: 999px; transition: width .25s; }
@@ -664,7 +665,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
             <div class="pull-meta">
               <div class="meta-cell"><div class="k">每次抽出</div><div class="v" id="metaMulti">1 张</div></div>
               <div class="meta-cell"><div class="k">每张数量</div><div class="v" id="metaClone">×1</div></div>
-              <div class="meta-cell"><div class="k">抽卡间隔</div><div class="v" id="metaSpeed">1.00s</div></div>
+              <div class="meta-cell"><div class="k">目标间隔</div><div class="v" id="metaSpeed">1.00s</div></div>
               <div class="meta-cell"><div class="k">累计抽卡</div><div class="v" id="metaPulls">0</div></div>
             </div>
           </div>
@@ -861,6 +862,12 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           </ul>
           <h4><time datetime="2026-11-25">2026-11-25</time> · 热点详情与显示设置</h4>
           <ul><li>悬停热点可预览奖励和实际持续时间，手机可点「详情」。抽卡过场可按稀有度自选，默认仍按原规则播放。</li><li>新增「屏蔽次要信息」，可分别隐藏六类弹窗和抽卡页高光记录。不影响奖励与记录。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 自动抽卡测速</h4>
+          <ul><li>前台连抽改为分帧结算，抽卡页分别显示目标倍率、实测倍率和每秒抽数。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 一键微调</h4>
+          <ul><li>模型详情新增「一键微调」，显示可升到的等级和总费用。科技与热点折扣照常生效，也可继续逐级微调。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 自定义每批抽数</h4>
+          <ul><li>测试时可在控制台输入 <code>setPullCount(100)</code> 设置每批 100 张；输入 <code>setPullCount()</code> 恢复研究升级数量。</li></ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -1797,7 +1804,8 @@ function addBuff(b) {
   if (b.type === 'lab') invalidateProduction();
   markDirty('hud');
 }
-function multi() { return 1 + S.up.multi; }
+let pullCountOverride = null;
+function multi() { return pullCountOverride ?? (1 + S.up.multi); }
 function cloneN() { return 1 + S.up.clone; }
 function interval() { return Math.max(0.05, Math.pow(0.95, S.up.speed)) / buffMul('rush'); }
 function packCost(p) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale'); }
@@ -1875,7 +1883,20 @@ function dexInfo() {
 function dexCount() { return dexInfo().n; }
 function trainLv(id) { return S.train[id] || 0; }
 function trainMul(id) { return 1 + 0.3 * trainLv(id); }
-function trainCost(m) { return TIERS[m.t].base * 1e4 * Math.pow(3, trainLv(m.id)) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
+function trainCost(m, level = trainLv(m.id)) { return TIERS[m.t].base * 1e4 * Math.pow(3, level) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
+function trainQuote(m, limit = Infinity) {
+  const start = trainLv(m.id);
+  let levels = 0, cost = 0, remaining = S.tokens;
+  if (owned(m) && Number.isFinite(remaining)) {
+    // Subtract in single-level order so discounts and boundary balances match manual clicks.
+    while (levels < limit) {
+      const next = trainCost(m, start + levels);
+      if (!(next > 0 && next <= remaining)) break;
+      remaining -= next; cost += next; levels++;
+    }
+  }
+  return {levels, cost, remaining};
+}
 function benchMul() { return Math.pow(1.15, S.stage); }
 function priceMul() { return Math.pow(1.2, S.up.price); }
 function compoundMul() { return Math.pow(1.5, S.tech.compound); }
@@ -2002,14 +2023,14 @@ function doRebirth(auto) {
   confirmModal('发布新版本', `消耗当前全部 Token（至少 ${fmt(cost)}）发布 v${S.rebirths + 2}.0。卡片、升级和科技全部保留。`,
     [`产出倍率 ×${rebirthMul()} → ×${rebirthMul() + 1}`, `获得 ${rebirthGpu()} 枚 GPU 芯片`], '发布', go);
 }
-function trainModel(id) {
-  const m = MODEL_BY_ID[id]; const c = trainCost(m);
-  if (!owned(m) || S.tokens < c) return false;
-  S.tokens -= c; S.train[id] = trainLv(id) + 1;
+function trainModel(id, limit = 1, maxCost = Infinity) {
+  const quote = trainQuote(MODEL_BY_ID[id], limit);
+  if (!quote.levels || quote.cost > maxCost) return false;
+  S.tokens = quote.remaining; S.train[id] = trainLv(id) + quote.levels;
   invalidateProduction();
   playTick();
   markDirty('models', 'bench', 'hud');
-  return true;
+  return quote;
 }
 
 /* =================== BENCH =================== */
@@ -2137,6 +2158,75 @@ function checkAch() {
     if (ok) { S.ach[a.id] = Date.now(); S.gpu += a.r; got = true; toast('成就达成：' + a.n, `${a.d}，获得 ${a.r} 枚 GPU 芯片`, 'achievement'); }
   }
   if (got) { playRare(false); markDirty('feats', 'research', 'hud'); }
+}
+
+/* Only the simulation tick earns batches. Animation frames consume existing credit. */
+let pullSpeed = 1, autoAcc = 0, pullFrame = null, pullShort = false;
+let meterSeconds = 0, meterBase = 0, meterBatches = 0, meterCards = 0, pullSample = null;
+let autoClockStart = performance.now();
+
+function resetAutoPull() {
+  if (pullFrame !== null) cancelAnimationFrame(pullFrame);
+  pullFrame = null; autoAcc = 0; pullShort = false; pullSample = null;
+  meterSeconds = meterBase = meterBatches = meterCards = 0;
+  autoClockStart = performance.now();
+}
+function setPullSpeed(x) {
+  if (!Number.isFinite(x) || x < 0.1 || x > 100) throw new RangeError('倍率范围：0.1 到 100');
+  pullSpeed = x; resetAutoPull(); renderPullBox();
+  return x;
+}
+function setPullCount(count = null) {
+  if (count !== null && (!Number.isInteger(count) || count < 1 || count > 1000)) {
+    throw new RangeError('每次抽卡数量须为 1 到 1000 的整数；setPullCount() 恢复升级数量');
+  }
+  pullCountOverride = count;
+  resetAutoPull();
+  markDirty('pull');
+  if (currentView === 'pull') renderActive(true);
+  return multi();
+}
+function drainAutoPull() {
+  if (!S.auto || document.hidden) return;
+  const deadline = performance.now() + 4;
+  const before = S.stats.pulls;
+  while (autoAcc >= 1) {
+    if (!doPull(true, null, pullSpeed > 1)) { autoAcc = 0; pullShort = true; break; }
+    autoAcc--; meterBatches++; pullShort = false;
+    if (performance.now() >= deadline) break;
+  }
+  meterCards += S.stats.pulls - before;
+  if (autoAcc >= 1 && pullFrame === null) {
+    pullFrame = requestAnimationFrame(() => { pullFrame = null; drainAutoPull(); });
+  }
+}
+function advanceAutoPull(dt) {
+  if (!S.auto) return;
+  const iv = interval();
+  if (document.hidden) {
+    // Keep the original bounded, normal-speed background behaviour.
+    autoAcc += dt / iv;
+    let n = 0;
+    while (autoAcc >= 1 && n < 40) {
+      if (!doPull(true)) { autoAcc = 0; break; }
+      autoAcc--; n++;
+    }
+    if (n === 40) autoAcc = 0;
+    return;
+  }
+  const now = performance.now();
+  dt = Math.max(0, (now - autoClockStart) / 1000);
+  autoClockStart = now;
+  const base = dt / iv, rate = pullSpeed / iv;
+  // Keep fractional credit at low speeds, but do not replay a long stall in a burst.
+  const maxPending = pullSpeed === 1 ? 40 : Math.max(2, Math.ceil(rate));
+  autoAcc = Math.min(maxPending, autoAcc + base * pullSpeed);
+  drainAutoPull();
+  meterSeconds += dt; meterBase += base;
+  if (meterSeconds >= 2) {
+    pullSample = { speed: meterBatches / meterBase, cards: meterCards / meterSeconds };
+    meterSeconds = meterBase = meterBatches = meterCards = 0;
+  }
 }
 
 /* =================== SAVE =================== */
@@ -2365,14 +2455,15 @@ function playRare(big) {
 
 let lastResults = [];
 let lastResultMeta = null;
-function doPull(auto, originEl) {
+let nextFastNotice = 0;
+function doPull(auto, originEl, paced = false) {
   const p = curPack(), draw = settlePull(p);
   if (!draw) {
     if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(pullCost(p))} Token`);
     return false;
   }
   if (draw.structural) markDirty('dex');
-  afterPull(draw.res, auto, p, originEl);
+  afterPull(draw.res, auto, p, originEl, paced);
   return true;
 }
 function resultScore(r) { return r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
@@ -2383,7 +2474,7 @@ function cinePick(sorted, auto) {
   const r = sorted[0];
   if (r && (r.leak || r.t >= 6 || ((r.isNew || r.v === 3) && r.t >= 4) || r.prob <= 1e-4)) return r;
 }
-function afterPull(res, auto, p, originEl) {
+function afterPull(res, auto, p, originEl, paced = false) {
   const now = Date.now();
   // aggregate for display
   const map = new Map();
@@ -2411,15 +2502,17 @@ function afterPull(res, auto, p, originEl) {
   // reveal decision
   const best = lastResults[0];
   const cine = cinePick(lastResults, auto);
-  if (cine) { playRare(cine.t >= 7); showCine(cine); }
+  if (cine) { if (!paced || !cineOpen) { playRare(cine.t >= 7); showCine(cine); } }
   else {
     if (!auto) playPull();
     for (const r of lastResults.slice(0, 3)) {
       if (r.leak) continue;
       if (auto && !((r.isNew && r.t >= 3) || r.t >= 6 || (r.v === 3 && r.t >= 3))) continue;
+      if (paced && now < nextFastNotice) break;
       const m = MODEL_BY_ID[r.id];
       if (r.isNew && r.t >= 2) toast('新模型入库', `${TIERS[r.t].id} ${m.n}${r.v ? ' · ' + VARIANTS[r.v].name : ''}`, 'newCard');
       else if (r.t >= 5 || r.v >= 2) toast((r.v ? VARIANTS[r.v].name + '版 ' : '') + m.n, `${TIERS[r.t].id} · 数量 ×${fmt(r.n)}`, 'rareCard');
+      if (paced) nextFastNotice = now + 150;
     }
   }
   if (!auto && originEl && S.set.fx) burstAt(originEl, best ? TIER_HEX[best.t] : '#fff');
@@ -2495,6 +2588,14 @@ function renderPull() {
   renderResults();
   renderLog();
 }
+function renderAutoInfo() {
+  let text = '';
+  if (S.auto) {
+    const sample = pullSample ? '实测 ' + pullSample.speed.toFixed(1) + '× · ' + pullSample.cards.toFixed(1) + ' 张/秒' : '测速中';
+    text = '目标 ' + pullSpeed + '× · ' + sample + (pullShort ? ' · Token 不足' : '');
+  }
+  textIfChanged($('#autoInfo'), text);
+}
 function renderPullBox() {
   const p = curPack(), cost = pullCost(p);
   const btn = $('#pullBtn');
@@ -2502,10 +2603,11 @@ function renderPullBox() {
   btn.disabled = S.tokens < cost;
   $('#pullCost').textContent = `${multi()} 张 · ${fmt(cost)} Token`;
   $('#autoSw').setAttribute('aria-checked', S.auto);
-  $('#autoInfo').textContent = S.auto ? `每 ${interval().toFixed(2)} 秒一次` : '';
+  renderAutoInfo();
   $('#metaMulti').textContent = multi() + ' 张';
   $('#metaClone').textContent = '×' + fmt(cloneN());
-  $('#metaSpeed').textContent = interval().toFixed(3) + 's';
+  const ms = interval() * 1000 / pullSpeed;
+  $('#metaSpeed').textContent = ms < 100 ? ms.toFixed(1) + 'ms' : (ms / 1000).toFixed(3) + 's';
   $('#metaPulls').textContent = fmt(S.stats.pulls);
 }
 let resultNodes = new Map();
@@ -2634,15 +2736,21 @@ function renderModels() {
     next = row.el.nextElementSibling;
   }
 }
+function refreshTrainButtons(detail) {
+  const m = MODEL_BY_ID[detail.dataset.trainId], has = owned(m);
+  const single = $('[data-act=train]', detail), bulk = $('[data-act=train-max]', detail);
+  const next = trainCost(m), quote = trainQuote(m);
+  single.disabled = bulk.disabled = !quote.levels;
+  textIfChanged($('.cost', single), fmt(next));
+  textIfChanged($('.cost', bulk), quote.levels ? `至 Lv.${trainLv(m.id) + quote.levels} · ${fmt(quote.cost)} Token` : has ? 'Token 不足' : '未拥有');
+  bulk.trainOffer = quote;
+}
 function openDetail(id) {
   const m = MODEL_BY_ID[id]; if (!m) return;
-  const c = S.cards[m.id] || [0, 0, 0, 0];
-  const has = total(c) > 0;
-  const ls = labStats()[m.lab];
   const html = () => {
-    const tc = trainCost(m);
+    const c = S.cards[m.id] || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
     return `<div class="modal-h"><h3>${esc(m.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
-    <div class="detail">
+    <div class="detail" data-train-id="${esc(m.id)}">
       ${cardHTML(m, has ? bestVar(c) : 0, { count: total(c), locked: !has })}
       <div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
@@ -2660,7 +2768,8 @@ function openDetail(id) {
         </dl>
         <div class="vars">${VARIANTS.map((v, i) => `<div class="vcell${c[i] > 0 ? '' : ' off'}"><span>${v.name}</span><b>${fmt(c[i])}</b></div>`).join('')}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-          <button class="btn" data-act="train" data-cost="${tc}" ${!has || S.tokens < tc ? 'disabled' : ''}>微调至 Lv.${trainLv(m.id) + 1}<span class="cost">${fmt(tc)}</span></button>
+          <button class="btn" data-act="train">微调至 Lv.${trainLv(m.id) + 1}<span class="cost"></span></button>
+          <button class="btn ghost" data-act="train-max">一键微调<span class="cost"></span></button>
           <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${S.sig === m.id ? '已是镇馆模型' : '设为镇馆模型'}</button>
         </div>
         <p class="note" style="margin-top:8px">${m.t === 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
@@ -2668,8 +2777,17 @@ function openDetail(id) {
     </div>`;
   };
   const bind = el => {
+    refreshTrainButtons($('.detail', el));
     el.querySelector('.x-btn').onclick = closeModal;
     el.querySelector('[data-act=train]').onclick = () => { if (trainModel(m.id)) { el.innerHTML = html(); bind(el); } };
+    const bulk = $('[data-act=train-max]', el);
+    bulk.onclick = () => {
+      const {levels, cost} = bulk.trainOffer;
+      const result = trainModel(m.id, levels, cost);
+      if (result) toast('一键微调完成', `${m.n} 升至 Lv.${trainLv(m.id)}，消耗 ${fmt(result.cost)} Token`);
+      else toast('微调报价已更新', '本次未扣除 Token');
+      el.innerHTML = html(); bind(el);
+    };
     el.querySelector('[data-act=sig]').onclick = () => { S.sig = m.id; markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n); };
   };
   openModal(html(), bind);
@@ -2874,7 +2992,8 @@ function refreshAfford() {
     if (b.dataset.gpu === '') continue;
     const disabled = S.gpu < Number(b.dataset.gpu); if (b.disabled !== disabled) b.disabled = disabled;
   }
-  const mb = $('#modal [data-cost]'); if (mb && !mb.closest('.detail')?.querySelector('.card.locked')) mb.disabled = S.tokens < Number(mb.dataset.cost);
+  const detail = $('#modal [data-train-id]');
+  if (detail) refreshTrainButtons(detail);
 }
 
 /* =================== CLOUD (artifact db + user + sample) =================== */
@@ -3128,9 +3247,9 @@ document.addEventListener('pointercancel', () => { pointerDown = false; }, true)
 /* =================== BINDINGS =================== */
 function on(sel, ev, fn) { const el = $(sel); if (el) el.addEventListener(ev, fn); }
 on('#rail', 'click', e => { const b = e.target.closest('.nav-btn'); if (!b) return; const v = b.dataset.view; if (location.hash !== '#' + v) location.hash = '#' + v; else showView(v); });
-on('#packs', 'click', e => { const b = e.target.closest('[data-pack]'); if (!b) return; S.pack = Number(b.dataset.pack); playTick(); markDirty('pull'); renderActive(true); });
+on('#packs', 'click', e => { const b = e.target.closest('[data-pack]'); if (!b) return; const id = Number(b.dataset.pack); if (S.pack !== id) resetAutoPull(); S.pack = id; playTick(); markDirty('pull'); renderActive(true); });
 on('#pullBtn', 'click', e => { initAudio(); doPull(false, e.currentTarget); renderActive(true); });
-on('#autoSw', 'click', () => { initAudio(); S.auto = !S.auto; renderPullBox(); });
+on('#autoSw', 'click', () => { initAudio(); S.auto = !S.auto; resetAutoPull(); renderPullBox(); });
 for (const sel of ['#results', '#vault', '#benchHero', '#dexLabs', '#dexSeries']) on(sel, 'click', e => { const b = e.target.closest('[data-model]'); if (b) openDetail(b.dataset.model); });
 on('#sortSeg', 'click', e => { const b = e.target.closest('[data-sort]'); if (!b) return; vaultSort = b.dataset.sort; for (const x of $$('#sortSeg button')) x.setAttribute('aria-pressed', x === b); renderModels(); });
 on('#labFilter', 'click', e => { const b = e.target.closest('[data-lab]'); if (!b) return; vaultLab = b.dataset.lab; renderModels(); });
@@ -3227,7 +3346,7 @@ document.addEventListener('keydown', e => {
 
 
 /* =================== LOOP =================== */
-let lastT = Date.now(), autoAcc = 0, lastAch = 0, lastLocalSave = Date.now(), lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0, upKey = 0;
+let lastT = Date.now(), lastAch = 0, lastLocalSave = Date.now(), lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0, upKey = 0;
 function updateTimers() {
   const up = upInfo();
   if (up.ends !== upKey) { if (upKey) { markDirty('pull'); toast('UP 轮换', '本期 UP：' + LABS[up.lab].name, 'rotation'); } upKey = up.ends; }
@@ -3236,6 +3355,7 @@ function updateTimers() {
 }
 function advanceSimulation(now, dt) {
   if (dt > 60) {
+    resetAutoPull();
     const off = applyOffline(now - dt * 1000);
     if (off && off.earned > 0) toast('欢迎回来', `离开 ${fmtDur(off.sec)}，按 ${Math.round(off.rate * 100)}% 效率获得 ${fmt(off.earned)} Token`);
     dt = 0.1;
@@ -3245,11 +3365,7 @@ function advanceSimulation(now, dt) {
   }
   lastYield = computeYield();
   addTokens(lastYield * dt);
-  if (S.auto) {
-    autoAcc += dt; const iv = interval(); let k = 0;
-    while (autoAcc >= iv && k < 40) { autoAcc -= iv; k++; if (!doPull(true)) { autoAcc = 0; break; } }
-    if (k >= 40) autoAcc = 0;
-  }
+  advanceAutoPull(dt);
   if (S.autoReb && S.tech.autoReb && S.tokens >= rebirthCost()) doRebirth(true);
   if (S.autoBench && S.tech.autoBench && now >= nextAutoBench) { nextAutoBench = now + 8000; runBench(true); }
   if (!news && now >= nextNewsAt) spawnNews();
@@ -3264,18 +3380,18 @@ function tick() {
   if (now - lastCloudTick > 1000) { lastCloudTick = now; cloudTick(false); }
   if (document.hidden) return;
   renderHUD();
-  if (now - lastAfford > 250) { lastAfford = now; refreshAfford(); }
+  if (now - lastAfford > 250) { lastAfford = now; refreshAfford(); if (currentView === 'pull' && S.auto) renderAutoInfo(); }
   renderActive(false);
 }
 
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') { saveLocal(); cloudTick(true); } });
+document.addEventListener('visibilitychange', () => { resetAutoPull(); if (document.hidden) { saveLocal(); cloudTick(true); } });
 window.addEventListener('pagehide', () => saveLocal());
 
 /* =================== INIT =================== */
 let offlineReport = null;
 function installSave(st) {
   S = st; buffs = []; lastResults = []; lastResultMeta = null;
-  autoAcc = 0; lastT = Date.now(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
+  resetAutoPull(); lastT = Date.now(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
   news = null; nextNewsAt = lastT + 40000; offlineReport = null; vaultLab = 'all';
   invalidate(); lastYield = computeYield(); applyTheme(); renderNews();
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
