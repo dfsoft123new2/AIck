@@ -168,6 +168,8 @@ button.hud-chip:hover { border-color: var(--line-2); }
 .view { display: none; }
 .view.active { display: block; }
 .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.model-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-width:0; }
+#bulkCardsForm input[type=number] { width:min(100%,16ch); }
 .view-title { font-size: 26px; font-weight: 900; margin: 0; letter-spacing: .01em; line-height: 1.15; }
 .view-sub { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 70ch; }
 .world-online { margin:0; color:var(--ink-2); font-size:13px; white-space:nowrap; }
@@ -792,10 +794,13 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
             <h2 class="view-title" id="h-models">模型库</h2>
             <p class="view-sub">已部署的全部模型。点开任意一张卡可以微调升级，或设为你的镇馆模型。</p>
           </div>
-          <div class="seg" id="sortSeg">
-            <button data-sort="out" aria-pressed="true">按产出</button>
-            <button data-sort="tier" aria-pressed="false">按稀有度</button>
-            <button data-sort="count" aria-pressed="false">按数量</button>
+          <div class="model-actions">
+            <div class="seg" id="sortSeg">
+              <button data-sort="out" aria-pressed="true">按产出</button>
+              <button data-sort="tier" aria-pressed="false">按稀有度</button>
+              <button data-sort="count" aria-pressed="false">按数量</button>
+            </div>
+            <button class="btn ghost small hidden" id="openBulkCards" type="button" aria-haspopup="dialog" aria-controls="bulkCards">一键增加全部卡</button>
           </div>
         </div>
         <div class="toolbar"><div class="chipsel" id="labFilter"></div></div>
@@ -1030,6 +1035,18 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 <dialog id="adminPanel" class="world-dialog admin-dialog" aria-labelledby="adminTitle">
   <header><h2 id="adminTitle">全服管理</h2><form method="dialog"><button class="x-btn" aria-label="关闭全服管理">×</button></form></header>
   <div class="world-dialog-body" id="adminBody"></div>
+</dialog>
+<dialog id="bulkCards" class="world-dialog" aria-labelledby="bulkCardsTitle">
+  <header><h2 id="bulkCardsTitle">一键增加全部卡</h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
+  <form id="bulkCardsForm" class="world-dialog-body">
+    <div class="admin-tools">
+      <label>每款增加数量<input class="input" name="amount" type="number" min="1" max="1000000000" step="1" inputmode="numeric" required autofocus></label>
+      <label class="admin-check"><input type="checkbox" name="allVariants">每种变体各加同样数量</label>
+    </div>
+    <p class="note" id="bulkCardsSummary"></p>
+    <p class="note notice-status" id="bulkCardsStatus" role="status"></p>
+    <div class="world-tools"><button class="btn" type="submit">确认增加</button></div>
+  </form>
 </dialog>
 <dialog id="chatRoom" class="world-dialog" aria-labelledby="chatTitle">
   <header><h2 id="chatTitle">全服聊天室</h2><form method="dialog"><button class="x-btn" aria-label="关闭聊天室">×</button></form></header>
@@ -3836,6 +3853,8 @@ const moderation = { booting: !!WORLD_CONFIG, level: WORLD_CONFIG && lsGet(MODER
   next: 0, adminId: null, until: null, reason: null, offlineFrom: 0, ready: false };
 const missingWorldRPC = e => ['PGRST202','42883'].includes(e?.code);
 const verifiedAdmin = id => !!id && moderation.adminId === id;
+const BULK_CARD_LIMIT = 1_000_000_000;
+const canGrantAllCards = () => moderation.ready && !moderation.level && verifiedAdmin(cloud.uid);
 let moderationRevision = 0;
 
 function finishModerationBoot(skipOffline = false) {
@@ -3870,7 +3889,33 @@ function applyModerationStatus(data) {
     cloud.board.pending = []; cloud.board.changed = true; persistHits(cloud.board);
   }
   if (before !== level && cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
-  renderModerationLock(); renderModerationNotice(); markDirty('world');
+  renderModerationLock(); renderModerationNotice(); renderBulkCardAccess(); markDirty('world');
+}
+
+function bulkCardInventory(amount, allVariants) {
+  if (!Number.isInteger(amount) || amount < 1 || amount > BULK_CARD_LIMIT) return null;
+  const cards = {...S.cards}, count = allVariants ? VARIANTS.length : 1;
+  for (const m of MODELS) {
+    const copies = [...(cards[m.id] ?? [0,0,0,0])];
+    for (let v = 0; v < count; v++) {
+      copies[v] += amount;
+      if (!Number.isSafeInteger(copies[v])) return null;
+    }
+    cards[m.id] = copies;
+  }
+  return cards;
+}
+
+function storeBulkCardOrder(order) {
+  if (S.itemReceipts.includes(order.id)) return true;
+  if (typeof order.id !== 'string' || (order.variant !== null && order.variant !== 0)) return false;
+  const cards = bulkCardInventory(Number(order.amount), order.variant === null);
+  if (!cards) return false;
+  const next = {...S, cards, itemReceipts:[...S.itemReceipts,order.id].slice(-200), lastSave:Date.now()};
+  if (!lsSet(SAVE_KEY, JSON.stringify(next))) return false;
+  S = next;
+  invalidate(); markDirty(...VIEWS, 'hud'); cloudBump(true);
+  return true;
 }
 
 function applyItemOrder(order) {
@@ -3900,6 +3945,16 @@ async function syncModeration(b, force) {
   applyModerationStatus(data);
   if (moderation.level) return;
   for (const order of data.orders || []) {
+    if (order.kind === 'all_cards') {
+      const isNew = !S.itemReceipts.includes(order.id);
+      if (!storeBulkCardOrder(order)) {
+        if (isNew) toast('批量加卡未写入', '请检查存储空间或卡片数量上限。');
+        break;
+      }
+      if (isNew) toast('批量加卡已入库', `每款模型的${order.variant === 0 ? '标准卡' : '每种变体'}各增加 ${fmt(order.amount)} 张。`);
+      unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
+      continue;
+    }
     if (!applyItemOrder(order)) continue;
     if (!lsSet(SAVE_KEY, JSON.stringify(S))) break;
     unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
@@ -4192,7 +4247,7 @@ async function loadAdminDetail() {
     if (!adminDialog.open || adminTarget !== id) return;
     if (!r?.score) { box.textContent = '该实验室没有已上报的数据。'; return; }
     const p = sanitizePlayer(id,{...r.score,team:r.score.top_cards});
-    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',self_reset:'清档重玩',chat_delete:'移除聊天消息'};
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息'};
     box.innerHTML = `<h3>${esc(p.name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
       ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
       <dl class="profile-stats">${PROFILE_STATS.map(([k,n])=>`<div><dt>${n}</dt><dd>${displayScore(p,k)}</dd></div>`).join('')}</dl>
@@ -4232,6 +4287,53 @@ async function runAdminAction(action, id, args = {}) {
   } catch { const status = $('#adminActionStatus'); if (status) status.textContent = '操作未完成。请检查权限与输入。'; }
   finally { adminActionBusy = false; }
 }
+
+const bulkCardsDialog = $('#bulkCards'), bulkCardsForm = $('#bulkCardsForm');
+const bulkAmount = bulkCardsForm.elements.amount, bulkAllVariants = bulkCardsForm.elements.allVariants;
+const bulkCardsStatus = $('#bulkCardsStatus'), bulkCardsButton = $('#openBulkCards');
+let bulkCardsRequest = null, bulkCardsBusy = false;
+
+function renderBulkCardAccess() {
+  const allowed = canGrantAllCards();
+  bulkCardsButton.classList.toggle('hidden', !allowed);
+  if (!allowed && bulkCardsDialog.open) bulkCardsDialog.close();
+}
+
+function renderBulkCardSummary() {
+  const amount = bulkAmount.valueAsNumber, all = bulkAllVariants.checked;
+  const scope = `${fmt(MODELS.length)} 款模型 · ${all ? `${VARIANTS.length} 种变体` : '仅标准卡'}`;
+  $('#bulkCardsSummary').textContent = bulkAmount.validity.valid ? `${scope} · 共增加 ${fmt(MODELS.length * (all ? VARIANTS.length : 1) * amount)} 张` : scope;
+}
+
+bulkCardsButton.onclick = () => {
+  if (!canGrantAllCards() || bulkCardsDialog.open) return;
+  renderBulkCardSummary(); bulkCardsDialog.showModal();
+};
+bulkCardsForm.oninput = renderBulkCardSummary;
+bulkCardsForm.onsubmit = async e => {
+  e.preventDefault();
+  if (bulkCardsBusy || !canGrantAllCards() || !cloud.board?.client || !bulkCardsForm.reportValidity()) return;
+  const p_amount = bulkAmount.valueAsNumber, p_all_variants = bulkAllVariants.checked;
+  if (!bulkCardInventory(p_amount, p_all_variants)) { bulkCardsStatus.textContent = '增加后有卡片超过数量上限。'; return; }
+  if (bulkCardsRequest?.p_amount !== p_amount || bulkCardsRequest.p_all_variants !== p_all_variants) {
+    bulkCardsRequest = {p_id:newEventId(), p_amount, p_all_variants};
+  }
+  bulkCardsBusy = true;
+  const submit = bulkCardsForm.querySelector('[type=submit]');
+  submit.disabled = bulkAmount.disabled = bulkAllVariants.disabled = true;
+  bulkCardsStatus.textContent = '正在提交…';
+  try {
+    unwrap(await cloud.board.client.rpc('frontier_grant_all_cards',bulkCardsRequest));
+    bulkCardsRequest = null; bulkCardsStatus.textContent = '';
+    bulkCardsDialog.close(); toast('批量加卡已提交', '卡片将在同步后入库。');
+    moderation.next = 0; boardTick(true);
+  } catch (error) {
+    bulkCardsStatus.textContent = missingWorldRPC(error) ? '尚未安装批量加卡的数据库更新。' : '未确认提交成功，请核对权限或联网后重试。';
+  } finally {
+    bulkCardsBusy = false;
+    submit.disabled = bulkAmount.disabled = bulkAllVariants.disabled = false;
+  }
+};
 
 const chatDialog = $('#chatRoom'), chatList = $('#chatMessages'), chatText = $('#chatText');
 const chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
