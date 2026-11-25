@@ -153,6 +153,12 @@ button.hud-chip:hover { border-color: var(--line-2); }
   animation: pillPulse 1.4s ease-out infinite;
 }
 .news-pill .tag { background: var(--copper-ink); color: var(--copper); border-radius: 999px; padding: 1px 7px; font-size: 11px; }
+.news-slot { position: relative; margin-inline-start: auto; display: flex; align-items: center; gap: 6px; max-width: 100%; }
+.news-tip { position: absolute; top: 100%; right: 0; width: max-content; max-width: min(19rem, calc(100vw - 32px)); padding: 10px 14px; background: var(--bg-3); color: var(--ink); border: 1px solid var(--line-2); border-radius: var(--r-m); box-shadow: var(--shadow); }
+.news-tip strong, .news-tip span { display: block; }
+.news-tip span { color: var(--ink-2); font-size: 12px; margin-top: 3px; }
+.news-info { display: none; background: var(--bg-3); border: 1px solid var(--line-2); border-radius: var(--r-s); color: var(--ink); }
+@media (hover: none), (any-pointer: coarse) { .news-info { display: inline-block; min-height: 44px; min-width: 44px; } }
 @keyframes pillPulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--copper) 55%, transparent); } 100% { box-shadow: 0 0 0 12px transparent; } }
 
 .views { padding: 22px 24px 40px; max-width: 1280px; width: 100%; }
@@ -481,6 +487,13 @@ button.card { transition: transform .12s; }
 .pref:last-child { border-bottom: 0; }
 .pref .n { font-weight: 700; }
 .pref .d { font-size: 12.5px; color: var(--ink-3); }
+.cine-pref { display: block; }
+.cine-pref .mode { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.pref-checks { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 6px; }
+.pref-checks[hidden] { display: none; }
+.pref-checks label { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; cursor: pointer; }
+.pref-checks input { accent-color: var(--copper); margin: 0; }
+@media (any-pointer: coarse) { .pref-checks label { min-height: 44px; } }
 textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: var(--font-num); font-size: 12px; }
 
 /* ========== Overlays ========== */
@@ -621,7 +634,11 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
       <button class="hud-chip" id="hudMulBtn" title="查看全部倍率">倍率 <b id="hudMul">×1</b></button>
       <div class="buffs" id="hudBuffs"></div>
       <span class="hud-spacer"></span>
-      <button class="news-pill hidden" id="newsPill"><span class="tag">热点</span><span id="newsText"></span></button>
+      <div class="news-slot hidden" id="newsSlot">
+        <button class="news-pill" id="newsPill" aria-describedby="newsTip"><span class="tag">热点</span><span id="newsText"></span></button>
+        <button class="news-info" id="newsInfo" aria-controls="newsTip" aria-expanded="false" aria-label="热点详情">详情</button>
+        <div class="news-tip" id="newsTip" role="tooltip" hidden><strong id="newsEffect"></strong><span id="newsTiming"></span></div>
+      </div>
     </header>
 
     <main class="views">
@@ -842,6 +859,8 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
             <li>评测第 25 关起门槛每关 ×1.3，第 16 次迭代起费用每次 ×5。高光日志改为批量写入，评测选队不再全库排序。</li>
             <li>满卡库时跳过屏外卡片的排版与绘制。连抽复用高光日志行，卡池概率区间只计算一次。</li>
           </ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 热点详情与显示设置</h4>
+          <ul><li>悬停热点可预览奖励和实际持续时间，手机可点「详情」。抽卡过场可按稀有度自选，默认仍按原规则播放。</li><li>新增「屏蔽次要信息」，可分别隐藏六类弹窗和抽卡页高光记录。不影响奖励与记录。</li></ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -1413,17 +1432,17 @@ const BENCHES = [
 ];
 
 const NEWS = [
-  { type: 'frenzy', w: 26, title: '发布会之夜', desc: '全部产出 ×7，持续 30 秒', dur: 30, mul: 7 },
-  { type: 'lab', w: 22, title: '{lab} 深夜上新', desc: '{lab} 的模型产出 ×15，持续 45 秒', dur: 45, mul: 15 },
-  { type: 'sale', w: 14, title: 'GPU 降价潮', desc: '卡池费用 −50%，持续 40 秒', dur: 40, mul: 0.5 },
-  { type: 'rush', w: 14, title: '算力现货到港', desc: '自动抽卡速度 ×3，持续 30 秒', dur: 30, mul: 3 },
-  { type: 'luck', w: 12, title: '榜单大洗牌', desc: '变体概率 ×5，持续 30 秒', dur: 30, mul: 5 },
+  { type: 'frenzy', w: 26, title: '发布会之夜', desc: '全部产出 ×7', dur: 30, mul: 7 },
+  { type: 'lab', w: 22, title: '{lab} 深夜上新', desc: '{lab} 的模型产出 ×15', dur: 45, mul: 15 },
+  { type: 'sale', w: 14, title: 'GPU 降价潮', desc: '卡池费用 −50%', dur: 40, mul: 0.5 },
+  { type: 'rush', w: 14, title: '算力现货到港', desc: '自动抽卡速度 ×3', dur: 30, mul: 3 },
+  { type: 'luck', w: 12, title: '榜单大洗牌', desc: '变体概率 ×5', dur: 30, mul: 5 },
   { type: 'cash', w: 10, title: '融资到账', desc: '立即获得 3 分钟产出' },
   { type: 'gpu', w: 2, title: '显卡黄牛落网', desc: '获得 1 枚 GPU 芯片' },
-  { type: 'uplab', w: 12, title: 'UP 加急', desc: '本期 UP 实验室的模型产出 ×20，持续 45 秒', dur: 45, mul: 20 },
-  { type: 'bench', w: 8, title: '评测集疑似泄题', desc: '评测战力 ×3，持续 60 秒', dur: 60, mul: 3 },
-  { type: 'train', w: 8, title: '开源社区共建', desc: '微调费用 −60%，持续 40 秒', dur: 40, mul: 0.4 },
-  { type: 'leak', w: 5, title: '爆料大 V 发帖', desc: '权重泄露概率 ×5，持续 30 秒', dur: 30, mul: 5 },
+  { type: 'uplab', w: 12, title: 'UP 加急', desc: '本期 UP：{lab} 的模型产出 ×20', dur: 45, mul: 20 },
+  { type: 'bench', w: 8, title: '评测集疑似泄题', desc: '评测战力 ×3', dur: 60, mul: 3 },
+  { type: 'train', w: 8, title: '开源社区共建', desc: '微调费用 −60%', dur: 40, mul: 0.4 },
+  { type: 'leak', w: 5, title: '爆料大 V 发帖', desc: '权重泄露概率 ×5', dur: 30, mul: 5 },
   { type: 'pity', w: 6, title: '保底补偿', desc: '当前卡池的保底进度推进 25%' }
 ];
 
@@ -1694,6 +1713,12 @@ const SAVE_KEY = 'frontier-pull-save-v1';
 // Decide the starter from the evaluated rarity, not the historical grouping in the list.
 const STARTER = MODELS_BY_TIER[0].find(m => m.id === 'eliza') || MODELS_BY_TIER[0][0];
 function randomLabName() { return '实验室-' + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0'); }
+const CINE_TIERS = [...TIERS.map(t => t.id), 'LEAK'];
+const INFO_GROUPS = { newCard: '新模型入库', rareCard: '稀有卡与变体', achievement: '成就达成', news: '热点领取通知', rotation: 'UP 轮换', autoBench: '自动评测通过', log: '抽卡页高光记录' };
+const LEGACY_PULL_MUTES = ['newCard', 'rareCard', 'autoBench'];
+function mutedInfo() { return S.set.mutedInfo ?? (S.set.toast ? [] : LEGACY_PULL_MUTES); }
+function isInfoMuted(key) { return !!key && mutedInfo().includes(key); }
+function defaultCinePrefs() { return { custom: false, tiers: [...TIERS.slice(6).map(t => t.id), 'LEAK'] }; }
 function defaultState() {
   return {
     v: 1, created: Date.now(), lastSave: Date.now(),
@@ -1706,7 +1731,7 @@ function defaultState() {
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
     name: randomLabName(), sig: null, log: [], rare: [],
-    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, theme: 'auto' }
+    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, theme: 'auto', cine: undefined, mutedInfo: undefined }
   };
 }
 function mergeState(base, saved) {
@@ -1720,6 +1745,10 @@ function mergeState(base, saved) {
   return base;
 }
 function sanitizeState(st) {
+  if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
+  const cine = st.set.cine;
+  st.set.cine = Array.isArray(cine?.tiers) ? {custom: cine.custom === true, tiers: CINE_TIERS.filter(id => cine.tiers.includes(id))} : undefined;
+  st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
   const clean = {};
   for (const [id, arr] of Object.entries(st.cards || {})) {
     if (!MODEL_BY_ID[id] || !Array.isArray(arr)) continue;
@@ -1761,8 +1790,9 @@ function buffMul(type, lab) {
   for (const b of buffs) if (b.type === type && (!lab || b.lab === lab)) m *= b.mul;
   return m;
 }
+function buffSeconds(base) { return base * (1 + 0.2 * S.tech.news); }
 function addBuff(b) {
-  const dur = (b.dur || 30) * (1 + 0.2 * S.tech.news);
+  const dur = buffSeconds(b.dur || 30);
   buffs.push({ type: b.type, mul: b.mul, lab: b.lab || null, label: b.label, until: Date.now() + dur * 1000 });
   if (b.type === 'lab') invalidateProduction();
   markDirty('hud');
@@ -2019,7 +2049,7 @@ function runBench(auto) {
   benchCooldown = Date.now() + 2500;
   if (win) {
     S.stage++; S.gpu += info.gpu;
-    if (!auto || S.set.toast) toast(`${info.name} 通过`, `得分 ${fmt(score)}，获得 ${info.gpu} 枚 GPU 芯片，产出永久 ×1.15`);
+    toast(`${info.name} 通过`, `得分 ${fmt(score)}，获得 ${info.gpu} 枚 GPU 芯片，产出永久 ×1.15`, auto ? 'autoBench' : null);
     playRare(false);
     cloudBump(false);
   } else if (!auto) {
@@ -2042,18 +2072,33 @@ function spawnNews() {
   renderNews();
 }
 function newsText(s, lab) { return s.replace(/\{lab\}/g, LABS[lab].name); }
+function newsCash() { return Math.max(1000, lastYield * 180); }
+function newsPity(p) {
+  const goal = pityN(p);
+  return Math.min(goal - 1, (S.pity[p.id] || 0) + Math.ceil(goal * 0.25));
+}
+function newsEffect({ def, lab }) {
+  const effect = newsText(def.desc, def.type === 'uplab' ? upInfo().lab : lab);
+  if (def.type === 'cash') return `${effect}（约 ${fmt(newsCash())} Token）`;
+  if (def.type === 'pity') {
+    const p = curPack();
+    return `${effect}：${p.name} ${S.pity[p.id] || 0} → ${newsPity(p)} / ${pityN(p)}`;
+  }
+  return effect;
+}
+function newsTiming(def) { return def.dur ? `领取后持续 ${Math.round(buffSeconds(def.dur))} 秒` : '领取后立即生效'; }
 function claimNews() {
   if (!news) return;
   const { def, lab } = news;
-  const title = newsText(def.title, lab), desc = newsText(def.desc, lab);
-  if (def.type === 'cash') addTokens(Math.max(1000, lastYield * 180));
+  const title = newsText(def.title, lab), desc = newsEffect(news) + (def.dur ? ' · ' + newsTiming(def) : '');
+  if (def.type === 'cash') addTokens(newsCash());
   else if (def.type === 'gpu') S.gpu += 1;
-  else if (def.type === 'pity') { const p = curPack(), pn = pityN(p); S.pity[p.id] = Math.min(pn - 1, (S.pity[p.id] || 0) + Math.ceil(pn * 0.25)); }
+  else if (def.type === 'pity') { const p = curPack(); S.pity[p.id] = newsPity(p); }
   else if (def.type === 'uplab') { const up = upInfo().lab; addBuff({ type: 'lab', mul: def.mul, dur: def.dur, lab: up, label: LABS[up].name + ' ×' + def.mul }); }
   else addBuff({ type: def.type, mul: def.mul, dur: def.dur, lab: def.type === 'lab' ? lab : null, label: def.type === 'lab' ? LABS[lab].name + ' ×' + def.mul : title });
   S.stats.news++;
   news = null; scheduleNews(); renderNews();
-  toast(title, desc);
+  toast(title, desc, 'news');
   playRare(false);
   markDirty('hud', 'pull');
 }
@@ -2089,7 +2134,7 @@ function checkAch() {
     if (S.ach[a.id]) continue;
     let ok = false;
     try { ok = a.ok(); } catch (e) {}
-    if (ok) { S.ach[a.id] = Date.now(); S.gpu += a.r; got = true; toast('成就达成：' + a.n, `${a.d}，获得 ${a.r} 枚 GPU 芯片`); }
+    if (ok) { S.ach[a.id] = Date.now(); S.gpu += a.r; got = true; toast('成就达成：' + a.n, `${a.d}，获得 ${a.r} 枚 GPU 芯片`, 'achievement'); }
   }
   if (got) { playRare(false); markDirty('feats', 'research', 'hud'); }
 }
@@ -2245,12 +2290,13 @@ function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; 
 function tierTag(t) { return `<span class="tag tier-text${t === 9 ? ' tier-q' : ''}" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
 
 /* =================== TOAST / MODAL / FX =================== */
-function toast(title, desc, isPull) {
-  if (isPull && !S.set.toast) return;
+function toast(title, desc, category) {
+  if (isInfoMuted(category)) return;
   const box = $('#toasts');
   while (box.children.length >= 4) box.firstElementChild.remove();
   const el = document.createElement('div');
   el.className = 'toast';
+  if (category) el.dataset.info = category;
   el.innerHTML = `<div class="t">${esc(title)}</div>${desc ? `<div class="d">${esc(desc)}</div>` : ''}`;
   box.appendChild(el);
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3400);
@@ -2330,6 +2376,13 @@ function doPull(auto, originEl) {
   return true;
 }
 function resultScore(r) { return r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
+function cinePick(sorted, auto) {
+  if (auto && !S.set.autoCine) return;
+  const prefs = S.set.cine;
+  if (prefs?.custom) return sorted.find(r => prefs.tiers.includes(r.leak ? 'LEAK' : TIERS[r.t].id));
+  const r = sorted[0];
+  if (r && (r.leak || r.t >= 6 || ((r.isNew || r.v === 3) && r.t >= 4) || r.prob <= 1e-4)) return r;
+}
 function afterPull(res, auto, p, originEl) {
   const now = Date.now();
   // aggregate for display
@@ -2357,20 +2410,16 @@ function afterPull(res, auto, p, originEl) {
   }
   // reveal decision
   const best = lastResults[0];
-  let cine = false;
-  if (best) {
-    cine = best.leak || best.t >= 6 || (best.isNew && best.t >= 4) || (best.v === 3 && best.t >= 4) || best.prob <= 1e-4;
-    if (auto && !S.set.autoCine) cine = false;
-  }
-  if (cine) { playRare(best.t >= 7); showCine(best); }
+  const cine = cinePick(lastResults, auto);
+  if (cine) { playRare(cine.t >= 7); showCine(cine); }
   else {
     if (!auto) playPull();
     for (const r of lastResults.slice(0, 3)) {
       if (r.leak) continue;
       if (auto && !((r.isNew && r.t >= 3) || r.t >= 6 || (r.v === 3 && r.t >= 3))) continue;
       const m = MODEL_BY_ID[r.id];
-      if (r.isNew && r.t >= 2) toast('新模型入库', `${TIERS[r.t].id} ${m.n}${r.v ? ' · ' + VARIANTS[r.v].name : ''}`, true);
-      else if (r.t >= 5 || r.v >= 2) toast((r.v ? VARIANTS[r.v].name + '版 ' : '') + m.n, `${TIERS[r.t].id} · 数量 ×${fmt(r.n)}`, true);
+      if (r.isNew && r.t >= 2) toast('新模型入库', `${TIERS[r.t].id} ${m.n}${r.v ? ' · ' + VARIANTS[r.v].name : ''}`, 'newCard');
+      else if (r.t >= 5 || r.v >= 2) toast((r.v ? VARIANTS[r.v].name + '版 ' : '') + m.n, `${TIERS[r.t].id} · 数量 ×${fmt(r.n)}`, 'rareCard');
     }
   }
   if (!auto && originEl && S.set.fx) burstAt(originEl, best ? TIER_HEX[best.t] : '#fff');
@@ -2397,10 +2446,17 @@ function renderHUD() {
   hud.dotResearch.classList.toggle('hidden', !canTech && S.tokens < rebirthCost());
 }
 function renderNews() {
-  const pill = $('#newsPill');
-  if (!news) { pill.classList.add('hidden'); return; }
-  pill.classList.remove('hidden');
-  $('#newsText').textContent = newsText(news.def.title, news.lab) + ' · ' + Math.max(0, Math.ceil((news.expires - Date.now()) / 1000)) + 's';
+  $('#newsSlot').classList.toggle('hidden', !news);
+  if (!news) { setNewsTip(false); return; }
+  textIfChanged($('#newsText'), newsText(news.def.title, news.lab) + ' · ' + Math.max(0, Math.ceil((news.expires - Date.now()) / 1000)) + 's');
+  textIfChanged($('#newsEffect'), newsEffect(news));
+  textIfChanged($('#newsTiming'), newsTiming(news.def));
+}
+function setNewsTip(open) {
+  if (open && !news) return;
+  if ($('#newsTip').hidden === !open) return;
+  $('#newsTip').hidden = !open;
+  $('#newsInfo').setAttribute('aria-expanded', String(open));
 }
 function showMulBreakdown() {
   const rows = mulParts().map(([k, v]) => `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line)"><span>${esc(k)}</span><b class="num">×${fmtMul(v)}</b></div>`).join('');
@@ -2489,6 +2545,9 @@ function renderResults() {
 let previousLogHead, previousLogMinute;
 function renderLog() {
   const el = $('#pullLog');
+  const panel = el.closest('.panel');
+  panel.hidden = isInfoMuted('log');
+  if (panel.hidden) return;
   const minute = Math.floor(Date.now() / 60000);
   if (previousLogHead === S.log[0] && previousLogMinute === minute) return;
   previousLogHead = S.log[0]; previousLogMinute = minute;
@@ -2785,11 +2844,15 @@ const PREFS = [
   ['sfx', '抽卡音效', '每次手动抽卡和升级时播放'],
   ['rareSfx', '稀有音效', '稀有卡、成就和热点时播放'],
   ['fx', '视觉特效', '稀有卡过场、粒子与卡片翻转'],
-  ['autoCine', '自动抽卡过场', '自动抽卡时遇到稀有卡也播放过场'],
-  ['toast', '抽卡提示', '右下角弹出新模型与稀有卡提示']
+  ['autoCine', '自动抽卡过场', '自动抽卡也按选定的过场规则播放']
 ];
 function renderPrefs() {
+  const cine = S.set.cine ?? defaultCinePrefs();
+  const tiers = CINE_TIERS.map(id => `<label><input type="checkbox" data-cine-tier="${id}" ${cine.tiers.includes(id) ? 'checked' : ''}>${id === 'LEAK' ? '权重泄露' : id}</label>`).join('');
+  const mutes = Object.entries(INFO_GROUPS).map(([key, name]) => `<label><input type="checkbox" data-mute="${key}" ${isInfoMuted(key) ? 'checked' : ''}>${name}</label>`).join('');
   $('#prefList').innerHTML = PREFS.map(([k, n, d]) => `<div class="pref"><div><div class="n">${n}</div><div class="d">${d}</div></div><button class="switch" role="switch" aria-checked="${!!S.set[k]}" data-pref="${k}" aria-label="${n}"></button></div>`).join('') +
+    `<div class="pref cine-pref"><div class="mode"><div class="n" id="cineModeLabel">抽卡过场稀有度</div><div class="seg" role="group" aria-labelledby="cineModeLabel">${[['default','原规则'],['custom','自选档位']].map(([mode,label]) => `<button data-cine-mode="${mode}" aria-pressed="${(mode === 'custom') === cine.custom}">${label}</button>`).join('')}</div></div><div id="cineTiers" class="pref-checks" role="group" aria-label="播放过场的档位" ${cine.custom ? '' : 'hidden'}>${tiers}</div></div>
+    <div class="pref cine-pref"><div class="n" id="muteLabel">屏蔽次要信息</div><div class="pref-checks" role="group" aria-labelledby="muteLabel">${mutes}</div></div>` +
     `<div class="pref"><div><div class="n">主题</div><div class="d">默认跟随系统</div></div><div class="seg" id="themeSeg">${[['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme-opt="${k}" aria-pressed="${S.set.theme === k}">${n}</button>`).join('')}</div></div>`;
   $('#saveSide').textContent = '每 5 秒自动保存到本机' + (cloud.ready ? '，并同步到云端' : '');
 }
@@ -3095,10 +3158,28 @@ on('#dailyPanel', 'click', e => { if (e.target.closest('#dailyBtn')) { initAudio
 on('#codeBtn', 'click', () => { redeem($('#codeIn').value); $('#codeIn').value = ''; });
 on('#codeIn', 'keydown', e => { if (e.key === 'Enter') { redeem($('#codeIn').value); $('#codeIn').value = ''; } });
 on('#prefList', 'click', e => {
+  const mode = e.target.closest('[data-cine-mode]');
+  if (mode) {
+    const cine = S.set.cine ??= defaultCinePrefs();
+    cine.custom = mode.dataset.cineMode === 'custom';
+    for (const b of $$('[data-cine-mode]')) b.setAttribute('aria-pressed', b === mode);
+    $('#cineTiers').hidden = !cine.custom;
+    saveLocal(); return;
+  }
   const b = e.target.closest('[data-pref]');
   if (b) { const k = b.dataset.pref; S.set[k] = !S.set[k]; b.setAttribute('aria-checked', S.set[k]); return; }
   const t = e.target.closest('[data-theme-opt]');
   if (t) { S.set.theme = t.dataset.themeOpt; applyTheme(); renderPrefs(); }
+});
+on('#prefList', 'change', e => {
+  const { cineTier, mute } = e.target.dataset;
+  if (cineTier) S.set.cine.tiers = $$('#cineTiers input:checked').map(x => x.dataset.cineTier);
+  else if (mute) {
+    S.set.mutedInfo = $$('#prefList [data-mute]:checked').map(x => x.dataset.mute);
+    if (e.target.checked) for (const el of $$('#toasts [data-info]')) { if (el.dataset.info === mute) el.remove(); }
+    if (mute === 'log') markDirty('pull');
+  } else return;
+  saveLocal();
 });
 on('#exportBtn', 'click', async () => {
   const text = saveLocal();
@@ -3127,10 +3208,16 @@ on('#resetBtn', 'click', () => {
 });
 on('#hudMulBtn', 'click', showMulBreakdown);
 on('#newsPill', 'click', () => { initAudio(); claimNews(); });
+on('#newsSlot', 'pointerenter', e => { if (e.pointerType === 'mouse') setNewsTip(true); });
+on('#newsSlot', 'pointerleave', e => { if (e.pointerType === 'mouse' && !$('#newsPill').matches(':focus-visible')) setNewsTip(false); });
+on('#newsPill', 'focus', () => setNewsTip(true));
+on('#newsSlot', 'focusout', e => { if (!e.currentTarget.contains(e.relatedTarget)) setNewsTip(false); });
+on('#newsInfo', 'click', () => setNewsTip($('#newsTip').hidden));
+document.addEventListener('pointerdown', e => { if (!$('#newsTip').hidden && !e.target.closest('#newsSlot')) setNewsTip(false); });
 on('#cine', 'click', closeCine);
 on('#modalBack', 'click', e => { if (e.target.id === 'modalBack') closeModal(); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if ($('#cine').classList.contains('open')) closeCine(); else if ($('#modalBack').classList.contains('open')) closeModal(); return; }
+  if (e.key === 'Escape') { setNewsTip(false); if ($('#cine').classList.contains('open')) closeCine(); else if ($('#modalBack').classList.contains('open')) closeModal(); return; }
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName);
   if (typing) return;
   if ((e.key === ' ' || e.code === 'Space') && currentView === 'pull' && !$('#modalBack').classList.contains('open') && document.activeElement === document.body) {
@@ -3143,7 +3230,7 @@ document.addEventListener('keydown', e => {
 let lastT = Date.now(), autoAcc = 0, lastAch = 0, lastLocalSave = Date.now(), lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0, upKey = 0;
 function updateTimers() {
   const up = upInfo();
-  if (up.ends !== upKey) { if (upKey) { markDirty('pull'); toast('UP 轮换', '本期 UP：' + LABS[up.lab].name); } upKey = up.ends; }
+  if (up.ends !== upKey) { if (upKey) { markDirty('pull'); toast('UP 轮换', '本期 UP：' + LABS[up.lab].name, 'rotation'); } upKey = up.ends; }
   const t = $('#upTimer'); if (t) t.textContent = clock(up.ends - Date.now());
   if (currentView === 'bench' && benchCooldown && Date.now() >= benchCooldown) { benchCooldown = 0; markDirty('bench'); }
 }
