@@ -105,6 +105,7 @@ button { cursor: pointer; }
   position: sticky; top: env(safe-area-inset-top, 0px); height: calc(100vh - env(safe-area-inset-top, 0px)); height: calc(100dvh - env(safe-area-inset-top, 0px));
   display: flex; flex-direction: column; align-items: stretch; gap: 2px;
   padding: 14px 8px; background: var(--bg-2); border-right: 1px solid var(--line); z-index: 30;
+  overflow-y: auto;
 }
 .logo { display: grid; place-items: center; margin: 0 0 14px; }
 .logo-mark { width: 52px; height: 52px; }
@@ -664,7 +665,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .rail {
     position: fixed; top: auto; bottom: 0; left: 0; right: 0; height: auto; z-index: 40;
     flex-direction: row; padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px)); border-right: 0; border-top: 1px solid var(--line);
-    overflow-x: auto; gap: 0;
+    overflow-x: auto; overflow-y: hidden; gap: 0;
   }
   .logo, .rail-foot { display: none; }
   .nav-btn { flex: 1 0 auto; min-width: 56px; font-size: 11px; padding: 6px 2px; }
@@ -701,6 +702,20 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 </div>
 
 <div class="shell">
+  <!--
+  Chat button icon: Lucide message-square (ISC).
+  Copyright (c) 2026 Lucide Icons and Contributors
+  Permission to use, copy, modify, and/or distribute this software for any
+  purpose with or without fee is hereby granted, provided that the above
+  copyright notice and this permission notice appear in all copies.
+  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  -->
   <nav class="rail" id="rail" aria-label="主导航">
     <div class="logo"><svg class="logo-mark" viewBox="0 0 120 120" aria-hidden="true" id="railMark"></svg><div class="logo-text">算力祈愿</div></div>
     <button class="nav-btn" data-view="pull"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8.5" y="8.5" width="7" height="7" rx="1"/><path d="M9 1.5v2.5M15 1.5v2.5M9 20v2.5M15 20v2.5M1.5 9h2.5M1.5 15h2.5M20 9h2.5M20 15h2.5"/></svg>抽卡</button>
@@ -709,6 +724,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
     <button class="nav-btn" data-view="bench"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><path d="M19 8l2-2-2-2"/></svg>评测</button>
     <button class="nav-btn" data-view="research"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg>研发<span class="nav-dot hidden" id="dotResearch"></span></button>
     <button class="nav-btn" data-view="world"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>全服</button>
+    <button class="nav-btn hidden" id="openChat" type="button" aria-haspopup="dialog" aria-controls="chatRoom"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>聊天</button>
     <button class="nav-btn" data-view="feats"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"/></svg>成就<span class="nav-dot hidden" id="dotFeats"></span></button>
     <button class="nav-btn" data-view="prefs"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>设置</button>
     <div class="rail-foot"><span class="cloud-led" id="cloudLed"></span><span id="cloudText">本地</span></div>
@@ -865,7 +881,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
                 <div class="muted" style="font-size:12.5px">实验室名称</div>
                 <div class="name-edit"><input class="input" id="labName" maxlength="16" placeholder="给实验室起个名字"><button class="btn small" id="saveName">保存</button></div>
                 <p class="note" id="sigNote" style="margin:8px 0 0">在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。</p>
-                <div class="world-tools"><button class="btn ghost small" id="openChat" type="button" hidden>聊天室</button><button class="btn small" id="openAdmin" type="button" hidden>管理实验室</button></div>
+                <div class="world-tools"><button class="btn small" id="openAdmin" type="button" hidden>管理实验室</button></div>
                 <details id="ownIdentity" hidden><summary>我的玩家 ID</summary><code id="ownPlayerId"></code></details>
               </div>
             </div>
@@ -971,7 +987,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           <h4><time datetime="2026-11-25">2026-11-25</time> · 经典模型档案</h4>
           <ul><li>新增 64 款 N 至 UR 的经典模型，每款附原论文及论文日期。图鉴扩至 393 款、1,572 个变体格，旧卡编号不变。</li><li>新增 14 个收藏系列，涵盖视觉、语音、代码、翻译、图文理解等方向。凑齐一组可获得 4%–6% 基础系列产出加成。</li><li>档位、保底和变体概率不变；扩池会改变指定模型的抽取概率。图鉴榜仍按点亮格数排名，超过 1,316 格即可排在旧版满图鉴成绩前面。</li><li>修正全服奇点进度显示：里程碑抽数与进度条、倍率统一口径，全服上报总抽数另列。</li></ul>
           <h4><time datetime="2026-11-25">2026-11-25</time> · 全服管理、聊天与处分通知</h4>
-          <ul><li>全服页新增聊天室。昵称旁标记管理员、限制或封禁状态。</li><li>管理员可在限制或封禁时给目标玩家附一条私密通知。限制通知独立弹出；封禁通知在锁定界面显示。离线未读通知会在玩家下次联网时送达。</li></ul>
+          <ul><li>新增全服聊天室，主导航「全服」与「成就」之间的「聊天」可直接打开。昵称旁标记管理员、限制或封禁状态。</li><li>管理员可在限制或封禁时给目标玩家附一条私密通知。限制通知独立弹出；封禁通知在锁定界面显示。离线未读通知会在玩家下次联网时送达。</li></ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -3988,7 +4004,6 @@ function renderWorld() {
   $('#mySig').innerHTML = sig ? cardHTML(sig, bestVar(S.cards[sig.id] || [0, 0, 0, 0]), { mini: true }) : `<div class="card mini locked"><div class="art">${logoSVGInline()}</div><div class="body"><div class="nm">未设置</div><div class="cd">镇馆模型</div></div></div>`;
   $('#sigNote').textContent = sig ? `镇馆模型：${sig.n}。在模型库里可以随时更换。` : '在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。';
   $('#ownIdentity').hidden = !cloud.board || !cloud.uid;
-  $('#openChat').hidden = !cloud.board || !cloud.uid;
   $('#openAdmin').hidden = !verifiedAdmin(cloud.uid);
   textIfChanged($('#ownPlayerId'), cloud.uid || '');
   const scoreNotice = moderation.level === 1 ? '限制：不参与全服排名' : cloud.board?.scoreIssue === 'FRONTIER_SCORE_HELD' ? '成绩待管理员复核' :
@@ -4220,6 +4235,8 @@ async function runAdminAction(action, id, args = {}) {
 
 const chatDialog = $('#chatRoom'), chatList = $('#chatMessages'), chatText = $('#chatText');
 const chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
+const chatButton = $('#openChat');
+chatButton.classList.toggle('hidden', !WORLD_CONFIG);
 let chatRead = false, chatWrite = false, chatTimer, chatState = null, chatDraftId = null;
 const chatErrors = {
   FRONTIER_CHAT_RATE:'发得太快，请稍等再试。', FRONTIER_CHAT_RESTRICTED:'封禁期间不能使用聊天室。',
@@ -4239,7 +4256,11 @@ function renderChat(messages) {
   chatState = state;
 }
 async function updateChat(action = 'list', args = {}) {
-  if (!chatDialog.open || !cloud.board?.client || moderation.level === 2) return false;
+  if (!chatDialog.open || moderation.level === 2) return false;
+  if (!cloud.uid || !cloud.board?.client) {
+    chatStatus.textContent = cloud.status === 'warn' ? '暂时无法连接。' : '正在连接…';
+    return false;
+  }
   try {
     const reply = await cloud.board.client.rpc('frontier_chat',{p_action:action,...args});
     if (!chatDialog.open) return !reply.error;
@@ -4257,8 +4278,8 @@ async function pollChat() {
   chatRead = true;
   try { await updateChat(); } finally { chatRead = false; }
 }
-$('#openChat').onclick = () => {
-  if (!cloud.uid || moderation.level === 2) return;
+chatButton.onclick = () => {
+  if (!WORLD_CONFIG || chatDialog.open || moderation.level === 2) return;
   chatList.replaceChildren(); chatState = null; chatStatus.textContent = '正在连接…';
   chatDialog.showModal(); pollChat(); chatTimer = setInterval(pollChat, 6000);
 };
@@ -4320,7 +4341,7 @@ document.addEventListener('pointercancel', () => { pointerDown = false; }, true)
 
 /* =================== BINDINGS =================== */
 function on(sel, ev, fn) { const el = $(sel); if (el) el.addEventListener(ev, fn); }
-on('#rail', 'click', e => { const b = e.target.closest('.nav-btn'); if (!b) return; const v = b.dataset.view; if (location.hash !== '#' + v) location.hash = '#' + v; else showView(v); });
+on('#rail', 'click', e => { const b = e.target.closest('.nav-btn[data-view]'); if (!b) return; const v = b.dataset.view; if (location.hash !== '#' + v) location.hash = '#' + v; else showView(v); });
 on('#packs', 'click', e => { const b = e.target.closest('[data-pack]'); if (!b) return; const id = Number(b.dataset.pack); if (S.pack !== id) resetAutoPull(); S.pack = id; playTick(); markDirty('pull'); renderActive(true); });
 on('#pullBtn', 'click', e => { initAudio(); doPull(false, e.currentTarget); renderActive(true); });
 on('#autoSw', 'click', () => { initAudio(); S.auto = !S.auto; resetAutoPull(); renderPullBox(); });
