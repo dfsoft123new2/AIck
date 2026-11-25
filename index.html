@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -592,6 +593,33 @@ button.card { transition: transform .12s; }
 .chat-tool svg { display:block; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; }
 .community-wide { flex:1 1 100%; }
 .community-wide input { width:100%; }
+.community-mode { flex:1 0 100%; min-width:0; padding:0; margin:0; border:0; color:var(--ink-2); font-size:13px; }
+.community-mode > div { display:flex; flex-wrap:wrap; gap:6px; margin-block:5px 6px; }
+.community-mode label { display:flex; align-items:center; gap:7px; min-height:44px; padding-inline:10px; border:1px solid var(--line-2); border-radius:var(--r-s); cursor:pointer; }
+.community-mode label:has(:checked) { border-color:var(--copper); color:var(--ink); background:var(--bg-3); }
+.community-mode input { margin:0; accent-color:var(--copper); }
+.packet-wallet { margin-bottom:12px; }
+.packet-wallet .note, .packet-debit { overflow-wrap:anywhere; }
+.packet-wallet .world-tools { align-items:center; justify-content:space-between; }
+.community-packet.lucky { border-inline-start-color:var(--gold); }
+.packet-details-table { width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:12px; }
+.packet-details-table th,.packet-details-table td { padding:8px 6px; text-align:start; vertical-align:top; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
+.packet-details-table th { color:var(--ink-2); font-size:12px; }
+.packet-details-table th:nth-child(2) { width:34%; }
+.packet-details-table th:last-child,.packet-details-table td:last-child { text-align:end; }
+.packet-details-table time { color:var(--ink-2); font-size:12px; }
+.lab-title { display:inline-block; max-inline-size:12em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; border-inline-start:1px solid var(--title-color); padding-inline:5px; background:color-mix(in srgb,var(--title-color) 17%,var(--bg-3)); color:var(--ink); font-size:12px; font-weight:650; border-radius:3px; }
+.lab-title-picker { margin-block:8px; }
+.lab-title-picker .world-tools { align-items:center; flex-wrap:wrap; }
+.lab-title-picker select { max-width:min(100%,18em); }
+.lab-title-picker [hidden],.lab-title-picker #ownTitleBadge:empty { display:none; }
+.lab-title-inline { margin-inline-start:6px; }
+.admin-tools input[type=color] { inline-size:60px; block-size:40px; padding:4px; cursor:pointer; }
+.inventory-tools label { max-inline-size:100%; }
+.inventory-table { min-width:32rem; }
+.inventory-table th[scope=row] { font-size:13px; color:var(--ink); white-space:normal; overflow-wrap:anywhere; min-inline-size:8em; }
+.inventory-table td.val:last-child { color:var(--copper); }
+.inventory-table .tier-name { color:var(--ink-2); font-size:12px; }
 #communitySubject { overflow-wrap:anywhere; }
 .community-attachment { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-block:8px; }
 .community-attachment img { max-width:120px; max-height:88px; border-radius:var(--r-s); }
@@ -994,6 +1022,12 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
                 <div class="muted" style="font-size:12.5px">实验室名称</div>
                 <div class="name-edit"><input class="input" id="labName" maxlength="16" placeholder="给实验室起个名字"><button class="btn small" id="saveName">保存</button></div>
                 <p class="note" id="sigNote" style="margin:8px 0 0">在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。</p>
+                <p class="note" id="onlineGpuInfo" hidden></p>
+                <div class="lab-title-picker" id="ownTitles" hidden>
+                  <label for="titleChoice">佩戴称号</label>
+                  <div class="world-tools"><span id="ownTitleBadge"></span><select class="input" id="titleChoice" hidden></select></div>
+                  <p class="note notice-status" id="ownTitleStatus" role="status"></p>
+                </div>
                 <div class="world-tools"><button class="btn small" id="openAdmin" type="button" hidden>管理实验室</button></div>
                 <details id="ownIdentity" hidden><summary>我的玩家 ID</summary><code id="ownPlayerId"></code></details>
               </div>
@@ -1123,12 +1157,6 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
-          <div class="pref"><div><div class="n">导出存档</div><div class="d">把进度复制为一段文本，可在其他设备导入。</div></div><button class="btn ghost small" id="exportBtn">复制存档</button></div>
-          <div class="pref" style="display:block">
-            <div class="n">导入存档</div>
-            <textarea class="input" id="importText" placeholder="粘贴导出的存档文本" style="margin-top:8px"></textarea>
-            <button class="btn ghost small" id="importBtn" style="margin-top:8px">导入并覆盖当前进度</button>
-          </div>
           <div class="pref"><div><div class="n">重置进度</div><div class="d">清空全部卡片、升级和科技，无法恢复。</div></div><button class="btn danger small" id="resetBtn">重置</button></div>
         </div>
       </section>
@@ -1175,17 +1203,49 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 <dialog id="communityComposer" class="world-dialog" aria-labelledby="communityComposeTitle">
   <header><h2 id="communityComposeTitle"></h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
   <form id="communityForm" class="world-dialog-body">
+    <fieldset class="community-mode packet-wallet" id="packetWallet" hidden>
+      <legend>红包钱包</legend>
+      <div class="world-tools"><p class="note" id="packetWalletBalance" role="status"></p><button class="btn ghost small" id="packetWalletRefresh" type="button">刷新余额</button></div>
+      <label><input id="packetWalletDeposit" type="checkbox" disabled> 将后续在线 GPU、全服福利和领取的红包存入此钱包</label>
+    </fieldset>
     <div class="admin-tools">
+      <fieldset class="community-mode" id="communityPacketMode" hidden>
+        <legend>红包类型</legend>
+        <div><label><input type="radio" name="packetMode" value="fixed" checked>固定红包</label><label><input type="radio" name="packetMode" value="lucky">拼手气红包</label></div>
+      </fieldset>
       <label class="community-wide" id="communityTitleField">标题<input class="input" name="title" maxlength="60"></label>
       <label class="admin-note-input">正文<textarea class="input" name="message" rows="3" maxlength="500"></textarea></label>
       <label class="community-wide" id="communityImageField">附图<input class="input" type="file" name="image" accept="image/png,image/jpeg,image/webp"></label>
       <label>奖励<select class="input" name="kind"><option value="">不发放</option><option value="tokens">Token</option><option value="gpu">GPU</option></select></label>
-      <label id="communityAmountField" hidden>每人数量<input class="input" name="amount" type="number" min="1" step="1"></label>
+      <label id="communityAmountField" hidden><span id="communityAmountLabel">每人数量</span><input class="input" name="amount" type="number" min="1" step="1"></label>
       <label id="communityPacketSlots" hidden>红包份数<input class="input" name="slots" type="number" min="1" max="200" step="1" value="10"></label>
     </div>
+    <p class="note packet-debit" id="packetWalletDebit" hidden></p>
     <p class="note" id="communityComposeStatus" role="status"></p>
-    <button class="btn" type="submit">确认发布</button>
+    <button class="btn" id="communitySubmit" type="submit">确认发布</button>
   </form>
+</dialog>
+<dialog id="packetDetails" class="world-dialog" aria-labelledby="packetDetailsTitle">
+  <header><h2 id="packetDetailsTitle">红包领取详情</h2><form method="dialog"><button class="x-btn" aria-label="关闭" autofocus>×</button></form></header>
+  <div class="world-dialog-body">
+    <p class="note" id="packetDetailsSummary"></p>
+    <div id="packetDetailsBody"></div>
+    <p class="note notice-status" id="packetDetailsStatus" role="status"></p>
+    <button class="btn ghost small" type="button" id="packetRefresh">刷新明细</button>
+  </div>
+</dialog>
+<dialog id="inventoryDialog" class="world-dialog admin-dialog" aria-labelledby="inventoryHeading">
+  <header><h2 id="inventoryHeading">全服卡牌库存</h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
+  <div class="world-dialog-body">
+    <div class="admin-tools inventory-tools">
+      <label>筛选模型<input id="inventoryFilter" class="input" type="search" maxlength="48"></label>
+      <label>排序<select class="input" id="inventorySort"><option value="catalog">图鉴顺序</option><option value="count">总量从高到低</option></select></label>
+      <button id="inventoryRefresh" class="btn ghost small" type="button">刷新库存</button>
+    </div>
+    <p class="note" id="inventoryStatus" role="status"></p>
+    <div id="inventoryTable" class="admin-table" tabindex="0" aria-label="卡牌变体总量" hidden></div>
+    <div id="inventoryPaging" class="world-tools" hidden><button type="button" class="btn ghost small" id="inventoryPrev">上一页</button><span id="inventoryPage"></span><button type="button" class="btn ghost small" id="inventoryNext">下一页</button></div>
+  </div>
 </dialog>
 <dialog id="bulkCards" class="world-dialog" aria-labelledby="bulkCardsTitle">
   <header><h2 id="bulkCardsTitle">一键增加全部卡</h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
@@ -1891,6 +1951,7 @@ const TECH = [
   { key: 'pity', name: '保底协议', desc: '所有卡池的保底所需抽数 −10%。', max: 5, cost: lv => 4 + 3 * lv, eff: lv => `保底 ×${(1 - 0.1 * lv).toFixed(1)}` },
   { key: 'discount', name: '算力团购', desc: '所有卡池费用 −3%。', max: 10, cost: lv => 3 + 2 * lv, eff: lv => `卡池费用 −${3 * lv}%` },
   { key: 'news', name: '热点雷达', desc: '热点出现更频繁，效果持续更久。', max: 5, cost: lv => 3 + 2 * lv, eff: lv => `频率 ×${(1 / (1 - 0.12 * lv)).toFixed(2)}` },
+  { key: 'eventDuration', name: '事件延时', desc: '延长热点领取时间与限时效果，每级 +20%。', max: 5, cost: lv => 4 + 3 * lv, eff: lv => `事件时长 +${20 * lv}%` },
   { key: 'leak', name: '泄露追踪', desc: '抽到“权重泄露”卡的概率翻倍。', max: 5, cost: lv => 5 + 3 * lv, eff: lv => `泄露率 ×${Math.pow(2, lv)}` },
   { key: 'autoBench', name: '自动评测', desc: '解锁自动评测开关，每 8 秒自动挑战一次。', max: 1, cost: () => 8, eff: lv => lv ? '已解锁' : '未解锁' },
   { key: 'autoReb', name: '自动迭代', desc: '解锁自动版本迭代开关，Token 足够时自动迭代。', max: 1, cost: () => 12, eff: lv => lv ? '已解锁' : '未解锁' },
@@ -1956,6 +2017,7 @@ const ACH = [
   { id: 'tAleph', n: '超越奇点', d: '抽到任意 ℵ 超限级卡', r: 30, ok: () => S.stats.maxTier >= 8 },
   { id: 'alephAll', n: '宇宙尽头', d: '集齐全部 ℵ 超限级卡', r: 50, ok: () => MODELS_BY_TIER[8].every(owned) },
   { id: 'tQ', n: '?', d: '抽到任意未知档卡', r: 50, ok: () => S.stats.maxTier >= 9 },
+  { id: 'tBang', n: '视界回波', d: '获得「！」模型的任意变体', r: 10000, ok: () => ownedId('exclamation') },
   { id: 'legends', n: '传奇收藏家', d: '集齐全部 LR 模型', r: 10, ok: () => MODELS_BY_TIER[5].every(owned) },
   { id: 'mr20', n: '解封进行时', d: '集齐 20 张 MR 封印卡', r: 10, ok: () => MODELS_BY_TIER[6].filter(owned).length >= 20 },
   { id: 'mrAll', n: '封印全解', d: '集齐全部 MR 封印卡', r: 25, ok: () => MODELS_BY_TIER[6].every(owned) },
@@ -2271,7 +2333,7 @@ function defaultState() {
     tokens: 1000, lifetime: 0, gpu: 0,
     cards: { [STARTER.id]: [1, 0, 0, 0] }, train: {}, leaks: 0,
     up: { multi: 0, speed: 0, clone: 0, price: 0 },
-    tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0 },
+    tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, eventDuration: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0 },
     pack: 1, auto: false, autoReb: false, autoBench: false,
     pity: {}, rebirths: 0, stage: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
@@ -2291,6 +2353,8 @@ function mergeState(base, saved) {
   return base;
 }
 function sanitizeState(st) {
+  if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
+  st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
   const cine = st.set.cine;
   st.set.cine = Array.isArray(cine?.tiers) ? {custom: cine.custom === true, tiers: CINE_TIERS.filter(id => cine.tiers.includes(id))} : undefined;
@@ -2338,9 +2402,10 @@ function buffMul(type, lab) {
   for (const b of buffs) if (b.type === type && (!lab || b.lab === lab)) m *= b.mul;
   return m;
 }
-function buffSeconds(base) { return base * (1 + 0.2 * S.tech.news); }
+function eventDurationMul() { return (5 + S.tech.eventDuration) / 5; }
+function buffSeconds(base, event = false) { return base * (1 + 0.2 * S.tech.news) * (event ? eventDurationMul() : 1); }
 function addBuff(b) {
-  const dur = buffSeconds(b.dur || 30);
+  const dur = buffSeconds(b.dur || 30, b.event);
   buffs.push({ type: b.type, mul: b.mul, lab: b.lab || null, label: b.label, until: Date.now() + dur * 1000 });
   if (b.type === 'lab') invalidateProduction();
   markDirty('hud');
@@ -2681,7 +2746,7 @@ function spawnNews() {
   for (const n of NEWS) { r -= n.w; if (r <= 0) { def = n; break; } }
   const labKeys = Object.keys(LABS).filter(k => k !== 'humanity' && LAB_MODELS[k].some(owned));
   const lab = labKeys.length ? pick(labKeys) : 'openai';
-  news = { def, lab, expires: Date.now() + 20000 };
+  news = { def, lab, expires: Date.now() + 20000 * eventDurationMul() };
   renderNews();
 }
 function newsText(s, lab) { return s.replace(/\{lab\}/g, LABS[lab].name); }
@@ -2699,7 +2764,7 @@ function newsEffect({ def, lab }) {
   }
   return effect;
 }
-function newsTiming(def) { return def.dur ? `领取后持续 ${Math.round(buffSeconds(def.dur))} 秒` : '领取后立即生效'; }
+function newsTiming(def) { return def.dur ? `领取后持续 ${Math.round(buffSeconds(def.dur,true))} 秒` : '领取后立即生效'; }
 function claimNews() {
   if (!news) return;
   const { def, lab } = news;
@@ -2707,8 +2772,8 @@ function claimNews() {
   if (def.type === 'cash') addTokens(newsCash());
   else if (def.type === 'gpu') S.gpu += 1;
   else if (def.type === 'pity') { const p = curPack(); S.pity[p.id] = newsPity(p); }
-  else if (def.type === 'uplab') { const up = upInfo().lab; addBuff({ type: 'lab', mul: def.mul, dur: def.dur, lab: up, label: LABS[up].name + ' ×' + def.mul }); }
-  else addBuff({ type: def.type, mul: def.mul, dur: def.dur, lab: def.type === 'lab' ? lab : null, label: def.type === 'lab' ? LABS[lab].name + ' ×' + def.mul : title });
+  else if (def.type === 'uplab') { const up = upInfo().lab; addBuff({ type: 'lab', mul: def.mul, dur: def.dur, event: true, lab: up, label: LABS[up].name + ' ×' + def.mul }); }
+  else addBuff({ type: def.type, mul: def.mul, dur: def.dur, event: true, lab: def.type === 'lab' ? lab : null, label: def.type === 'lab' ? LABS[lab].name + ' ×' + def.mul : title });
   S.stats.news++;
   news = null; scheduleNews(); renderNews();
   toast(title, desc, 'news');
@@ -4060,7 +4125,10 @@ async function boardTick(force = false) {
         b.pending = []; b.changed = true; persistHits(b);
       }
       cloud.lastPlayerWrite = now;
+      if (!b.scoreIssue) syncInventorySnapshot(b,uid);
     }
+    pulseOnlineGPU(b);
+    if (writeScore) syncGPUReview(b,uid);
     if (writeHits && b.pending.length && !b.scoreIssue && !moderation.level) {
       const batch = b.pending.slice(0, 64), ids = new Set(batch.map(r => r.event));
       unwrap(await b.client.from('leaderboard_hits').upsert(batch.map(r => ({player_id: uid, event_id: r.event, name: r.name,
@@ -4083,6 +4151,40 @@ async function boardTick(force = false) {
     b.next = Date.now() + Math.min(120000, 2000 * 2 ** Math.min(6, b.errors++));
     setCloudStatus('warn');
   } finally { b.busy = false; }
+}
+
+async function syncGPUReview(b,uid) {
+  if (verifiedAdmin(uid)) return;
+  if (b.gpuReview?.uid !== uid) b.gpuReview = {uid,next:0};
+  const report = b.gpuReview;
+  if (report.busy || Date.now()<report.next || !Number.isFinite(S.gpu)) return;
+  report.busy = true;
+  report.next = Date.now()+55000;
+  try { unwrap(await b.client.rpc('frontier_report_gpu',{p_gpu:S.gpu})); }
+  catch (error) { if (missingWorldRPC(error)) report.next = Date.now()+120000; }
+  finally { report.busy = false; }
+}
+
+async function syncInventorySnapshot(b, uid) {
+  if (b.inventory?.uid !== uid) b.inventory = {uid,next:0};
+  const pending = b.inventory;
+  if (pending.busy || Date.now()<pending.next) return;
+  const cards = {};
+  for (const m of MODELS) {
+    const counts = S.cards[m.id];
+    if (!counts) continue;
+    const safe = VARIANTS.map((_,v) => num(Math.floor(counts[v]),Number.MAX_SAFE_INTEGER));
+    if (safe.some(Boolean)) cards[m.id] = safe;
+  }
+  const p_epoch = S.saveEpoch || null, json = JSON.stringify([p_epoch,cards]);
+  if (pending.json === json) return;
+  pending.next = Date.now()+45000; pending.busy = true;
+  try {
+    unwrap(await b.client.rpc('frontier_inventory_sync',{p_cards:cards,p_epoch}));
+    pending.json = json;
+  } catch (error) {
+    if (missingWorldRPC(error)) pending.next = Date.now()+120000;
+  } finally { pending.busy = false; }
 }
 
 async function readLabProfile(uid) {
@@ -4204,16 +4306,46 @@ function applyItemOrder(order) {
   return true;
 }
 
+function privateGiftLabel(kind, amount, model, variant) {
+  if (kind === 'gpu' || kind === 'tokens') return `${Number(amount).toLocaleString('zh-CN')} ${kind === 'gpu' ? 'GPU' : 'Token'}`;
+  return `${MODEL_BY_ID[model].n} · ${VARIANTS[variant].name} × ${Number(amount).toLocaleString('zh-CN')}`;
+}
+
+function storePrivateGift(order) {
+  if (typeof order.id !== 'string') return false;
+  if (S.itemReceipts.includes(order.id)) return true;
+  const amount = Number(order.amount), kind = order.kind.slice(5);
+  if (!Number.isSafeInteger(amount) || amount<1) return false;
+  const next = {...S, itemReceipts:[...S.itemReceipts,order.id].slice(-200), lastSave:Date.now()};
+  if (kind === 'gpu' || kind === 'tokens') {
+    next[kind] += amount;
+    if (!Number.isFinite(next[kind]) || next[kind] <= S[kind]) return false;
+  } else if (kind === 'card' && Object.hasOwn(MODEL_BY_ID,order.model) && [0,1,2,3].includes(order.variant)) {
+    const counts = [...(S.cards[order.model] ?? [0,0,0,0])];
+    counts[order.variant] += amount;
+    if (!Number.isSafeInteger(counts[order.variant])) return false;
+    next.cards = {...S.cards,[order.model]:counts};
+  } else return false;
+  if (!lsSet(SAVE_KEY,JSON.stringify(next))) return false;
+  S = next; invalidate(); markDirty(...VIEWS, 'hud'); cloudBump(true);
+  return true;
+}
+
 function startInbox(b) {
   function check(force = false) {
-    if (!cloud.uid || !navigator.onLine || document.hidden) return;
+    if (!cloud.uid || !navigator.onLine) return;
+    pulseOnlineGPU(b);
+    if (document.hidden) return;
     syncModeration(b, force).catch(() => {});
     syncCommunityInbox(b, force).catch(() => {});
   }
   setInterval(check, 10000);
   const wake = () => check(true);
-  window.addEventListener('online', wake);
-  window.addEventListener('pageshow', wake);
+  const reconnect = () => { pauseOnlineGPU(b); wake(); };
+  window.addEventListener('offline', () => pauseOnlineGPU(b));
+  window.addEventListener('pagehide', () => pauseOnlineGPU(b));
+  window.addEventListener('online', reconnect);
+  window.addEventListener('pageshow', reconnect);
   window.addEventListener('focus', wake);
   document.addEventListener('visibilitychange', wake);
 }
@@ -4246,6 +4378,13 @@ async function readModerationStatus(b) {
       unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
       continue;
     }
+    if (['gift_gpu','gift_tokens','gift_card'].includes(order.kind)) {
+      const isNew = !S.itemReceipts.includes(order.id);
+      if (!storePrivateGift(order)) continue;
+      if (isNew) toast('收到管理员赠礼', privateGiftLabel(order.kind.slice(5),order.amount,order.model,order.variant));
+      unwrap(await b.client.rpc('frontier_session',{p_action:'ack',p_order:order.id}));
+      continue;
+    }
     if (!applyItemOrder(order)) continue;
     if (!lsSet(SAVE_KEY, JSON.stringify(S))) break;
     unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
@@ -4258,6 +4397,48 @@ async function changeModerationSession(action, order = null) {
   // A status poll started before this reply can still carry the old notice.
   moderationRevision++;
   applyModerationStatus(data);
+}
+
+function pauseOnlineGPU(b) {
+  const pulse = b.onlineGPU;
+  if (!pulse) return;
+  pulse.revision++; pulse.resume = true; pulse.next = 0;
+  markDirty('world');
+}
+
+async function pulseOnlineGPU(b) {
+  if (!b.client || !cloud.uid || !navigator.onLine || !moderation.ready || moderation.level === 2) return;
+  if (b.onlineGPU?.uid !== cloud.uid) b.onlineGPU = {uid:cloud.uid,tab:newEventId(),next:0,revision:0,resume:true};
+  const pulse = b.onlineGPU;
+  if (pulse.busy || Date.now() < pulse.next) return;
+  const revision = pulse.revision;
+  const current = () => pulse.uid === cloud.uid && revision === pulse.revision && moderation.level !== 2;
+  pulse.next = Date.now()+9000; pulse.busy = true;
+  try {
+    const data = unwrap(await b.client.rpc('frontier_online_gpu',{p_tab:pulse.tab,p_resume:pulse.resume}));
+    if (!current()) return;
+    pulse.resume = false; pulse.data = data;
+    markDirty('world');
+    if (data.gift && storeCommunityGift(data.gift,false)) {
+      // A lost acknowledgement retries the same persisted receipt, not a new credit.
+      await b.client.rpc('frontier_online_gpu',{p_ack:data.gift.id});
+    }
+  } catch (error) {
+    if (!current()) return;
+    pulse.resume = true;
+    if (missingWorldRPC(error)) pulse.next = Date.now()+120000;
+    markDirty('world');
+  } finally { pulse.busy = false; }
+}
+
+function renderOnlineGPU() {
+  const line = $('#onlineGpuInfo'), pulse = cloud.board?.onlineGPU;
+  const data = pulse?.uid === cloud.uid ? pulse?.data : null;
+  line.hidden = !data;
+  if (!data) return;
+  const rate = (data.rate_tenths / 10).toLocaleString('zh-CN',{maximumFractionDigits:1});
+  const time = navigator.onLine && !pulse.resume ? `${data.seconds}／60 秒` : '已暂停';
+  textIfChanged(line,`在线奖励：${rate} GPU／分钟 · ${time}`);
 }
 
 const PROFILE_STATS = [ ['tps','每秒产出',' Token/s'], ['dex','图鉴',' 格'], ['stage','评测通关',' 关'],
@@ -4303,11 +4484,11 @@ async function loadLabProfile(id) {
   else dlg.querySelector('.x-btn').focus({preventScroll:true});
   body.scrollTop = 0;
   try {
-    const p = await readLabProfile(id);
+    const [p, titles] = await Promise.all([readLabProfile(id),readWornTitles([id]).catch(() => ({}))]);
     if (seq !== profileRequest || !dlg.open) return;
     if (!p) { body.innerHTML = '<p class="profile-note" role="status">这个实验室还没有公开成绩。</p>'; return; }
     const [role, label] = labRole(p.id,p.level);
-    $('#profileTitle').innerHTML = styledLabName(p.name,role);
+    $('#profileTitle').innerHTML = styledLabName(p.name,role) + labTitleBadge(titles[id],true);
     $('#profileCaption').textContent = label ? `实验室档案 · ${label}` : '实验室档案';
     if (p.level) { body.innerHTML = '<p class="profile-note">此实验室暂不参与公开榜单。</p>'; return; }
     body.innerHTML = `<dl class="profile-stats">${PROFILE_STATS.map(([key,label,unit])=>`<div><dt>${label}</dt><dd>${p[key] == null ? '未上报' : fmt(p[key])+unit}</dd></div>`).join('')}</dl><h3>战力最强的模型</h3>${profileTeamHTML(p)}`;
@@ -4350,6 +4531,8 @@ function renderWorld() {
   $('#mySig').innerHTML = sig ? cardHTML(sig, bestVar(S.cards[sig.id] || [0, 0, 0, 0]), { mini: true }) : `<div class="card mini locked"><div class="art">${logoSVGInline()}</div><div class="body"><div class="nm">未设置</div><div class="cd">镇馆模型</div></div></div>`;
   $('#sigNote').textContent = sig ? `镇馆模型：${sig.n}。在模型库里可以随时更换。` : '在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。';
   $('#ownIdentity').hidden = !cloud.board || !cloud.uid;
+  renderOwnTitles();
+  renderOnlineGPU();
   $('#openAdmin').hidden = !verifiedAdmin(cloud.uid);
   textIfChanged($('#ownPlayerId'), cloud.uid || '');
   const scoreNotice = moderation.level === 1 ? '限制：不参与全服排名' : cloud.board?.scoreIssue === 'FRONTIER_SCORE_HELD' ? '成绩待管理员复核' :
@@ -4380,21 +4563,22 @@ function renderWorld() {
   const board = cloud.board?.boards[key];
   const top = board?.rows || list?.slice(0,10);
   const mine = board?.mine || list?.find(p => p.me);
+  const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare.map(r=>({...r,owner:p.id}))).sort((a,b) => b.ts - a.ts);
+  refreshWorldTitles([...(top || []).map(p=>p.id),mine?.id,...(feed || []).slice(0,30).map(r=>r.owner)]);
   const rank = board?.rank ?? (mine && list && cloud.players.length < 500 ? list.indexOf(mine)+1 : null);
   const label = { tps:'Token/s', dex:'图鉴格', stage:'评测关', pulls:'抽卡数', power:'评测战力', achievements:'已解锁成就', lifetime:'累计 Token' }[key];
   function row(p, n, own) {
     const sm = p.sig ? MODEL_BY_ID[p.sig] : null;
-    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
+    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : '正在读取…';
   const ownRow = mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || '尚未上报成绩'}</td></tr>`;
   setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : waiting}</div>`);
-  const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare.map(r=>({...r,owner:p.id}))).sort((a,b) => b.ts - a.ts);
   setWorldList($('#feed'), feed?.length ? feed.slice(0, 30).map(r => {
     const m = modelOrLeak(r.id);
     const what = r.id === 'leak' ? '泄露的权重' : `${VARIANTS[r.v].name}版 ${m.n}`;
     const pack = PACKS.find(p => p.id === r.pack);
-    return `<div class="feed-row" data-event="${esc(r.event || r.ts)}"><span class="ic">${sharedArt(m)}</span><span>${labLink(r.owner,r.name)} 在${esc(pack.name)}抽到了 ${esc(what)}<br><small>单抽约 1/${Math.round(1/r.chance).toLocaleString('zh-CN')}</small></span><span class="when">${ago(r.ts)}</span></div>`;
+    return `<div class="feed-row" data-event="${esc(r.event || r.ts)}"><span class="ic">${sharedArt(m)}</span><span>${labLink(r.owner,r.name)}${labTitleBadge(titlePublic[r.owner],true)} 在${esc(pack.name)}抽到了 ${esc(what)}<br><small>单抽约 1/${Math.round(1/r.chance).toLocaleString('zh-CN')}</small></span><span class="when">${ago(r.ts)}</span></div>`;
   }).join('') : `<div class="empty">${feed ? '还没有单抽概率低至十万分之一的记录。' : waiting}</div>`);
 }
 function logoSVGInline() { return `<svg viewBox="0 0 120 120">${logoSVG()}</svg>`; }
@@ -4486,7 +4670,9 @@ $('#clearLockedSave').onclick = async e => {
 };
 
 const adminDialog = $('#adminPanel'), adminBody = $('#adminBody');
-const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力'};
+const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力',high_gpu:'GPU 超过 10 万'};
+const adminModelOptions = () => MODELS.map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join('');
+const adminVariantOptions = () => VARIANTS.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('');
 let adminSeq = 0, adminOffset = 0, adminResults = [], adminTarget = null;
 let privateNoticeRequest = null, privateNoticeBusy = false;
 async function adminRPC(action, args = {}) {
@@ -4505,22 +4691,31 @@ $('#openAdmin').onclick = () => {
     <label>排序<select class="input" name="sort">${PROFILE_STATS.map(([k,n])=>`<option value="${k}"${k==='pulls'?' selected':''}>${n}</option>`).join('')}</select></label>
     <label class="admin-check"><input type="checkbox" name="flagged">仅疑似异常</label><button class="btn small" type="submit">查询</button>
     </form>
-    <div class="world-tools"><button class="btn ghost small" id="openWorldNoticeComposer" type="button">发布全服通知</button></div>
+    <div class="world-tools"><button class="btn ghost small" id="openWorldNoticeComposer" type="button">发布全服通知</button><button class="btn ghost small" id="openInventory" type="button">全服卡牌库存</button></div>
     <details class="admin-notice" id="adminNotice">
-      <summary>发送私密通知</summary>
+      <summary>发送私密通知或赠礼</summary>
       <form class="admin-tools" id="adminNoticeForm">
         <label class="notice-recipient">玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}" title="36 位玩家 ID（UUID）"></label>
         <p class="note notice-status" id="adminNoticeRecipient"></p>
-        <label class="admin-note-input">通知内容<textarea class="input" name="body" maxlength="500" rows="3" required></textarea></label>
+        <label class="admin-note-input">通知内容<textarea class="input" name="body" maxlength="500" rows="3"></textarea></label>
+        <label>赠礼<select class="input" name="kind"><option value="">不附道具</option><option value="gpu">GPU</option><option value="tokens">Token</option><option value="card">模型卡</option></select></label>
+        <label class="gift-card" hidden>模型<select class="input" name="model" disabled>${adminModelOptions()}</select></label>
+        <label class="gift-card" hidden>变体<select class="input" name="variant" disabled>${adminVariantOptions()}</select></label>
+        <label id="adminGiftAmount" hidden>增加数量<input class="input" name="amount" type="number" min="1" max="9007199254740991" step="1" disabled required></label>
         <button class="btn small" type="submit">发送通知</button>
       </form><p class="note notice-status" id="adminNoticeStatus" role="status"></p>
     </details>
+    ${adminTitlePanelHTML()}
     <p class="note" id="adminStatus" role="status"></p><div class="admin-table" id="adminResults"></div>
     <div class="world-tools"><button class="btn ghost small" id="adminPrev" type="button" disabled>上一页</button><button class="btn ghost small" id="adminNext" type="button" disabled>下一页</button></div>
     <section class="admin-detail" id="adminDetail" aria-label="玩家详情"></section>`;
   $('#adminFind').onsubmit = e => { e.preventDefault(); adminOffset = 0; loadAdminList(); };
   $('#openWorldNoticeComposer').onclick = () => openCommunityComposer('world');
-  $('#adminNoticeForm').onsubmit = sendPrivateNotice;
+  $('#openInventory').onclick = openInventoryTotals;
+  const noticeForm = $('#adminNoticeForm');
+  noticeForm.onsubmit = sendPrivateNotice;
+  noticeForm.elements.kind.onchange = () => renderPrivateGiftFields(noticeForm);
+  bindAdminTitlePanel();
   $('#adminNoticeForm [name=player]').oninput = () => { $('#adminNoticeRecipient').textContent = ''; };
   $('#adminPrev').onclick = () => { adminOffset = Math.max(0,adminOffset-25); loadAdminList(); };
   $('#adminNext').onclick = () => { adminOffset += 25; loadAdminList(); };
@@ -4533,40 +4728,53 @@ $('#openAdmin').onclick = () => {
 adminDialog.addEventListener('close', () => { adminSeq++; adminTarget = null; });
 function composePrivateNotice(id, name) {
   if (privateNoticeBusy) return;
-  const form = $('#adminNoticeForm'), {player,body} = form.elements;
-  if (player.value && player.value !== id && body.value.trim() && !window.confirm('切换收件人并清除未发送的通知？')) return;
-  if (player.value !== id) body.value = '';
+  const form = $('#adminNoticeForm'), {player,body,kind,amount} = form.elements;
+  if (player.value && player.value !== id && (body.value.trim() || kind.value) && !window.confirm('切换收件人并清除未发送的内容？')) return;
+  if (player.value !== id) { body.value = kind.value = amount.value = ''; renderPrivateGiftFields(form); }
   player.value = id;
   $('#adminNoticeRecipient').textContent = `收件人：${name}`;
   $('#adminNoticeStatus').textContent = '';
   $('#adminNotice').open = true;
   body.focus();
 }
+function renderPrivateGiftFields(form) {
+  const {kind,amount,model,variant} = form.elements;
+  amount.disabled = $('#adminGiftAmount').hidden = !kind.value;
+  model.disabled = model.parentElement.hidden = variant.disabled = variant.parentElement.hidden = kind.value !== 'card';
+  form.querySelector('[type=submit]').textContent = kind.value ? '发送赠礼' : '发送通知';
+}
 async function sendPrivateNotice(e) {
   e.preventDefault();
   if (privateNoticeBusy || !verifiedAdmin(cloud.uid) || !cloud.board?.client) return;
   const form = e.currentTarget, status = $('#adminNoticeStatus');
-  const {player,body} = form.elements, submit = e.submitter || form.querySelector('[type=submit]');
+  const {player,body,kind,amount,model,variant} = form.elements;
   const p_player = player.value.toLowerCase(), p_body = body.value.trim();
-  if (!p_body) { status.textContent = '请输入通知内容。'; body.focus(); return; }
-  if (!window.confirm(`向玩家 ${p_player} 发送私密通知？`)) return;
-  if (privateNoticeRequest?.p_player !== p_player || privateNoticeRequest.p_body !== p_body) {
-    privateNoticeRequest = {p_player, p_body, p_id:newEventId()};
-  }
+  const p_kind = kind.value, p_amount = amount.valueAsNumber;
+  const p_model = p_kind === 'card' ? model.value : null, p_variant = p_kind === 'card' ? Number(variant.value) : null;
+  if (!p_body && !p_kind) { status.textContent = '请输入通知内容或选择赠礼。'; body.focus(); return; }
+  if (p_kind && (!canGrantAllCards() || !Number.isSafeInteger(p_amount) || p_amount < 1)) return;
+  const item = p_kind ? privateGiftLabel(p_kind,p_amount,p_model,p_variant) : '';
+  if (!window.confirm(`向玩家 ${p_player} ${item ? `赠送 ${item}${p_body ? '并附私密通知' : ''}` : '发送私密通知'}？`)) return;
+  const payload = p_kind ? {p_player,p_body,p_kind,p_amount,p_model,p_variant} : {p_player,p_body};
+  const snapshot = JSON.stringify([cloud.uid,payload]);
+  if (privateNoticeRequest?.snapshot !== snapshot) privateNoticeRequest = {snapshot,id:newEventId()};
   privateNoticeBusy = true;
-  submit.disabled = player.readOnly = body.readOnly = true;
+  const controls = [...form.elements].filter(el => !el.disabled);
+  controls.forEach(el => { el.disabled = true; });
   status.textContent = '正在发送…';
   try {
-    unwrap(await cloud.board.client.rpc('frontier_send_notice',privateNoticeRequest));
+    unwrap(await cloud.board.client.rpc(p_kind ? 'frontier_send_private_gift' : 'frontier_send_notice',{...payload,p_id:privateNoticeRequest.id}));
     privateNoticeRequest = null;
-    body.value = '';
-    status.textContent = '已发送。该玩家联网时会收到通知。';
+    body.value = kind.value = amount.value = '';
+    status.textContent = p_kind ? '赠礼已发送。该玩家下次同步后会收到。' : '已发送。该玩家联网时会收到通知。';
   } catch (error) {
-    status.textContent = missingWorldRPC(error) ? '尚未安装私密通知的数据库更新。' :
+    status.textContent = missingWorldRPC(error) ? '尚未安装私密通知和赠礼的数据库更新。' :
+      error?.message === 'FRONTIER_TOO_MANY_PENDING' ? '该玩家还有太多未领取的道具，请稍后重试。' :
       error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : '未确认发送成功，请核对权限或联网后重试。';
   } finally {
     privateNoticeBusy = false;
-    submit.disabled = player.readOnly = body.readOnly = false;
+    controls.forEach(el => { el.disabled = false; });
+    if (form.isConnected) renderPrivateGiftFields(form);
   }
 }
 async function loadAdminList() {
@@ -4591,10 +4799,12 @@ async function loadAdminDetail() {
     if (!adminDialog.open || adminTarget !== id) return;
     if (!r?.score) { box.textContent = '该实验室没有已上报的数据。'; return; }
     const p = sanitizePlayer(id,{...r.score,team:r.score.top_cards});
-    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知'};
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理 GPU 标记'};
     box.innerHTML = `<h3>${esc(p.name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
-      <button type="button" class="btn ghost small" id="adminComposeNotice">发私密通知</button>
+      <button type="button" class="btn ghost small" id="adminComposeNotice">发私密通知或赠礼</button>
+      <button type="button" class="btn ghost small" id="adminComposeTitle">发放称号</button>
       ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
+      <div id="adminPlayerControls" aria-label="红包权限与 GPU 复核" aria-live="polite"></div>
       <dl class="profile-stats">${PROFILE_STATS.map(([k,n])=>`<div><dt>${n}</dt><dd>${displayScore(p,k)}</dd></div>`).join('')}</dl>
       ${profileTeamHTML(p)}
       <form id="adminBan" class="admin-tools"><label>级别<select class="input" name="level"><option value="1">一级限制</option><option value="2">二级封禁</option></select></label>
@@ -4604,12 +4814,14 @@ async function loadAdminDetail() {
       <label class="admin-note-input">给玩家的通知<textarea class="input" name="notice" maxlength="500" rows="3" placeholder="选填；在独立通知界面显示"></textarea></label>
       <button class="btn small">执行</button><button class="btn ghost small" id="adminUnban" type="button"${r.hold?'':' disabled'}>解封</button></form>
       <form id="adminItems" class="admin-tools"><label>道具<select class="input" name="kind"><option value="gpu">GPU 芯片</option><option value="tokens">Token</option><option value="card">模型卡</option></select></label>
-      <label class="item-card" hidden>模型<select class="input" name="model">${MODELS.map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join('')}</select></label>
-      <label class="item-card" hidden>变体<select class="input" name="variant">${VARIANTS.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('')}</select></label>
+      <label class="item-card" hidden>模型<select class="input" name="model">${adminModelOptions()}</select></label>
+      <label class="item-card" hidden>变体<select class="input" name="variant">${adminVariantOptions()}</select></label>
       <label>设为数量<input class="input" type="number" name="amount" min="0" max="9007199254740991" step="1" required></label><button class="btn small">下发调整</button></form>
       <p class="note">未领取的调整：${r.pending}</p>${r.audit.length ? `<ul class="admin-audit">${r.audit.map(a=>`<li>${esc(new Date(a.at).toLocaleString('zh-CN'))} · ${esc(auditNames[a.action] || a.action)}${a.detail?.reason ? `：${esc(a.detail.reason)}` : ''}</li>`).join('')}</ul>` : ''}<p id="adminActionStatus" class="note" role="status"></p>`;
     box.scrollIntoView({block:'nearest'});
     $('#adminComposeNotice').onclick = () => composePrivateNotice(id,p.name);
+    $('#adminComposeTitle').onclick = () => chooseTitleRecipient(id);
+    renderAdminPlayerControls(id);
     const ban = $('#adminBan'), items = $('#adminItems');
     const field = (form, name) => form.elements.namedItem(name);
     field(ban,'minutes').onchange = () => { $('#banCustom').hidden = field(ban,'minutes').value !== 'custom'; };
@@ -4620,6 +4832,25 @@ async function loadAdminDetail() {
     items.onsubmit = e => { e.preventDefault(); const amount=field(items,'amount').value;
       if (window.confirm(`将「${p.name}」所选道具的数量设为 ${amount}？`)) runAdminAction('items',id,{kind:field(items,'kind').value,model:field(items,'model').value,variant:field(items,'variant').value,amount}); };
   } catch { if (adminTarget === id) box.textContent = '无法读取玩家资料。'; }
+}
+async function renderAdminPlayerControls(id,box=$('#adminPlayerControls'),args={}) {
+  if (!box) return;
+  box.textContent = '正在读取红包权限…';
+  try {
+    const result = unwrap(await cloud.board.client.rpc('frontier_admin_packet_controls',{p_player:id,...args}));
+    if (!adminDialog.open || adminTarget !== id || !box.isConnected) return;
+    const {enabled,qualified,review} = result;
+    box.innerHTML = `<p class="note">发红包：${!enabled ? '管理员已关闭' : qualified ? '已开启' : '未达门槛'}${qualified ? '' : ' · 累计 Token 须超过 1 京'}</p>
+      <div class="world-tools"><button type="button" id="adminPacketToggle" class="btn ghost small"${!enabled && !qualified ? ' disabled' : ''}>${enabled ? '关闭发红包' : '开启发红包'}</button></div>
+      ${review ? `<p class="note">GPU 复核：${review.resolved ? '已处理' : '待处理'} · 最近上报 ${esc(fmt(Number(review.gpu)))} GPU · 标记期间最高 ${esc(fmt(Number(review.peak)))} GPU</p>
+      ${review.resolved ? '' : '<button type="button" id="adminResolveGPU" class="btn ghost small">标记为已处理</button>'}` : ''}`;
+    $('#adminPacketToggle').onclick = () => renderAdminPlayerControls(id,box,{p_enabled:!enabled});
+    if (review && !review.resolved) $('#adminResolveGPU').onclick = () => renderAdminPlayerControls(id,box,{p_resolve_gpu:true});
+    if (args.p_resolve_gpu) loadAdminList();
+    if (Object.keys(args).length) loadAdminDetail();
+  } catch (error) {
+    if (box.isConnected) box.textContent = missingWorldRPC(error) ? '红包权限与 GPU 复核尚未上线。' : '无法更新红包权限或 GPU 复核，请重新打开玩家详情。';
+  }
 }
 let adminActionBusy = false;
 async function runAdminAction(action, id, args = {}) {
@@ -4690,6 +4921,10 @@ const giftLabel = (kind, amount) => `${fmt(Number(amount))} ${kind === 'gpu' ? '
 const communityClient = () => cloud.board?.client;
 let communityDrain = Promise.resolve(), communityClaiming = false, shownNotice = null;
 let communityChannel = 'world', communitySending = false, communityRequest = null;
+const canComposeCommunity = channel => !!cloud.uid && !!communityClient() && moderation.level !== 2 &&
+  (channel === 'packet' || verifiedAdmin(cloud.uid));
+const packetDeposit = $('#packetWalletDeposit'), packetRefresh = $('#packetWalletRefresh');
+let packetWallet = null, packetWalletSeq = 0;
 
 async function encodeCommunityImage(file) {
   if (!file) return null;
@@ -4737,15 +4972,15 @@ async function loadCommunityImage(node) {
   node.replaceChildren(img);
 }
 
-function storeCommunityGift(gift) {
+function storeCommunityGift(gift, announce = true) {
   const receipt = 'gift:' + gift.id;
   if (S.itemReceipts.includes(receipt)) return true;
   const key = gift.kind === 'gpu' ? 'gpu' : gift.kind === 'tokens' ? 'tokens' : '', amount = Number(gift.amount);
   if (!key || !Number.isInteger(amount) || amount <= 0 || !Number.isFinite(S[key] + amount)) return false;
   const next = {...S, [key]:S[key]+amount, itemReceipts:[...S.itemReceipts,receipt].slice(-200), lastSave:Date.now()};
   if (!lsSet(SAVE_KEY,JSON.stringify(next))) return false;
-  S = next; markDirty('hud','pull','research'); cloudBump(true);
-  toast('奖励已到账', giftLabel(gift.kind,amount));
+  S = next; markDirty('hud','pull','research');
+  if (announce) { cloudBump(true); toast('奖励已到账', giftLabel(gift.kind,amount)); }
   return true;
 }
 function applyCommunityGifts(items, uid = cloud.uid) {
@@ -4762,6 +4997,11 @@ function communityError(error) {
   if (missingWorldRPC(error)) return '尚未安装全服活动的数据库更新。';
   if (error?.message === 'FRONTIER_GIFT_EMPTY') return '红包已领完。';
   if (error?.message === 'FRONTIER_GIFT_UNAVAILABLE') return '奖励已过期或不可领取。';
+  if (error?.message === 'FRONTIER_PACKET_TOTAL_TOO_SMALL') return '总金额不能少于红包份数。';
+  if (error?.message === 'FRONTIER_PACKET_BALANCE') return '红包钱包余额不足，未扣款。';
+  if (error?.message === 'FRONTIER_PACKET_LIFETIME') return '累计 Token 超过 1 京后才能发红包。';
+  if (error?.message === 'FRONTIER_PACKET_DISABLED') return '管理员已关闭该实验室的发红包权限。';
+  if (error?.message === 'FRONTIER_CHAT_RATE') return '发得太快了，请稍后再发。';
   return '未确认操作成功，请联网后重试。';
 }
 async function claimCommunityGift(id) {
@@ -4770,6 +5010,7 @@ async function claimCommunityGift(id) {
   try {
     const items = unwrap(await communityClient().rpc('frontier_community_claim',{p_id:id}));
     await applyCommunityGifts(items);
+    if (!items.length) toast('奖励已领取', '本次奖励已处理，可在红包钱包查看转入余额。');
     return true;
   } finally { communityClaiming = false; }
 }
@@ -4832,7 +5073,7 @@ $('#readWorldNotice').onclick = () => readCommunityNotice(false);
 $('#claimWorldGift').onclick = () => readCommunityNotice(true);
 
 function openCommunityComposer(channel) {
-  if (!verifiedAdmin(cloud.uid) || moderation.level === 2 || communityComposer.open || communitySending) return;
+  if (!canComposeCommunity(channel) || communityComposer.open || communitySending) return;
   communityChannel = channel; communityForm.reset();
   const packet = channel === 'packet', f = communityForm.elements;
   $('#communityComposeTitle').textContent = packet ? '发聊天室红包' : '发布全服通知';
@@ -4840,22 +5081,88 @@ function openCommunityComposer(channel) {
   $('#communityTitleField').hidden = $('#communityImageField').hidden = packet;
   f.title.required = !packet; f.message.maxLength = packet ? 120 : 500;
   $('#communityPacketSlots').hidden = !packet; f.slots.required = packet;
+  $('#communityPacketMode').hidden = $('#communityPacketMode').disabled = !packet;
+  $('#packetWallet').hidden = $('#packetWalletDebit').hidden = !packet;
+  $('#communitySubmit').textContent = packet ? '发红包' : '确认发布';
   f.kind.options[0].disabled = packet;
   if (packet) f.kind.value = 'tokens';
+  packetWallet = null;
   updateCommunityFields(); communityComposer.showModal();
-  (packet ? f.message : f.title).focus();
+  if (packet) loadPacketWallet();
+  (packet ? f.packetMode[0] : f.title).focus();
 }
+function walletMinorUnits(value) {
+  const parts = /^(\d+)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(String(value));
+  if (!parts) return null;
+  const shift = 2+Number(parts[3] || 0)-(parts[2]?.length || 0);
+  if (Math.abs(shift)>220) return null;
+  const digits = BigInt(parts[1]+(parts[2] || ''));
+  return shift>=0 ? digits*10n**BigInt(shift) : digits/10n**BigInt(-shift);
+}
+function walletNumber(cents) {
+  const fraction = String(cents%100n).padStart(2,'0').replace(/0+$/,'');
+  return (cents/100n).toLocaleString('zh-CN')+(fraction ? '.'+fraction : '');
+}
+function renderPacketDebit() {
+  if (communityChannel !== 'packet') return;
+  const f = communityForm.elements, debit = $('#packetWalletDebit');
+  const allowed = packetWallet?.enabled && packetWallet?.qualified;
+  $('#communitySubmit').disabled = communitySending || !allowed;
+  if (!allowed || !f.amount.value || !f.amount.validity.valid || !f.slots.validity.valid) { debit.textContent = ''; return; }
+  const amount = walletMinorUnits(f.amount.value);
+  if (amount === null) { debit.textContent = ''; return; }
+  const base = amount*BigInt(f.packetMode.value === 'lucky' ? 1 : f.slots.valueAsNumber);
+  const fee = base*BigInt(packetWallet.fee_bps)/10000n;
+  const kind = f.kind.value === 'gpu' ? 'GPU' : 'Token';
+  const short = (walletMinorUnits(packetWallet[f.kind.value]) ?? 0n) < base+fee;
+  debit.textContent = `本金 ${walletNumber(base)} ＋ 手续费 ${walletNumber(fee)}（${packetWallet.fee_bps/100}%）＝ 实扣 ${walletNumber(base+fee)} ${kind}${short ? ' · 余额不足' : ''}`;
+}
+async function loadPacketWallet(deposit) {
+  if (communityChannel !== 'packet' || !communityComposer.open || communitySending) return;
+  const seq = ++packetWalletSeq, uid = cloud.uid, balance = $('#packetWalletBalance');
+  const current = () => seq === packetWalletSeq && uid === cloud.uid && communityChannel === 'packet' && communityComposer.open;
+  packetDeposit.disabled = packetRefresh.disabled = true;
+  balance.textContent = '正在读取钱包…';
+  try {
+    const data = unwrap(await communityClient().rpc('frontier_packet_wallet', deposit === undefined ? {} : {p_deposit_rewards:deposit}));
+    if (!current()) return;
+    packetWallet = data;
+    const hint = !data.enabled ? ' · 发红包权限已关闭' : !data.qualified ? ' · 累计 Token 超过 1 京后可发红包' : '';
+    balance.textContent = `余额：${walletNumber(walletMinorUnits(data.gpu))} GPU · ${walletNumber(walletMinorUnits(data.tokens))} Token${hint}`;
+  } catch (error) {
+    if (current()) balance.textContent = missingWorldRPC(error) ? '红包钱包尚未上线。' : '未能同步红包钱包，请刷新余额。';
+  } finally {
+    if (current()) {
+      packetRefresh.disabled = false;
+      packetDeposit.disabled = !packetWallet;
+      packetDeposit.checked = packetWallet?.deposit_rewards === true;
+      renderPacketDebit();
+    }
+  }
+}
+packetRefresh.onclick = () => loadPacketWallet();
+packetDeposit.onchange = () => loadPacketWallet(packetDeposit.checked);
 function updateCommunityFields() {
-  const {kind, amount} = communityForm.elements;
+  const {kind, amount, slots, packetMode} = communityForm.elements;
+  const packet = communityChannel === 'packet', lucky = packet && packetMode.value === 'lucky';
   $('#communityAmountField').hidden = !kind.value;
+  $('#communityAmountLabel').textContent = lucky ? '总金额' : packet ? '每份金额' : '每人数量';
   amount.required = !!kind.value;
+  amount.min = lucky && slots.validity.valid ? slots.value : '1';
   amount.max = kind.value === 'gpu' ? '10000000' : '1e100';
+  if (packet) renderPacketDebit();
+  else $('#communitySubmit').disabled = false;
 }
 communityForm.elements.kind.onchange = updateCommunityFields;
+communityForm.elements.slots.oninput = updateCommunityFields;
+communityForm.elements.amount.oninput = renderPacketDebit;
+$('#communityPacketMode').onchange = updateCommunityFields;
 communityForm.onsubmit = async e => {
   e.preventDefault();
-  if (communitySending || !verifiedAdmin(cloud.uid) || !communityClient()) return;
+  if (communitySending || !canComposeCommunity(communityChannel)) return;
   const f = communityForm.elements, status = $('#communityComposeStatus'), packet = communityChannel === 'packet';
+  const lucky = packet && f.packetMode.value === 'lucky';
+  if (packet && (!packetWallet?.enabled || !packetWallet?.qualified)) return;
   const data = {p_channel:communityChannel, p_title:packet ? null : f.title.value.trim(), p_body:f.message.value.trim(),
     p_kind:f.kind.value || null, p_amount:f.kind.value ? f.amount.valueAsNumber : null, p_slots:packet ? f.slots.valueAsNumber : null};
   const file = packet ? null : f.image.files[0];
@@ -4866,16 +5173,224 @@ communityForm.onsubmit = async e => {
     status.textContent = '正在发布…';
     try { data.p_image = await encodeCommunityImage(file); }
     catch (error) { status.textContent = error.message; return; }
-    const snapshot = JSON.stringify(data);
+    const rpc = lucky ? 'frontier_community_publish_lucky' : 'frontier_community_publish';
+    const payload = lucky ? {p_body:data.p_body,p_kind:data.p_kind,p_total:f.amount.value,p_slots:data.p_slots} : packet ? {...data,p_amount:f.amount.value} : data;
+    const snapshot = JSON.stringify([rpc,payload]);
     if (communityRequest?.snapshot !== snapshot) communityRequest = {snapshot,id:newEventId()};
-    unwrap(await communityClient().rpc('frontier_community_publish',{p_id:communityRequest.id,...data}));
+    unwrap(await communityClient().rpc(rpc,{p_id:communityRequest.id,...payload}));
     communityRequest = null; communityComposer.close();
-    toast(packet ? '红包已发出' : '全服通知已发布', data.p_kind ? giftLabel(data.p_kind,data.p_amount) + '／人' : data.p_title);
+    toast(packet ? '红包已发出' : '全服通知已发布', data.p_kind ? `${lucky ? '总计 ' : ''}${giftLabel(data.p_kind,data.p_amount)}${lucky ? '' : '／人'}` : data.p_title);
     if (packet) pollChat(); else syncCommunityInbox(cloud.board,true).catch(() => {});
   } catch (error) { status.textContent = communityError(error); }
-  finally { communitySending = false; controls.forEach(el => { el.disabled = false; }); }
+  finally {
+    communitySending = false; controls.forEach(el => { el.disabled = false; });
+    if (packet && communityComposer.open) loadPacketWallet();
+  }
 };
 $('#chatPacketButton').onclick = () => openCommunityComposer('packet');
+
+const packetDetailsDialog = $('#packetDetails'), packetDetailRefresh = $('#packetRefresh');
+let packetDetailsId = null, packetDetailsSeq = 0;
+function exactGiftLabel(kind, amount) {
+  const value = String(amount).replace(/\.0+$/, '');
+  const count = /^\d+$/.test(value) ? BigInt(value).toLocaleString('zh-CN') : fmt(Number(amount));
+  return `${count} ${kind === 'gpu' ? 'GPU' : 'Token'}`;
+}
+function openPacketDetails(message) {
+  if (message.player_id !== cloud.uid || !communityClient()) return;
+  packetDetailsId = message.id;
+  $('#packetDetailsSummary').textContent = '';
+  $('#packetDetailsBody').replaceChildren();
+  packetDetailsDialog.showModal();
+  readPacketDetails();
+}
+async function readPacketDetails() {
+  if (!packetDetailsDialog.open || !communityClient()) return;
+  const seq = ++packetDetailsSeq, status = $('#packetDetailsStatus');
+  const uid = cloud.uid, current = () => packetDetailsDialog.open && seq === packetDetailsSeq && cloud.uid === uid;
+  packetDetailRefresh.disabled = true; status.textContent = '正在读取领取记录…';
+  try {
+    const p = unwrap(await communityClient().rpc('frontier_packet_details',{p_id:packetDetailsId}));
+    if (!current()) return;
+    const amount = exactGiftLabel(p.kind,p.amount);
+    $('#packetDetailsSummary').textContent = `${p.lucky ? '拼手气红包' : '固定红包'} · ${p.lucky ? `总计 ${amount}` : `${amount}／份`} · 已领 ${p.claimed}／${p.slots} 份`;
+    const body = $('#packetDetailsBody');
+    body.innerHTML = p.receipts.length ? `<table class="packet-details-table"><thead><tr><th scope="col">领取人</th><th scope="col">领取时间</th><th scope="col">领取金额</th></tr></thead><tbody>${p.receipts.map(r =>
+      `<tr><td><bdi title="${esc(r.player_id)}">${esc(r.name || `实验室 ${r.player_id.slice(-8)}`)}</bdi></td><td><time datetime="${esc(r.at)}">${esc(new Date(r.at).toLocaleString('zh-CN'))}</time></td><td>${esc(exactGiftLabel(p.kind,r.amount))}</td></tr>`).join('')}</tbody></table>` : '<p class="note">还没有人领取。</p>';
+    status.textContent = '';
+  } catch (error) {
+    if (current()) status.textContent = error?.code === '42501' ? '只有红包发出者能查看明细。' : communityError(error);
+  } finally { if (seq === packetDetailsSeq) packetDetailRefresh.disabled = false; }
+}
+packetDetailRefresh.onclick = readPacketDetails;
+packetDetailsDialog.addEventListener('close', () => { if (!packetDetailsDialog.open) packetDetailsSeq++; });
+
+function labTitleBadge(title, inline = false) {
+  if (typeof title?.name !== 'string' || !/^#[0-9a-f]{6}$/i.test(title.color)) return '';
+  return `<bdi class="lab-title${inline ? ' lab-title-inline' : ''}" style="--title-color:${title.color}" title="${esc(title.name)}">${esc(title.name)}</bdi>`;
+}
+
+async function readWornTitles(ids) {
+  if (!ids.length || !cloud.board?.client || !cloud.uid) return {};
+  return unwrap(await cloud.board.client.rpc('frontier_lab_titles',{p_players:ids}));
+}
+
+const ownTitleChoice = $('#titleChoice'), ownTitleStatus = $('#ownTitleStatus');
+let titleAccount = null, titleList = null, titleListAt = 0, titleReadSeq = 0, titleSaving = false;
+let titlePublic = {}, titlePublicKey = '', titlePublicAt = 0, titlePublicSeq = 0;
+function resetTitleCache() {
+  if (titleAccount === cloud.uid) return;
+  titleAccount = cloud.uid; titleList = null; titleListAt = titlePublicAt = 0;
+  titleReadSeq++; titlePublicSeq++; titlePublic = {}; titlePublicKey = '';
+  ownTitleStatus.textContent = '';
+}
+function renderOwnTitles() {
+  resetTitleCache();
+  $('#ownTitles').hidden = !titleList?.length;
+  if (titleList?.length) {
+    const worn = titleList.find(t => t.equipped);
+    const badge = labTitleBadge(worn), badgeHost = $('#ownTitleBadge');
+    if (badgeHost.innerHTML !== badge) badgeHost.innerHTML = badge;
+    ownTitleChoice.hidden = titleList.length < 2;
+    const options = titleList.map(t => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join('');
+    if (ownTitleChoice.dataset.contents !== options) { ownTitleChoice.innerHTML = options; ownTitleChoice.dataset.contents = options; }
+    if (!titleSaving) ownTitleChoice.value = worn?.id || '';
+  }
+  if (titleAccount && !titleSaving && Date.now() >= titleListAt) loadOwnTitles();
+}
+async function loadOwnTitles() {
+  if (!titleAccount || !cloud.board?.client || titleSaving) return;
+  const uid = titleAccount, seq = ++titleReadSeq;
+  titleListAt = Date.now()+20000;
+  try {
+    const list = unwrap(await cloud.board.client.rpc('frontier_title_inventory'));
+    if (seq !== titleReadSeq || uid !== cloud.uid) return;
+    titleList = list;
+    markDirty('world');
+  } catch (error) { if (seq === titleReadSeq && missingWorldRPC(error)) titleListAt = Date.now()+120000; }
+}
+function refreshWorldTitles(ids) {
+  resetTitleCache();
+  if (!titleAccount || !cloud.board?.client) return;
+  const players = [...new Set(ids.filter(Boolean))].sort(), key = players.join(',');
+  if (!key || (key === titlePublicKey && Date.now() < titlePublicAt)) return;
+  const uid = titleAccount, seq = ++titlePublicSeq;
+  titlePublicKey = key; titlePublicAt = Date.now()+20000;
+  readWornTitles(players).then(titles => {
+    if (seq !== titlePublicSeq || uid !== cloud.uid) return;
+    titlePublic = titles; markDirty('world');
+  }).catch(error => { if (seq === titlePublicSeq && missingWorldRPC(error)) titlePublicAt = Date.now()+120000; });
+}
+ownTitleChoice.onchange = async () => {
+  if (!titleAccount || titleSaving || !ownTitleChoice.value || !cloud.board?.client) return;
+  const uid = titleAccount, id = ownTitleChoice.value;
+  titleReadSeq++; titleSaving = ownTitleChoice.disabled = true;
+  ownTitleStatus.textContent = '正在更换…';
+  try {
+    const list = unwrap(await cloud.board.client.rpc('frontier_title_equip',{p_id:id}));
+    if (uid !== cloud.uid) return;
+    titleList = list;
+    titlePublicSeq++; titlePublicAt = 0;
+    titlePublic[uid] = list.find(t => t.equipped);
+    ownTitleStatus.textContent = '已更换称号。';
+  } catch { if (uid === cloud.uid) ownTitleStatus.textContent = '更换失败，请联网后重试。'; }
+  finally { titleSaving = ownTitleChoice.disabled = false; renderOwnTitles(); markDirty('world'); }
+};
+
+function adminTitlePanelHTML() {
+  return `<details class="admin-notice" id="adminTitles"><summary>发放称号</summary>
+    <form class="admin-tools" id="adminTitleForm">
+      <label class="notice-recipient">玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"></label>
+      <label>称号名称<input class="input" name="name" maxlength="24" required></label>
+      <label>颜色<input class="input" name="color" type="color" value="#c89158"></label>
+      <span id="adminTitlePreview"></span><button class="btn small" type="submit">发放称号</button>
+    </form><p class="note notice-status" id="adminTitleStatus" role="status"></p>
+  </details>`;
+}
+function bindAdminTitlePanel() {
+  const form = $('#adminTitleForm'), status = $('#adminTitleStatus'), fields = form.elements;
+  const name = fields.namedItem('name'), player = fields.player, color = fields.color, submit = form.querySelector('[type=submit]');
+  let busy = false;
+  form.oninput = () => { $('#adminTitlePreview').innerHTML = name.value.trim() ? labTitleBadge({name:name.value.trim(),color:color.value}) : ''; };
+  form.onsubmit = async e => {
+    e.preventDefault();
+    if (busy || !verifiedAdmin(cloud.uid) || !cloud.board?.client) return;
+    const p_player = player.value.toLowerCase(), p_name = name.value.trim(), p_color = color.value;
+    if (!p_name) { status.textContent = '请输入称号名称。'; name.focus(); return; }
+    busy = submit.disabled = player.disabled = name.disabled = color.disabled = true;
+    status.textContent = '正在发放…';
+    try {
+      unwrap(await cloud.board.client.rpc('frontier_title_grant',{p_player,p_name,p_color}));
+      status.textContent = `已发放「${p_name}」。`;
+      titlePublicSeq++; titlePublicAt = 0;
+      if (p_player === cloud.uid) { titleReadSeq++; titleListAt = 0; }
+      markDirty('world');
+    } catch (error) {
+      status.textContent = missingWorldRPC(error) ? '尚未安装称号数据库更新。' : error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : '发放失败，请检查权限和称号名称。';
+    } finally { busy = submit.disabled = player.disabled = name.disabled = color.disabled = false; }
+  };
+}
+function chooseTitleRecipient(id) {
+  const form = $('#adminTitleForm');
+  if (form.elements.player.disabled) return;
+  form.elements.player.value = id;
+  $('#adminTitleStatus').textContent = '';
+  $('#adminTitles').open = true;
+  form.elements.namedItem('name').focus();
+}
+
+const inventoryDialog = $('#inventoryDialog'), inventoryTable = $('#inventoryTable'), inventoryStatus = $('#inventoryStatus');
+const inventoryFilter = $('#inventoryFilter'), inventorySort = $('#inventorySort'), inventoryRefresh = $('#inventoryRefresh');
+const INVENTORY_PAGE_SIZE = 30;
+let inventoryRows = null, inventoryPage = 0, inventorySeq = 0, inventoryMeta = '';
+
+function openInventoryTotals() {
+  if (!verifiedAdmin(cloud.uid) || !cloud.board?.client || inventoryDialog.open) return;
+  inventoryRows = null; inventoryMeta = ''; inventoryPage = 0;
+  inventoryFilter.value = ''; inventorySort.value = 'catalog';
+  renderInventoryTotals(); inventoryDialog.showModal(); loadInventoryTotals();
+}
+async function loadInventoryTotals() {
+  if (!inventoryDialog.open || !verifiedAdmin(cloud.uid) || !cloud.board?.client) return;
+  const seq = ++inventorySeq, uid = cloud.uid;
+  const current = () => inventoryDialog.open && seq === inventorySeq && uid === cloud.uid && verifiedAdmin(uid);
+  inventoryRefresh.disabled = true; inventoryStatus.textContent = '正在汇总库存…';
+  try {
+    const data = unwrap(await cloud.board.client.rpc('frontier_inventory_totals'));
+    if (!current()) return;
+    inventoryRows = MODELS.map(m => {
+      const values = VARIANTS.map((_,v) => BigInt(data.cards[m.id]?.[v] || '0'));
+      return {m,values,sum:values.reduce((a,b)=>a+b,0n)};
+    });
+    inventoryMeta = `已上报 ${Number(data.players).toLocaleString('zh-CN')} 个实验室${data.latest ? ` · 最新上报 ${new Date(data.latest).toLocaleString('zh-CN')}` : ''}`;
+    renderInventoryTotals();
+  } catch (error) {
+    if (current()) inventoryStatus.textContent = missingWorldRPC(error) ? '尚未安装全服库存的数据库更新。' : '无法读取库存，请刷新重试。';
+  } finally { if (seq === inventorySeq) inventoryRefresh.disabled = false; }
+}
+function renderInventoryTotals() {
+  inventoryTable.hidden = !inventoryRows;
+  $('#inventoryPaging').hidden = !inventoryRows;
+  if (!inventoryRows) { inventoryTable.replaceChildren(); return; }
+  const query = inventoryFilter.value.trim().toLowerCase();
+  const rows = inventoryRows.filter(({m})=>m.n.toLowerCase().includes(query) || m.id.includes(query));
+  if (inventorySort.value === 'count') rows.sort((a,b)=>a.sum>b.sum ? -1 : a.sum<b.sum ? 1 : 0);
+  const pages = Math.max(1, Math.ceil(rows.length/INVENTORY_PAGE_SIZE));
+  inventoryPage = Math.max(0,Math.min(inventoryPage,pages-1));
+  const start = inventoryPage*INVENTORY_PAGE_SIZE;
+  const format = n => n.toLocaleString('zh-CN');
+  inventoryStatus.textContent = inventoryMeta;
+  inventoryTable.innerHTML = `<table class="lb inventory-table"><thead><tr><th scope="col">模型</th>${VARIANTS.map(v=>`<th scope="col" class="val">${v.name}</th>`).join('')}<th scope="col" class="val">合计</th></tr></thead><tbody>${rows.slice(start,start+INVENTORY_PAGE_SIZE).map(({m,values,sum})=>
+    `<tr><th scope="row"><span class="tier-name">${TIERS[m.t].id}</span> ${esc(m.n)}</th>${values.map(n=>`<td class="val">${format(n)}</td>`).join('')}<td class="val">${format(sum)}</td></tr>`).join('') || '<tr><td colspan="6">没有匹配的模型。</td></tr>'}</tbody></table>`;
+  $('#inventoryPage').textContent = `${inventoryPage+1}／${pages}`;
+  $('#inventoryPrev').disabled = inventoryPage<=0;
+  $('#inventoryNext').disabled = inventoryPage>=pages-1;
+}
+inventoryFilter.oninput = inventorySort.onchange = () => { inventoryPage = 0; renderInventoryTotals(); };
+inventoryRefresh.onclick = loadInventoryTotals;
+$('#inventoryPrev').onclick = () => { inventoryPage--; renderInventoryTotals(); };
+$('#inventoryNext').onclick = () => { inventoryPage++; renderInventoryTotals(); };
+inventoryDialog.addEventListener('close', () => { if (!inventoryDialog.open) inventorySeq++; });
 
 const chatList = $('#chatMessages'), chatText = $('#chatText'), chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
 const chatMentions = $('#chatMentions'), chatEmojis = $('#chatEmojis'), chatReplyDraft = $('#chatReplyDraft');
@@ -4902,7 +5417,7 @@ const chatAvatar = m => {
 };
 function renderChat(messages) {
   const isAdmin = verifiedAdmin(cloud.uid);
-  $('#chatPacketButton').hidden = !isAdmin;
+  $('#chatPacketButton').hidden = !canComposeCommunity('packet');
   const state = JSON.stringify([moderation.adminId,cloud.uid,messages]);
   if (state === chatState) return;
   chatMessages = messages;
@@ -4911,11 +5426,11 @@ function renderChat(messages) {
   unwatchCommunityImages(chatList);
   chatList.innerHTML = messages.map(m => {
     const [role,label] = labRole(m.player_id,m.level,m.is_admin === true);
-    const who = `<button class="lab-link" data-player="${esc(m.player_id)}" aria-haspopup="dialog">${styledLabName(m.name,role)}</button>`;
+    const who = `<button class="lab-link" data-player="${esc(m.player_id)}" aria-haspopup="dialog">${styledLabName(m.name,role)}</button>${labTitleBadge(m.lab_title)}`;
     const when = new Date(m.sent_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
     const quote = m.reply_to ? `<blockquote class="chat-quote">${m.reply ? `<strong>${esc(m.reply.name)}：</strong>${esc(m.reply.body)}` : '原消息已不可用'}</blockquote>` : '';
-    const packet = m.packet, left = packet ? Math.max(0,packet.slots-packet.claimed) : 0;
-    const gift = packet ? `<div class="community-packet"><strong>红包 · ${esc(giftLabel(packet.kind,packet.amount))}／人</strong><small>剩 ${left}／${packet.slots} 份</small>${packet.mine ? '<span>已领取</span>' : left && m.player_id !== cloud.uid ? '<button class="btn small" type="button" data-act="claim">领红包</button>' : ''}</div>` : '';
+    const lucky = !!m.lucky_packet, packet = m.lucky_packet || m.packet, left = packet ? Math.max(0,packet.slots-packet.claimed) : 0;
+    const gift = packet ? `<div class="community-packet${lucky ? ' lucky' : ''}"><strong>${lucky ? '拼手气红包 · 总计 ' : '固定红包 · '}${esc(giftLabel(packet.kind,lucky ? packet.total : packet.amount))}${lucky ? '' : '／份'}</strong><small>${left ? `剩 ${left}／${packet.slots} 份` : '已领完'}</small>${m.player_id === cloud.uid ? '<button class="btn ghost small" type="button" data-act="packet-details">领取详情</button>' : packet.mine ? `<span>已领取${packet.my_amount == null ? '' : ' · ' + esc(giftLabel(packet.kind,packet.my_amount))}</span>` : left ? '<button class="btn small" type="button" data-act="claim">领红包</button>' : ''}</div>` : '';
     return `<li data-event="${esc(m.id)}">${chatAvatar(m)}<div><div class="chat-meta">${who}${label ? `<span class="role-tag role-${role}">${label}</span>` : ''}${m.mentions?.includes(cloud.uid) ? '<span class="chat-mentioned">提到了你</span>' : ''}<time datetime="${esc(m.sent_at)}">${esc(when)}</time><span class="chat-message-actions">${m.player_id === cloud.uid ? '' : `<button class="btn ghost small" type="button" data-act="mention" aria-label="提到${esc(m.name)}" title="提到此玩家">@</button>`}<button class="btn ghost small" type="button" data-act="reply">回复</button>${isAdmin ? '<button class="btn ghost small" type="button" data-act="delete" aria-label="移除消息" title="移除消息">×</button>' : ''}</span></div>${quote}${m.has_image && m.body === '[图片]' ? '' : `<p>${esc(m.body)}</p>`}${m.has_image ? communityMediaHTML(m.id) : ''}${gift}</div></li>`;
   }).join('');
   watchCommunityImages(chatList);
@@ -4970,7 +5485,7 @@ async function pollChat() {
   try { await updateChat(); } finally { chatRead = false; }
 }
 function renderChatView() {
-  $('#chatPacketButton').hidden = !verifiedAdmin(cloud.uid);
+  $('#chatPacketButton').hidden = !canComposeCommunity('packet');
   if (chatTimer !== null) return;
   chatStatus.textContent = '正在连接…'; pollChat(); chatTimer = setInterval(pollChat, 6000);
 }
@@ -5074,6 +5589,7 @@ chatList.onclick = e => {
   if (!message || !action || chatWrite) return;
   if (action === 'mention') insertMention(message);
   if (action === 'reply') { setChatReply(message); chatText.focus(); }
+  if (action === 'packet-details') openPacketDetails(message);
   if (action === 'claim') {
     const button = e.target.closest('[data-act="claim"]'); button.disabled = true;
     claimCommunityGift(message.id).then(pollChat).catch(error => {
@@ -5184,26 +5700,6 @@ on('#prefList', 'change', e => {
     if (mute === 'log') markDirty('pull');
   } else return;
   saveLocal();
-});
-on('#exportBtn', 'click', async () => {
-  const text = saveLocal();
-  let ok = false;
-  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
-  if (ok) toast('存档已复制', '粘贴到任意地方保存即可');
-  else { const ta = $('#importText'); ta.value = text; ta.focus(); ta.select(); toast('请手动复制', '存档文本已放进下方的输入框并全选'); }
-});
-on('#importBtn', 'click', () => {
-  const text = $('#importText').value.trim();
-  if (!text) return toast('没有内容', '先粘贴一段导出的存档文本');
-  let st;
-  try { st = parseSave(text); } catch (e) { return toast('导入失败', '这段文本不是有效的存档'); }
-  if (S.saveEpoch && S.saveEpoch !== st.saveEpoch) return toast('无法导入', '这份存档早于全服清档。');
-  confirmModal('导入存档', '当前进度会被覆盖，确定导入吗？', null, '导入', () => {
-    if (moderation.level === 2 || (S.saveEpoch && S.saveEpoch !== st.saveEpoch)) return;
-    installSave(st); saveLocal(); cloudTick(true);
-    $('#importText').value = '';
-    markDirty(...VIEWS, 'hud'); renderActive(true); toast('导入成功', '欢迎回来，' + S.name);
-  });
 });
 on('#resetBtn', 'click', () => {
   confirmModal('重置进度', '全部卡片、升级、科技和成就都会被清空，并且无法恢复。', null, '确认重置', () => {
