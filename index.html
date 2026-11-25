@@ -1,4 +1,4 @@
-<!DOCTYPE html>  
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -98,6 +98,23 @@ button { cursor: pointer; }
 .num { font-family: var(--font-num); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
 .muted { color: var(--ink-3); }
 .hidden { display: none !important; }
+
+/* Keep native scrolling and the system's touch/high-contrast scrollbars. */
+@media (any-pointer: fine) and (forced-colors: none) {
+  @supports selector(::-webkit-scrollbar) {
+    /* Non-auto standard properties override the WebKit part styles. */
+    ::-webkit-scrollbar { width:9px; height:9px; }
+    ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background:var(--bg-sunk); }
+    ::-webkit-scrollbar-thumb { border:1px solid var(--bg-sunk); border-radius:var(--r-s); background:var(--ink-3); }
+    ::-webkit-scrollbar-thumb:hover { background:var(--ink-2); }
+    ::-webkit-scrollbar-button { display:none; }
+  }
+  @supports not selector(::-webkit-scrollbar) {
+    :root { scrollbar-color:var(--ink-3) var(--bg-sunk); }
+    :root, .rail, .log, .feed, .lb-wrap, #profileBody, .world-dialog-body,
+    .admin-table, .chat-messages, .chat-picker, .modal, textarea { scrollbar-width:thin; }
+  }
+}
 
 /* ========== Shell ========== */
 .shell { display: grid; grid-template-columns: 92px minmax(0,1fr); min-height: 100vh; min-height: 100dvh; }
@@ -530,6 +547,11 @@ button.card { transition: transform .12s; }
 .admin-note-input { flex:0 1 100%; }
 .admin-note-input textarea { width:100%; resize:vertical; }
 .admin-table { overflow-x:auto; }
+.admin-notice { margin:12px 0; padding-block:8px; border-block:1px solid var(--line); }
+.admin-notice summary { cursor:pointer; color:var(--ink); font-weight:700; min-height:28px; }
+.admin-notice .admin-tools { margin-top:6px; }
+.admin-notice .notice-recipient { flex:1 1 100%; }
+.admin-notice .note { overflow-wrap:anywhere; }
 .admin-detail:not(:empty) { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
 .admin-detail .admin-tools { margin-top:12px; }
 .admin-audit { padding-inline-start:20px; color:var(--ink-2); font-size:13px; }
@@ -538,15 +560,30 @@ button.card { transition: transform .12s; }
 .notice-body h3 { margin:0 0 6px; font-size:16px; }
 .notice-message { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; margin:8px 0 12px; }
 .notice-status:empty { margin:0; }
-.chat-body { display:flex; flex-direction:column; }
-.chat-messages { height:min(52dvh,430px); min-height:100px; padding:0; margin:0; overflow:auto; overscroll-behavior:contain; list-style:none; }
-.chat-messages li { border-bottom:1px solid var(--line); padding:7px 0; }
-.chat-messages p { margin:3px 0 0; overflow-wrap:anywhere; white-space:pre-wrap; }
-.chat-meta,.chat-compose { display:flex; align-items:center; gap:8px; min-width:0; }
+.chat-messages { height:clamp(240px,52dvh,620px); padding:0; margin:0; overflow:auto; overscroll-behavior:contain; list-style:none; background:var(--bg-2); border-block:1px solid var(--line); }
+.chat-messages li { display:grid; grid-template-columns:32px minmax(0,1fr); gap:10px; border-bottom:1px solid var(--line); padding:10px 12px; }
+.chat-messages li:last-child { border-bottom:0; }
+.chat-avatar { display:grid; place-items:center; inline-size:32px; block-size:32px; border-radius:var(--r-s); font-weight:750; color:var(--ink); background:color-mix(in srgb,var(--avatar) 23%,var(--bg-3)); }
+.chat-avatar-model { overflow:hidden; background:#0e1a18; border:1px solid var(--avatar,var(--line-2)); }
+.chat-avatar img { display:block; width:100%; height:100%; }
+.chat-messages p { margin:4px 0 0; overflow-wrap:anywhere; white-space:pre-wrap; }
+.chat-meta,.chat-compose,.chat-reply-draft { display:flex; align-items:center; gap:8px; min-width:0; }
 .chat-meta { flex-wrap:wrap; }
 .chat-meta .lab-link { overflow-wrap:anywhere; }
 .chat-meta time { margin-inline-start:auto; color:var(--ink-2); font-size:12px; white-space:nowrap; }
-.chat-meta button.x-btn { min-width:32px; }
+.chat-message-actions { display:flex; align-items:center; gap:4px; }
+.chat-message-actions button { padding:3px 5px; }
+.chat-mentioned { color:var(--copper); font-size:12px; font-weight:700; }
+.chat-quote,.chat-reply-draft { border-inline-start:1px solid var(--line-2); margin:6px 0 0; padding:3px 8px; color:var(--ink-2); font-size:12px; overflow-wrap:anywhere; }
+.chat-reply-draft { justify-content:space-between; margin-bottom:7px; }
+.chat-picker { display:flex; flex-wrap:wrap; gap:6px; max-height:138px; overflow:auto; margin-bottom:8px; padding:8px; background:var(--bg-2); border:1px solid var(--line); border-radius:var(--r-s); }
+#view-chat [hidden] { display:none; }
+.chat-picker .btn { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+.chat-emojis .btn { min-width:40px; font-size:19px; }
+.chat-compose { flex-wrap:wrap; }
+.chat-compose #chatText { flex:1 0 8ch; }
+.chat-tool { padding-inline:9px; }
+.chat-tool svg { display:block; width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; }
 #chatStatus { min-height:1.2em; margin:6px 0; }
 .lab-name { font-weight:750; color:var(--role-color); }
 .lab-name-admin,.role-admin { --role-color:light-dark(#145ab2,#8ec5ff); --role-light:light-dark(#007d9c,#c3eaff); }
@@ -726,7 +763,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
     <button class="nav-btn" data-view="bench"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/><path d="M19 8l2-2-2-2"/></svg>评测</button>
     <button class="nav-btn" data-view="research"><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 15h9"/></svg>研发<span class="nav-dot hidden" id="dotResearch"></span></button>
     <button class="nav-btn" data-view="world"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>全服</button>
-    <button class="nav-btn hidden" id="openChat" type="button" aria-haspopup="dialog" aria-controls="chatRoom"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>聊天</button>
+    <button class="nav-btn hidden" id="openChat" type="button" data-view="chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>聊天</button>
     <button class="nav-btn" data-view="feats"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.5L7 22l5-3 5 3-1.5-8.5"/></svg>成就<span class="nav-dot hidden" id="dotFeats"></span></button>
     <button class="nav-btn" data-view="prefs"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>设置</button>
     <div class="rail-foot"><span class="cloud-led" id="cloudLed"></span><span id="cloudText">本地</span></div>
@@ -929,6 +966,21 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
       </section>
 
       <!-- FEATS -->
+      <section class="view" id="view-chat" aria-labelledby="chatTitle">
+        <div class="view-head"><h1 class="view-title" id="chatTitle">全服聊天室</h1></div>
+        <ol class="chat-messages" id="chatMessages" aria-label="最近消息" tabindex="0"></ol>
+        <p class="note" id="chatStatus" role="status"></p>
+        <div id="chatReplyDraft" class="chat-reply-draft" hidden><span id="chatReplyLabel"></span><button class="x-btn" type="button" id="chatCancelReply" aria-label="取消回复">×</button></div>
+        <div class="chat-picker" id="chatMentions" aria-label="选择要提到的玩家" hidden></div>
+        <div class="chat-picker chat-emojis" id="chatEmojis" aria-label="选择表情" hidden></div>
+        <form id="chatSend" class="chat-compose">
+          <button class="btn ghost chat-tool" id="chatMentionButton" type="button" title="提到玩家" aria-label="提到玩家" aria-expanded="false" aria-controls="chatMentions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4.5 8.35"/></svg></button>
+          <button class="btn ghost chat-tool" id="chatEmojiButton" type="button" title="表情" aria-label="表情" aria-expanded="false" aria-controls="chatEmojis"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14a4 4 0 0 0 8 0M9 9h.01M15 9h.01"/></svg></button>
+          <input class="input" id="chatText" maxlength="240" aria-label="聊天消息" placeholder="输入消息" required>
+          <button class="btn" type="submit">发送</button>
+        </form>
+      </section>
+
       <section class="view" id="view-feats" aria-labelledby="h-feats">
         <div class="view-head">
           <div>
@@ -1047,14 +1099,6 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
     <p class="note notice-status" id="bulkCardsStatus" role="status"></p>
     <div class="world-tools"><button class="btn" type="submit">确认增加</button></div>
   </form>
-</dialog>
-<dialog id="chatRoom" class="world-dialog" aria-labelledby="chatTitle">
-  <header><h2 id="chatTitle">全服聊天室</h2><form method="dialog"><button class="x-btn" aria-label="关闭聊天室">×</button></form></header>
-  <div class="world-dialog-body chat-body">
-    <ol class="chat-messages" id="chatMessages" aria-label="最近消息" tabindex="0"></ol>
-    <p class="note" id="chatStatus" role="status"></p>
-    <form id="chatSend" class="chat-compose"><input class="input" id="chatText" maxlength="240" aria-label="聊天消息" placeholder="输入消息" required><button class="btn" type="submit">发送</button></form>
-  </div>
 </dialog>
 <div class="modal-back" id="modalBack"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
 <div class="cine" id="cine"><div class="rays"></div><div class="wafer"></div><div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div><div class="hint">点击任意处继续</div></div>
@@ -4144,7 +4188,7 @@ async function runAI() {
 
 const lockDialog = $('#moderationLock');
 const noticeDialog = $('#moderationNotice');
-const noticeMeta = notice => `${notice.level === 2 ? '封禁通知' : '限制通知'} · ${new Date(notice.at).toLocaleString('zh-CN')}`;
+const noticeMeta = notice => `${notice.level === 0 ? '管理员私密通知' : notice.level === 2 ? '封禁通知' : '限制通知'} · ${new Date(notice.at).toLocaleString('zh-CN')}`;
 function renderModerationLock() {
   if (moderation.level !== 2) {
     if (lockDialog.open) lockDialog.close();
@@ -4197,6 +4241,7 @@ $('#clearLockedSave').onclick = async e => {
 const adminDialog = $('#adminPanel'), adminBody = $('#adminBody');
 const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力'};
 let adminSeq = 0, adminOffset = 0, adminResults = [], adminTarget = null;
+let privateNoticeRequest = null, privateNoticeBusy = false;
 async function adminRPC(action, args = {}) {
   return unwrap(await cloud.board.client.rpc('frontier_admin',{p_action:action,p_args:args}));
 }
@@ -4212,10 +4257,22 @@ $('#openAdmin').onclick = () => {
     <label>实验室名或玩家 ID<input class="input" name="query" maxlength="64"></label>
     <label>排序<select class="input" name="sort">${PROFILE_STATS.map(([k,n])=>`<option value="${k}"${k==='pulls'?' selected':''}>${n}</option>`).join('')}</select></label>
     <label class="admin-check"><input type="checkbox" name="flagged">仅疑似异常</label><button class="btn small" type="submit">查询</button>
-    </form><p class="note" id="adminStatus" role="status"></p><div class="admin-table" id="adminResults"></div>
+    </form>
+    <details class="admin-notice" id="adminNotice">
+      <summary>发送私密通知</summary>
+      <form class="admin-tools" id="adminNoticeForm">
+        <label class="notice-recipient">玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}" title="36 位玩家 ID（UUID）"></label>
+        <p class="note notice-status" id="adminNoticeRecipient"></p>
+        <label class="admin-note-input">通知内容<textarea class="input" name="body" maxlength="500" rows="3" required></textarea></label>
+        <button class="btn small" type="submit">发送通知</button>
+      </form><p class="note notice-status" id="adminNoticeStatus" role="status"></p>
+    </details>
+    <p class="note" id="adminStatus" role="status"></p><div class="admin-table" id="adminResults"></div>
     <div class="world-tools"><button class="btn ghost small" id="adminPrev" type="button" disabled>上一页</button><button class="btn ghost small" id="adminNext" type="button" disabled>下一页</button></div>
     <section class="admin-detail" id="adminDetail" aria-label="玩家详情"></section>`;
   $('#adminFind').onsubmit = e => { e.preventDefault(); adminOffset = 0; loadAdminList(); };
+  $('#adminNoticeForm').onsubmit = sendPrivateNotice;
+  $('#adminNoticeForm [name=player]').oninput = () => { $('#adminNoticeRecipient').textContent = ''; };
   $('#adminPrev').onclick = () => { adminOffset = Math.max(0,adminOffset-25); loadAdminList(); };
   $('#adminNext').onclick = () => { adminOffset += 25; loadAdminList(); };
   $('#adminResults').onclick = e => {
@@ -4225,6 +4282,44 @@ $('#openAdmin').onclick = () => {
   adminDialog.showModal(); loadAdminList();
 };
 adminDialog.addEventListener('close', () => { adminSeq++; adminTarget = null; });
+function composePrivateNotice(id, name) {
+  if (privateNoticeBusy) return;
+  const form = $('#adminNoticeForm'), {player,body} = form.elements;
+  if (player.value && player.value !== id && body.value.trim() && !window.confirm('切换收件人并清除未发送的通知？')) return;
+  if (player.value !== id) body.value = '';
+  player.value = id;
+  $('#adminNoticeRecipient').textContent = `收件人：${name}`;
+  $('#adminNoticeStatus').textContent = '';
+  $('#adminNotice').open = true;
+  body.focus();
+}
+async function sendPrivateNotice(e) {
+  e.preventDefault();
+  if (privateNoticeBusy || !verifiedAdmin(cloud.uid) || !cloud.board?.client) return;
+  const form = e.currentTarget, status = $('#adminNoticeStatus');
+  const {player,body} = form.elements, submit = e.submitter || form.querySelector('[type=submit]');
+  const p_player = player.value.toLowerCase(), p_body = body.value.trim();
+  if (!p_body) { status.textContent = '请输入通知内容。'; body.focus(); return; }
+  if (!window.confirm(`向玩家 ${p_player} 发送私密通知？`)) return;
+  if (privateNoticeRequest?.p_player !== p_player || privateNoticeRequest.p_body !== p_body) {
+    privateNoticeRequest = {p_player, p_body, p_id:newEventId()};
+  }
+  privateNoticeBusy = true;
+  submit.disabled = player.readOnly = body.readOnly = true;
+  status.textContent = '正在发送…';
+  try {
+    unwrap(await cloud.board.client.rpc('frontier_send_notice',privateNoticeRequest));
+    privateNoticeRequest = null;
+    body.value = '';
+    status.textContent = '已发送。该玩家联网时会收到通知。';
+  } catch (error) {
+    status.textContent = missingWorldRPC(error) ? '尚未安装私密通知的数据库更新。' :
+      error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : '未确认发送成功，请核对权限或联网后重试。';
+  } finally {
+    privateNoticeBusy = false;
+    submit.disabled = player.readOnly = body.readOnly = false;
+  }
+}
 async function loadAdminList() {
   const req = ++adminSeq, status = $('#adminStatus'), form = $('#adminFind');
   const args = {query:form.query.value, sort:form.sort.value, flagged:form.flagged.checked, offset:adminOffset};
@@ -4247,8 +4342,9 @@ async function loadAdminDetail() {
     if (!adminDialog.open || adminTarget !== id) return;
     if (!r?.score) { box.textContent = '该实验室没有已上报的数据。'; return; }
     const p = sanitizePlayer(id,{...r.score,team:r.score.top_cards});
-    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息'};
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知'};
     box.innerHTML = `<h3>${esc(p.name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
+      <button type="button" class="btn ghost small" id="adminComposeNotice">发私密通知</button>
       ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
       <dl class="profile-stats">${PROFILE_STATS.map(([k,n])=>`<div><dt>${n}</dt><dd>${displayScore(p,k)}</dd></div>`).join('')}</dl>
       ${profileTeamHTML(p)}
@@ -4264,6 +4360,7 @@ async function loadAdminDetail() {
       <label>设为数量<input class="input" type="number" name="amount" min="0" max="9007199254740991" step="1" required></label><button class="btn small">下发调整</button></form>
       <p class="note">未领取的调整：${r.pending}</p>${r.audit.length ? `<ul class="admin-audit">${r.audit.map(a=>`<li>${esc(new Date(a.at).toLocaleString('zh-CN'))} · ${esc(auditNames[a.action] || a.action)}${a.detail?.reason ? `：${esc(a.detail.reason)}` : ''}</li>`).join('')}</ul>` : ''}<p id="adminActionStatus" class="note" role="status"></p>`;
     box.scrollIntoView({block:'nearest'});
+    $('#adminComposeNotice').onclick = () => composePrivateNotice(id,p.name);
     const ban = $('#adminBan'), items = $('#adminItems');
     const field = (form, name) => form.elements.namedItem(name);
     field(ban,'minutes').onchange = () => { $('#banCustom').hidden = field(ban,'minutes').value !== 'custom'; };
@@ -4335,81 +4432,181 @@ bulkCardsForm.onsubmit = async e => {
   }
 };
 
-const chatDialog = $('#chatRoom'), chatList = $('#chatMessages'), chatText = $('#chatText');
-const chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
-const chatButton = $('#openChat');
-chatButton.classList.toggle('hidden', !WORLD_CONFIG);
-let chatRead = false, chatWrite = false, chatTimer, chatState = null, chatDraftId = null;
+const chatList = $('#chatMessages'), chatText = $('#chatText'), chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
+const chatMentions = $('#chatMentions'), chatEmojis = $('#chatEmojis'), chatReplyDraft = $('#chatReplyDraft');
+const chatMentionButton = $('#chatMentionButton'), chatEmojiButton = $('#chatEmojiButton');
+const chatSendButton = chatForm.querySelector('[type=submit]');
+$('#openChat').classList.toggle('hidden', !WORLD_CONFIG);
+const chatGlyphs = ['😀','😂','🥳','🤔','😮','😭','😎','👍','👏','🙏','🤝','💚','🔥','🎉','🎲','💎','🤖','✨'];
 const chatErrors = {
   FRONTIER_CHAT_RATE:'发得太快，请稍等再试。', FRONTIER_CHAT_RESTRICTED:'封禁期间不能使用聊天室。',
-  FRONTIER_CHAT_NO_LAB:'实验室尚未同步，请联网后再试。'
+  FRONTIER_CHAT_NO_LAB:'实验室尚未同步，请联网后再试。', FRONTIER_CHAT_REPLY_GONE:'原消息已不可用，取消回复后可直接发送。'
+};
+let chatRead = false, chatWrite = false, chatTimer = null, chatState = null, chatDraftId = null;
+let chatSeq = 0, chatMessages = [], chatReply = null;
+const chatTargets = new Map();
+const chatActive = () => currentView === 'chat' && moderation.level !== 2;
+const chatAvatar = m => {
+  if (Object.hasOwn(MODEL_BY_ID,m.sig)) {
+    const model = MODEL_BY_ID[m.sig], v = [0,1,2,3].includes(m.sig_variant) ? m.sig_variant : 0;
+    return `<span class="chat-avatar chat-avatar-model" role="img" aria-label="${esc(model.n)} · ${VARIANTS[v].name}" title="${esc(model.n)} · ${VARIANTS[v].name}" style="--avatar:${TIER_HEX[model.t]}">${sharedArt(model)}</span>`;
+  }
+  const hue = [...m.player_id].reduce((n,c) => (n * 31 + c.charCodeAt(0)) % 360, 0);
+  return `<span class="chat-avatar" aria-hidden="true" style="--avatar:hsl(${hue} 60% 50%)">${esc(Array.from(m.name.trim())[0]?.toUpperCase() || '?')}</span>`;
 };
 function renderChat(messages) {
-  const state = JSON.stringify([moderation.adminId,messages]);
+  const isAdmin = verifiedAdmin(cloud.uid);
+  const state = JSON.stringify([moderation.adminId,cloud.uid,messages]);
   if (state === chatState) return;
+  chatMessages = messages;
+  const focused = document.activeElement, row = focused?.closest('#chatMessages [data-event]');
   const atBottom = chatList.scrollHeight-chatList.scrollTop-chatList.clientHeight < 48;
   chatList.innerHTML = messages.map(m => {
     const [role,label] = labRole(m.player_id,m.level,m.is_admin === true);
     const who = `<button class="lab-link" data-player="${esc(m.player_id)}" aria-haspopup="dialog">${styledLabName(m.name,role)}</button>`;
     const when = new Date(m.sent_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
-    return `<li><div class="chat-meta">${who}${label ? `<span class="role-tag role-${role}">${label}</span>` : ''}<time datetime="${esc(m.sent_at)}">${esc(when)}</time>${verifiedAdmin(cloud.uid) ? `<button type="button" class="x-btn" data-delete="${esc(m.id)}" aria-label="移除消息" title="移除消息">×</button>` : ''}</div><p>${esc(m.body)}</p></li>`;
+    const quote = m.reply_to ? `<blockquote class="chat-quote">${m.reply ? `<strong>${esc(m.reply.name)}：</strong>${esc(m.reply.body)}` : '原消息已不可用'}</blockquote>` : '';
+    return `<li data-event="${esc(m.id)}">${chatAvatar(m)}<div><div class="chat-meta">${who}${label ? `<span class="role-tag role-${role}">${label}</span>` : ''}${m.mentions?.includes(cloud.uid) ? '<span class="chat-mentioned">提到了你</span>' : ''}<time datetime="${esc(m.sent_at)}">${esc(when)}</time><span class="chat-message-actions">${m.player_id === cloud.uid ? '' : `<button class="btn ghost small" type="button" data-act="mention" aria-label="提到${esc(m.name)}" title="提到此玩家">@</button>`}<button class="btn ghost small" type="button" data-act="reply">回复</button>${isAdmin ? '<button class="btn ghost small" type="button" data-act="delete" aria-label="移除消息" title="移除消息">×</button>' : ''}</span></div>${quote}<p>${esc(m.body)}</p></div></li>`;
   }).join('');
   if (atBottom || chatState === null) chatList.scrollTop = chatList.scrollHeight;
+  if (row) {
+    const replacement = [...chatList.children].find(node => node.dataset.event === row.dataset.event);
+    const button = focused.dataset.act ? replacement?.querySelector(`[data-act="${focused.dataset.act}"]`) : replacement?.querySelector('.lab-link');
+    (button || chatList).focus({preventScroll:true});
+  }
   chatState = state;
+  if (!chatMentions.hidden && !chatMentions.contains(document.activeElement)) renderMentionPicker();
 }
 async function updateChat(action = 'list', args = {}) {
-  if (!chatDialog.open || moderation.level === 2) return false;
+  if (!chatActive()) return false;
   if (!cloud.uid || !cloud.board?.client) {
     chatStatus.textContent = cloud.status === 'warn' ? '暂时无法连接。' : '正在连接…';
     return false;
   }
+  const seq = ++chatSeq, client = cloud.board.client;
+  const stillHere = () => chatActive() && seq === chatSeq;
   try {
-    const reply = await cloud.board.client.rpc('frontier_chat',{p_action:action,...args});
-    if (!chatDialog.open) return !reply.error;
+    let reply = await client.rpc('frontier_chat_v2',{p_action:action,...args});
+    if (missingWorldRPC(reply.error)) {
+      if (args.p_reply_to || args.p_mentions?.length) {
+        if (stillHere()) chatStatus.textContent = '回复和 @ 需要更新聊天室数据库。';
+        return false;
+      }
+      reply = await client.rpc('frontier_chat',{p_action:action,...(args.p_id ? {p_id:args.p_id} : {}),...(args.p_body ? {p_body:args.p_body} : {})});
+    }
+    if (!stillHere()) return !reply.error;
     if (missingWorldRPC(reply.error)) { chatStatus.textContent = '聊天室尚未启用。'; return false; }
     const messages = unwrap(reply);
     renderChat(messages);
-    if (action !== 'list' || !chatStatus.textContent || chatStatus.textContent === '正在连接…' || chatStatus.textContent === '暂时无法连接。') {
+    if (action !== 'list' || !chatStatus.textContent || ['还没有消息。','正在连接…','暂时无法连接。'].includes(chatStatus.textContent)) {
       chatStatus.textContent = messages.length ? '' : '还没有消息。';
     }
     return true;
-  } catch (error) { if (chatDialog.open) chatStatus.textContent = chatErrors[error?.message] || '暂时无法连接。'; return false; }
+  } catch (error) { if (stillHere()) chatStatus.textContent = chatErrors[error?.message] || '暂时无法连接。'; return false; }
 }
 async function pollChat() {
-  if (document.hidden || chatRead || chatWrite) return;
+  if (document.hidden || chatRead || chatWrite || !chatActive()) return;
   chatRead = true;
   try { await updateChat(); } finally { chatRead = false; }
 }
-chatButton.onclick = () => {
-  if (!WORLD_CONFIG || chatDialog.open || moderation.level === 2) return;
-  chatList.replaceChildren(); chatState = null; chatStatus.textContent = '正在连接…';
-  chatDialog.showModal(); pollChat(); chatTimer = setInterval(pollChat, 6000);
+function renderChatView() {
+  if (chatTimer !== null) return;
+  chatStatus.textContent = '正在连接…'; pollChat(); chatTimer = setInterval(pollChat, 6000);
+}
+function leaveChatView() { clearInterval(chatTimer); chatTimer = null; chatSeq++; showChatPicker(null); }
+function setChatReply(message) {
+  chatDraftId = null; chatReply = message;
+  $('#chatReplyLabel').textContent = message ? `回复 ${message.name}：${Array.from(message.body).slice(0,64).join('')}` : '';
+  chatReplyDraft.hidden = !message;
+}
+function showChatPicker(picker) {
+  chatMentions.hidden = picker !== 'mention'; chatEmojis.hidden = picker !== 'emoji';
+  chatMentionButton.setAttribute('aria-expanded',String(!chatMentions.hidden));
+  chatEmojiButton.setAttribute('aria-expanded',String(!chatEmojis.hidden));
+}
+function chatMentionToken() {
+  return /(?:^|\s)@([^\s@]*)$/u.exec(chatText.value.slice(0,chatText.selectionStart));
+}
+function renderMentionPicker(query = chatMentionToken()?.[1] || '') {
+  const people = new Map();
+  for (const m of [...chatMessages].reverse()) if (m.player_id !== cloud.uid && !people.has(m.player_id)) people.set(m.player_id,m);
+  const matches = [...people.values()].filter(m => m.name.toLowerCase().includes(query.toLowerCase())).slice(0,12);
+  chatMentions.innerHTML = matches.length ? matches.map(m => `<button type="button" class="btn ghost small" data-mention="${esc(m.player_id)}">${esc(m.name)} <small>· ${esc(m.player_id.slice(-6))}</small></button>`).join('') : '<span class="note">没有找到最近发言的玩家。</span>';
+}
+function insertChatText(text, start = chatText.selectionStart, end = chatText.selectionEnd) {
+  if (chatWrite) return false;
+  if (chatText.value.length - (end-start) + text.length > chatText.maxLength) { chatStatus.textContent = '消息已达长度上限。'; return false; }
+  chatText.setRangeText(text,start,end,'end');
+  chatDraftId = null; showChatPicker(null); chatText.focus(); return true;
+}
+function chosenMentions(message) {
+  return [...chatTargets].filter(([,name]) => message.startsWith(name+' ') || message.includes(' '+name+' ') || message === name || message.endsWith(' '+name)).map(([id]) => id).slice(0,5);
+}
+function insertMention(message) {
+  if (!message || message.player_id === cloud.uid) return;
+  const token = chatMentionToken(), at = chatText.selectionStart;
+  const duplicate = chatMessages.some(m => m.player_id !== message.player_id && m.name === message.name);
+  const start = token ? at - token[1].length - 1 : at;
+  const name = `@${message.name}${duplicate ? ` [${message.player_id.slice(-6)}]` : ''}`;
+  if (!chatTargets.has(message.player_id) && chosenMentions(chatText.value).length >= 5) { chatStatus.textContent = '每条消息最多提到 5 位玩家。'; return; }
+  if (insertChatText(`${start && !/\s/u.test(chatText.value[start-1]) ? ' ' : ''}${name} `,start,chatText.selectionEnd)) chatTargets.set(message.player_id,name);
+}
+chatText.addEventListener('input', () => {
+  chatDraftId = null;
+  const token = chatMentionToken();
+  if (token) { renderMentionPicker(token[1]); showChatPicker('mention'); }
+  else if (!chatMentions.hidden) showChatPicker(null);
+});
+chatMentionButton.onclick = () => {
+  if (!chatMentions.hidden) { showChatPicker(null); return; }
+  renderMentionPicker(); showChatPicker('mention'); chatMentions.querySelector('button')?.focus();
 };
-chatDialog.addEventListener('close', () => clearInterval(chatTimer));
-chatText.addEventListener('input', () => { chatDraftId = null; });
+chatEmojis.innerHTML = chatGlyphs.map((glyph,i) => `<button class="btn ghost small" type="button" data-emoji="${i}">${glyph}</button>`).join('');
+chatEmojiButton.onclick = () => {
+  if (!chatEmojis.hidden) { showChatPicker(null); return; }
+  showChatPicker('emoji'); chatEmojis.querySelector('button').focus();
+};
+chatMentions.onclick = e => insertMention([...chatMessages].reverse().find(m => m.player_id === e.target.closest('[data-mention]')?.dataset.mention));
+chatEmojis.onclick = e => { const glyph = chatGlyphs[e.target.closest('[data-emoji]')?.dataset.emoji]; if (glyph) insertChatText(glyph); };
+$('#view-chat').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' && e.target === chatText && !chatMentions.hidden && chatMentions.querySelector('button')) {
+    e.preventDefault(); chatMentions.querySelector('button').focus();
+  }
+  if (e.key === 'Escape' && (!chatMentions.hidden || !chatEmojis.hidden)) { showChatPicker(null); chatText.focus(); }
+});
+$('#chatCancelReply').onclick = () => { if (!chatWrite) { setChatReply(null); chatText.focus(); } };
 chatForm.onsubmit = async e => {
   e.preventDefault();
-  const message = chatText.value.trim(), send = chatForm.querySelector('button');
+  const message = chatText.value.trim();
   if (!message || chatWrite) return;
-  chatDraftId ??= newEventId(); chatWrite = true; send.disabled = true; chatText.readOnly = true;
-  try { if (await updateChat('send',{p_id:chatDraftId,p_body:message})) { chatText.value = ''; chatDraftId = null; } }
-  finally { chatWrite = false; send.disabled = false; chatText.readOnly = false; if (chatDialog.open) chatText.focus(); }
+  chatDraftId ??= newEventId(); chatWrite = true; chatSendButton.disabled = true; chatText.readOnly = true;
+  const payload = {p_id:chatDraftId,p_body:message,p_reply_to:chatReply?.id ?? null,p_mentions:chosenMentions(message)};
+  try {
+    if (await updateChat('send',payload)) { chatText.value = ''; chatTargets.clear(); setChatReply(null); showChatPicker(null); }
+  } finally { chatWrite = false; chatSendButton.disabled = false; chatText.readOnly = false; if (chatActive()) chatText.focus(); }
 };
 chatList.onclick = e => {
   const name = e.target.closest('[data-player]');
   if (name) { openLabProfile(name); return; }
-  const remove = e.target.closest('[data-delete]');
-  if (remove && verifiedAdmin(cloud.uid) && window.confirm('移除这条聊天消息？')) updateChat('delete',{p_id:remove.dataset.delete});
+  const message = chatMessages.find(m => m.id === e.target.closest('[data-event]')?.dataset.event);
+  const action = e.target.closest('[data-act]')?.dataset.act;
+  if (!message || !action || chatWrite) return;
+  if (action === 'mention') insertMention(message);
+  if (action === 'reply') { setChatReply(message); chatText.focus(); }
+  if (action === 'delete' && verifiedAdmin(cloud.uid) && window.confirm('移除这条聊天消息？')) {
+    chatWrite = true; updateChat('delete',{p_id:message.id}).finally(() => { chatWrite = false; });
+  }
 };
 
 /* =================== ROUTER =================== */
-const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'feats', 'prefs'];
-const RENDER = { pull: renderPull, models: renderModels, dex: renderDex, bench: renderBench, research: renderResearch, world: renderWorld, feats: renderFeats, prefs: renderPrefs };
-const MIN_GAP = { pull: 250, models: 1200, dex: 1500, bench: 800, research: 400, world: 1000, feats: 600, prefs: 300 };
+const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'chat', 'feats', 'prefs'];
+const RENDER = { pull: renderPull, models: renderModels, dex: renderDex, bench: renderBench, research: renderResearch, world: renderWorld, chat: renderChatView, feats: renderFeats, prefs: renderPrefs };
+const MIN_GAP = { pull: 250, models: 1200, dex: 1500, bench: 800, research: 400, world: 1000, chat: 600, feats: 600, prefs: 300 };
 let lastRender = 0, pointerDown = false;
 function showView(v) {
-  if (!VIEWS.includes(v)) v = 'pull';
+  if (!VIEWS.includes(v) || (v === 'chat' && !WORLD_CONFIG)) v = 'pull';
   const changed = v !== currentView;
+  if (changed && currentView === 'chat') leaveChatView();
   currentView = v;
   for (const s of $$('.view')) s.classList.toggle('active', s.id === 'view-' + v);
   for (const b of $$('.nav-btn')) { if (b.dataset.view === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }
