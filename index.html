@@ -474,6 +474,34 @@ button.card { transition: transform .12s; }
 .feed-row .ic { width: 28px; height: 28px; border-radius: 6px; overflow: hidden; background: #0E1A18; flex: none; }
 .feed-row .ic svg { width: 100%; height: 100%; display: block; }
 .feed-row .when { margin-left: auto; color: var(--ink-3); font-size: 12px; white-space: nowrap; font-family: var(--font-num); }
+.lb .sigc .ic img, .feed-row .ic img, .profile-art img { width: 100%; height: 100%; display: block; }
+.lab-link { padding: 2px 0; min-height: 24px; border: 0; background: transparent; color: var(--ink); font-weight: 650; text-align: start; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
+.lab-link:hover, .lab-link:focus-visible { color: var(--copper); text-decoration-color: currentColor; }
+#labProfile { width: min(620px, calc(100% - 24px)); max-height: min(82vh, 800px); max-height: min(88dvh, 800px); padding: 0; border: 1px solid var(--line-2); border-radius: var(--r-l); background: var(--bg-2); color: var(--ink); overflow: hidden; }
+#labProfile[open] { display: flex; flex-direction: column; }
+#labProfile::backdrop { background: rgb(6 20 17 / .64); }
+#labProfile header { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 22px; border-bottom: 1px solid var(--line); }
+#labProfile header p, #labProfile h2, #labProfile h3 { margin: 0; }
+#labProfile header p, .profile-note, .profile-stats dt { color: var(--ink-2); font-size: 13px; }
+#labProfile h2 { font-size: 21px; overflow-wrap: anywhere; }
+#labProfile h3 { font-size: 16px; }
+#labProfile .x-btn { width: 40px; height: 40px; }
+#profileBody { overflow: auto; overscroll-behavior: contain; padding: 16px 22px 20px; }
+.profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); margin: 0 0 18px; gap: 10px 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.profile-stats dd { margin: 0; font: 700 15px/1.55 var(--font-num); overflow-wrap: anywhere; }
+.profile-note { margin: 3px 0 10px; }
+.profile-team { list-style: none; margin: 0; padding: 0; counter-reset: card-rank; }
+.profile-team li { counter-increment: card-rank; display: grid; grid-template-columns: 18px 44px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 10px 0; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 12px; overflow-wrap: anywhere; }
+.profile-team li::before { content: counter(card-rank, decimal-leading-zero); color: var(--ink-2); font-family: var(--font-num); }
+.profile-team strong { color: var(--ink); font-size: 14px; }
+.profile-art { border-radius: var(--r-s); overflow: hidden; aspect-ratio: 1; }
+.profile-pw { text-align: end; color: var(--ink); font: 700 15px/1.5 var(--font-num); font-variant-numeric: tabular-nums; }
+.profile-pw small { display: block; color: var(--ink-2); font: 400 12px/1.5 var(--font-ui); }
+@media (max-width: 480px) {
+  #labProfile header, #profileBody { padding: 12px 14px; }
+  .profile-team li { grid-template-columns: 16px 32px minmax(0, 1fr) minmax(40px, max-content); gap: 6px; }
+  .profile-pw { font-size: 13px; }
+}
 .world-prog .ms { position: relative; height: 18px; font-size: 11.5px; color: var(--ink-3); margin-top: 6px; font-family: var(--font-num); }
 .world-prog .ms span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
 .world-prog .ms span:last-child { transform: translateX(-100%); }
@@ -885,6 +913,8 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           <ul><li>四榜展示实验室名、成绩和镇馆模型。全服仅播报当次卡池中具体模型与变体的单抽概率不高于十万分之一的结果。</li></ul>
           <h4><time datetime="2026-11-25">2026-11-25</time> · 排行榜扩展与高速连抽</h4>
           <ul><li>顶栏已生效的热点可悬停或轻点查看效果和剩余时间。</li><li>全服页显示在线人数，同一玩家打开多个标签页只计一人。</li><li>新增战力、成就和累计 Token 榜。七项成绩在任意游戏页自动上报；每榜显示前十名，另列自己的全服名次。</li><li>优化前台高速连抽与屏幕外的结果刷新；抽卡概率、保底和实际抽数的计法不变。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 实验室档案</h4>
+          <ul><li>排行榜与全服播报的实验室名现在可打开公开档案，查看七项成绩及当前评测战力最高的五张卡。</li></ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -902,6 +932,10 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<dialog id="labProfile" aria-labelledby="profileTitle" aria-describedby="profileCaption">
+  <header><div><p id="profileCaption">实验室档案</p><h2 id="profileTitle"></h2></div><form method="dialog"><button class="x-btn" aria-label="关闭实验室档案" autofocus>×</button></form></header>
+  <div id="profileBody"></div>
+</dialog>
 <div class="modal-back" id="modalBack"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
 <div class="cine" id="cine"><div class="rays"></div><div class="wafer"></div><div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div><div class="hint">点击任意处继续</div></div>
 <div class="flash" id="flash"></div>
@@ -3208,6 +3242,16 @@ function setCloudStatus(s) {
   markDirty('world', 'prefs');
 }
 function num(x, max) { x = Number(x); return isFinite(x) && x >= 0 ? Math.min(x, max) : 0; }
+function publicTeam(rows) {
+  if (!Array.isArray(rows)) return null;
+  const seen = new Set();
+  return rows.slice(0,5).filter(c => {
+    if (!c || typeof c.id !== 'string' || !Object.hasOwn(MODEL_BY_ID,c.id) || seen.has(c.id) ||
+        ![0,1,2,3].includes(c.v) || !Number.isFinite(c.pw) || c.pw < 0 ||
+        !Number.isInteger(c.lv) || c.lv < 0 || !Number.isInteger(c.count) || c.count < 1) return false;
+    seen.add(c.id); return true;
+  }).map(({id,v,pw,lv,count}) => ({id,v,pw,lv,count})).sort((a,b)=>b.pw-a.pw);
+}
 function sanitizePlayer(id, d) {
   if (!d || typeof d !== 'object') return null;
   const rare = Array.isArray(d.rare) ? d.rare.slice(0, 8).filter(validWorldHit) : [];
@@ -3217,14 +3261,16 @@ function sanitizePlayer(id, d) {
     tps: num(d.tps, 1e300), dex: num(d.dex, 4000), stage: num(d.stage, 1e6), pulls: num(d.pulls, 1e15), reb: num(d.reb, 1e6),
     power: d.power == null ? null : num(d.power, 1e300), achievements: d.achievements == null ? null : num(d.achievements, 1e6),
     lifetime: d.lifetime == null ? null : num(d.lifetime, 1e300),
-    rare, ts: num(d.ts, Date.now() + 6e4)
+    team: publicTeam(d.team), rare, ts: num(d.ts, Date.now() + 6e4)
   };
 }
 function playerDoc() {
+  const team = bestTeam(benchInfo(S.stage).s);
   return {
     name: S.name.slice(0, 16), sig: S.sig || null, sigV: S.sig ? bestVar(S.cards[S.sig] || [0, 0, 0, 0]) : 0,
     tps: computeYield(), dex: dexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
-    power: bestTeam(benchInfo(S.stage).s).reduce((sum, x) => sum + x.pw, 0),
+    power: team.reduce((sum, x) => sum + x.pw, 0),
+    team: team.map(({m,v,pw}) => ({id:m.id,v,pw:num(pw,1e300),count:S.cards[m.id][v],lv:trainLv(m.id)})),
     achievements: ACH.filter(a => S.ach[a.id]).length, lifetime: S.lifetime,
     rare: S.rare.slice(0, 5), ts: Date.now()
   };
@@ -3445,7 +3491,13 @@ async function boardTick(force = false) {
       const base = {player_id:uid, name:p.name, sig:p.sig, sig_variant:p.sigV, tps:p.tps, dex:Math.floor(p.dex), stage:Math.floor(p.stage), pulls:Math.floor(p.pulls)};
       const write = row => b.client.from('leaderboard_players').upsert(row, {onConflict:'player_id'});
       if (!(now < b.legacyUntil)) {
-        const reply = await write({...base, power:p.power, achievements:p.achievements, lifetime:p.lifetime});
+        const seven = {...base, power:p.power, achievements:p.achievements, lifetime:p.lifetime};
+        let reply;
+        if (!(now < b.teamRetryAt)) {
+          reply = await write({...seven, top_cards:p.team});
+          if (missingScoreColumn(reply.error)) { b.teamRetryAt = now + 60000; reply = null; }
+        }
+        reply ??= await write(seven);
         if (missingScoreColumn(reply.error)) b.legacyUntil = now + 60000;
         else unwrap(reply);
       }
@@ -3466,9 +3518,9 @@ async function boardTick(force = false) {
       else b.boards[mode] = {at:now, ...await readRanking(b.client, mode, uid)};
     }
     if (readFeed) {
-      const hits = unwrap(await b.client.from('leaderboard_hits').select('event_id,name,pack,model,variant,chance,drawn_at')
+      const hits = unwrap(await b.client.from('leaderboard_hits').select('player_id,event_id,name,pack,model,variant,chance,drawn_at')
         .order('drawn_at', {ascending:false}).order('event_id', {ascending:false}).limit(30));
-      b.feed = hits.map(r => ({event:r.event_id, name:r.name, pack:r.pack, id:r.model, v:r.variant, chance:r.chance, ts:r.drawn_at})).filter(validWorldHit);
+      b.feed = hits.map(r => ({owner:r.player_id, event:r.event_id, name:r.name, pack:r.pack, id:r.model, v:r.variant, chance:r.chance, ts:r.drawn_at})).filter(validWorldHit);
       b.feedAt = now;
     }
     b.errors = 0; cloud.ready = true; setCloudStatus('on');
@@ -3476,6 +3528,18 @@ async function boardTick(force = false) {
     b.next = Date.now() + Math.min(120000, 2000 * 2 ** Math.min(6, b.errors++));
     setCloudStatus('warn');
   } finally { b.busy = false; }
+}
+
+async function readLabProfile(uid) {
+  const b = cloud.board;
+  if (!b) return livePlayers().find(p => p.id === uid) || null;
+  const base = 'player_id,name,tps,dex,stage,pulls', seven = base + ',power,achievements,lifetime';
+  const read = fields => b.client.from('leaderboard_players').select(fields).eq('player_id',uid).maybeSingle();
+  let res = await read(seven + ',top_cards');
+  if (missingScoreColumn(res.error)) res = await read(seven);
+  if (missingScoreColumn(res.error)) res = await read(base);
+  const r = unwrap(res);
+  return r ? sanitizePlayer(r.player_id,{...r,team:r.top_cards}) : null;
 }
 
 async function readRanking(client, mode, uid) {
@@ -3496,8 +3560,76 @@ async function readRanking(client, mode, uid) {
   return {rows, mine:player(own), rank:Number.isSafeInteger(ahead.count) ? ahead.count+1 : null};
 }
 
+const PROFILE_STATS = [ ['tps','每秒产出',' Token/s'], ['dex','图鉴',' 格'], ['stage','评测通关',' 关'],
+  ['pulls','累计抽卡',' 抽'], ['power','评测战力',''], ['achievements','已解锁成就',' 项'], ['lifetime','累计 Token',''] ];
+
+function labLink(id, name) {
+  if (!id) return esc(name);
+  return `<button type="button" class="lab-link" data-player="${esc(id)}" aria-haspopup="dialog" aria-label="查看${esc(name)}的实验室档案">${esc(name)}</button>`;
+}
+function profileTeamHTML(p) {
+  if (p.team == null) return '<p class="profile-note">尚未同步阵容。该玩家下次使用新版上报后显示。</p>';
+  if (!p.team.length) return '<p class="profile-note">暂无可参评的模型。</p>';
+  const info = benchInfo(p.stage);
+  return `<p class="profile-note">第 ${p.stage+1} 关 · ${esc(info.name)} · ${SPECS[info.s].name}评测</p><ol class="profile-team">${p.team.map(c => {
+    const m = MODEL_BY_ID[c.id], match = m.s === 'all' || m.s === info.s;
+    return `<li><span class="profile-art">${sharedArt(m)}</span><div><strong>${esc(m.n)}</strong><div>${esc(LABS[m.lab].name)} · ${TIERS[m.t].id} · ${VARIANTS[c.v].name}版</div><div>${SPECS[m.s].name}${match ? '（专长匹配 ×2）' : ''} · 微调 Lv.${c.lv} · 持有 ${fmt(c.count)} 张</div></div><span class="profile-pw"><small>战力</small>${fmt(c.pw)}</span></li>`;
+  }).join('')}</ol>`;
+}
+let profileRequest = 0, profileOrigin = null;
+function labOrigin(link) {
+  return {id:link.dataset.player, event:link.closest('[data-event]')?.dataset.event,
+    root:link.closest('tfoot') ? '#lbWrap tfoot' : link.closest('#feed') ? '#feed' : '#lbWrap tbody', link};
+}
+function focusLabOrigin({id,event,root,link}) {
+  const target = link.isConnected ? link : $$(root+' .lab-link').find(el=>el.dataset.player===id && (!event || el.closest('[data-event]')?.dataset.event===event));
+  (target || $('#lbSeg [aria-pressed="true"]'))?.focus({preventScroll:true});
+}
+function openLabProfile(link) {
+  profileOrigin = labOrigin(link);
+  $('#profileTitle').textContent = link.textContent;
+  loadLabProfile(link.dataset.player);
+}
+async function loadLabProfile(id) {
+  const seq = ++profileRequest, dlg = $('#labProfile'), body = $('#profileBody');
+  body.innerHTML = '<p role="status" class="profile-note">正在读取档案…</p>';
+  if (!dlg.open) dlg.showModal();
+  else dlg.querySelector('.x-btn').focus({preventScroll:true});
+  body.scrollTop = 0;
+  try {
+    const p = await readLabProfile(id);
+    if (seq !== profileRequest || !dlg.open) return;
+    if (!p) { body.innerHTML = '<p class="profile-note" role="status">这个实验室还没有公开成绩。</p>'; return; }
+    $('#profileTitle').textContent = p.name;
+    body.innerHTML = `<dl class="profile-stats">${PROFILE_STATS.map(([key,label,unit])=>`<div><dt>${label}</dt><dd>${p[key] == null ? '未上报' : fmt(p[key])+unit}</dd></div>`).join('')}</dl><h3>战力最强的模型</h3>${profileTeamHTML(p)}`;
+  } catch {
+    if (seq !== profileRequest || !dlg.open) return;
+    body.innerHTML = '<p role="status" class="profile-note">未能读取实验室档案。</p><button type="button" class="btn ghost small">重新读取</button>';
+    body.querySelector('button').onclick = () => loadLabProfile(id);
+  }
+}
+$('#labProfile').addEventListener('click', e => {
+  if (e.target !== e.currentTarget) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) e.currentTarget.close();
+});
+$('#labProfile').addEventListener('close', () => {
+  if ($('#labProfile').open) return;
+  profileRequest++;
+  if (!profileOrigin) return;
+  focusLabOrigin(profileOrigin); profileOrigin = null;
+});
+
 /* =================== RENDER: WORLD =================== */
 let lbMode = 'tps';
+const worldLists = new WeakMap();
+function setWorldList(root, html) {
+  if (worldLists.get(root) === html) return;
+  const focus = document.activeElement, origin = root.contains(focus) && focus.matches('.lab-link') ? labOrigin(focus) : null;
+  root.innerHTML = html;
+  worldLists.set(root, html);
+  if (origin) focusLabOrigin(origin);
+}
 function renderWorld() {
   const presence = cloud.board?.presence;
   const pending = presence?.status === 'connecting' && cloud.status !== 'warn';
@@ -3524,8 +3656,8 @@ function renderWorld() {
   for (const b of $$('#lbSeg button')) b.setAttribute('aria-pressed', b.dataset.lb === lbMode);
   if (!loaded) {
     const msg = cloud.status === 'connecting' ? '正在连接全服数据…' : cloud.status === 'warn' ? '全服暂时离线，将自动重试。本机存档不受影响。' : '当前未连接排行榜数据库，进度仅保存在本机。';
-    $('#lbWrap').innerHTML = `<div class="empty">${msg}</div>`;
-    $('#feed').innerHTML = `<div class="empty">全服播报会在联网后出现。</div>`;
+    setWorldList($('#lbWrap'), `<div class="empty">${msg}</div>`);
+    setWorldList($('#feed'), '<div class="empty">全服播报会在联网后出现。</div>');
     return;
   }
   const key = lbMode;
@@ -3538,18 +3670,18 @@ function renderWorld() {
   const label = { tps:'Token/s', dex:'图鉴格', stage:'评测关', pulls:'抽卡数', power:'评测战力', achievements:'已解锁成就', lifetime:'累计 Token' }[key];
   function row(p, n, own) {
     const sm = p.sig ? MODEL_BY_ID[p.sig] : null;
-    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${esc(p.name)}${p.me && !own ? '（你）' : ''}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${cardArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
+    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : '正在读取…';
   const ownRow = mine ? row(mine,rank,true) : '<tr><td colspan="4">我的排名 · 尚未上报成绩</td></tr>';
-  $('#lbWrap').innerHTML = top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : waiting}</div>`;
-  const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare).sort((a,b) => b.ts - a.ts);
-  $('#feed').innerHTML = feed?.length ? feed.slice(0, 30).map(r => {
+  setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : waiting}</div>`);
+  const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare.map(r=>({...r,owner:p.id}))).sort((a,b) => b.ts - a.ts);
+  setWorldList($('#feed'), feed?.length ? feed.slice(0, 30).map(r => {
     const m = modelOrLeak(r.id);
     const what = r.id === 'leak' ? '泄露的权重' : `${VARIANTS[r.v].name}版 ${m.n}`;
     const pack = PACKS.find(p => p.id === r.pack);
-    return `<div class="feed-row"><span class="ic">${cardArt(m)}</span><span><b>${esc(r.name)}</b> 在${esc(pack.name)}抽到了 ${esc(what)}<br><small>单抽约 1/${Math.round(1/r.chance).toLocaleString('zh-CN')}</small></span><span class="when">${ago(r.ts)}</span></div>`;
-  }).join('') : `<div class="empty">${feed ? '还没有单抽概率低至十万分之一的记录。' : waiting}</div>`;
+    return `<div class="feed-row" data-event="${esc(r.event || r.ts)}"><span class="ic">${sharedArt(m)}</span><span>${labLink(r.owner,r.name)} 在${esc(pack.name)}抽到了 ${esc(what)}<br><small>单抽约 1/${Math.round(1/r.chance).toLocaleString('zh-CN')}</small></span><span class="when">${ago(r.ts)}</span></div>`;
+  }).join('') : `<div class="empty">${feed ? '还没有单抽概率低至十万分之一的记录。' : waiting}</div>`);
 }
 function logoSVGInline() { return `<svg viewBox="0 0 120 120">${logoSVG()}</svg>`; }
 
@@ -3646,6 +3778,10 @@ on('#rebirthPanel', 'click', e => {
 });
 on('#techGrid', 'click', e => { const b = e.target.closest('[data-tech]'); if (b) { initAudio(); buyTech(b.dataset.tech); renderActive(true); } });
 on('#lbSeg', 'click', e => { const b = e.target.closest('[data-lb]'); if (!b) return; lbMode = b.dataset.lb; renderWorld(); });
+for (const root of ['#lbWrap','#feed']) on(root, 'click', e => {
+  const link = e.target.closest('.lab-link');
+  if (link) openLabProfile(link);
+});
 function saveName() {
   const v = $('#labName').value.replace(/\s+/g, ' ').trim().slice(0, 16);
   if (!v) { toast('名称不能为空', '给实验室起个名字吧'); return; }
