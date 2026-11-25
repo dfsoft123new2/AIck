@@ -507,6 +507,56 @@ button.card { transition: transform .12s; }
 .world-prog .ms span:last-child { transform: translateX(-100%); }
 .world-prog .bar { overflow: visible; }
 .world-prog .bar .tick { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--line-2); }
+.world-tools { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.world-tools [hidden] { display:none; }
+#ownIdentity { margin-top:8px; color:var(--ink-2); font-size:12px; }
+#ownIdentity code,.admin-id { overflow-wrap:anywhere; }
+.world-dialog { width:min(620px,calc(100% - 24px)); max-height:88dvh; padding:0; overflow:hidden; color:var(--ink); background:var(--bg-2); border:1px solid var(--line-2); border-radius:var(--r-l); }
+.world-dialog[open] { display:flex; flex-direction:column; }
+.world-dialog::backdrop { background:rgb(6 20 17 / .64); }
+.world-dialog header { display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--line); padding:14px 18px; }
+.world-dialog header h2 { margin:0; font-size:20px; }
+.world-dialog-body { min-height:0; overflow:auto; overscroll-behavior:contain; padding:14px 18px 18px; }
+.world-dialog-body > :first-child { margin-top:0; }
+.world-dialog [hidden] { display:none; }
+.admin-dialog { width:min(950px,calc(100% - 24px)); }
+.admin-tools { display:flex; flex-wrap:wrap; align-items:end; gap:8px; }
+.admin-tools label { display:grid; gap:4px; min-width:0; font-size:13px; color:var(--ink-2); }
+.admin-tools label.admin-check { display:flex; align-items:center; min-height:34px; }
+.admin-tools select { max-width:min(250px,70vw); }
+.admin-note-input { flex:0 1 100%; }
+.admin-note-input textarea { width:100%; resize:vertical; }
+.admin-table { overflow-x:auto; }
+.admin-detail:not(:empty) { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
+.admin-detail .admin-tools { margin-top:12px; }
+.admin-audit { padding-inline-start:20px; color:var(--ink-2); font-size:13px; }
+.notice-dialog header { border-block-start:4px solid var(--copper); }
+.notice-body { padding:12px 0; border-block:1px solid var(--line); }
+.notice-body h3 { margin:0 0 6px; font-size:16px; }
+.notice-message { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; margin:8px 0 12px; }
+.notice-status:empty { margin:0; }
+.chat-body { display:flex; flex-direction:column; }
+.chat-messages { height:min(52dvh,430px); min-height:100px; padding:0; margin:0; overflow:auto; overscroll-behavior:contain; list-style:none; }
+.chat-messages li { border-bottom:1px solid var(--line); padding:7px 0; }
+.chat-messages p { margin:3px 0 0; overflow-wrap:anywhere; white-space:pre-wrap; }
+.chat-meta,.chat-compose { display:flex; align-items:center; gap:8px; min-width:0; }
+.chat-meta { flex-wrap:wrap; }
+.chat-meta .lab-link { overflow-wrap:anywhere; }
+.chat-meta time { margin-inline-start:auto; color:var(--ink-2); font-size:12px; white-space:nowrap; }
+.chat-meta button.x-btn { min-width:32px; }
+#chatStatus { min-height:1.2em; margin:6px 0; }
+.lab-name { font-weight:750; color:var(--role-color); }
+.lab-name-admin,.role-admin { --role-color:light-dark(#145ab2,#8ec5ff); --role-light:light-dark(#007d9c,#c3eaff); }
+.lab-name-limited,.role-limited { --role-color:light-dark(#b92d20,#ff9283); --role-light:light-dark(#9b4b13,#ffc285); }
+.lab-name-banned,.role-banned { --role-color:light-dark(#555f65,#b5bec3); --role-light:light-dark(#6a7177,#dde1e4); }
+.role-tag { color:var(--role-color); font-size:12px; white-space:nowrap; }
+@supports (background-clip:text) {
+  .lab-name { background:linear-gradient(105deg,var(--role-color) 0%,var(--role-light) 50%,var(--role-color) 100%); background-size:220% 100%; background-clip:text; color:transparent; }
+  .lab-name-admin,.lab-name-limited { animation:lab-name-shine 4s ease-in-out infinite; }
+}
+@keyframes lab-name-shine { 0%,28%,100% { background-position:100% 50%; } 62% { background-position:0 50%; } }
+@media (prefers-reduced-motion:reduce) { .lab-name { animation:none; } }
+@media (max-width:540px) { .world-dialog header,.world-dialog-body { padding-inline:12px; } }
 .ai-out { white-space: pre-wrap; font-size: 14px; line-height: 1.75; padding: 12px 14px; border-radius: var(--r-m); background: var(--bg-3); border: 1px solid var(--line); min-height: 64px; }
 .note { font-size: 12.5px; color: var(--ink-3); }
 
@@ -815,15 +865,18 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
                 <div class="muted" style="font-size:12.5px">实验室名称</div>
                 <div class="name-edit"><input class="input" id="labName" maxlength="16" placeholder="给实验室起个名字"><button class="btn small" id="saveName">保存</button></div>
                 <p class="note" id="sigNote" style="margin:8px 0 0">在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。</p>
+                <div class="world-tools"><button class="btn ghost small" id="openChat" type="button" hidden>聊天室</button><button class="btn small" id="openAdmin" type="button" hidden>管理实验室</button></div>
+                <details id="ownIdentity" hidden><summary>我的玩家 ID</summary><code id="ownPlayerId"></code></details>
               </div>
             </div>
           </div>
           <div class="panel world-prog">
-            <div class="panel-h"><h3>全服奇点进度</h3><span class="side" id="worldBonus">全服加成 ×1.00</span></div>
-            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span class="num" style="font-size:24px;font-weight:700" id="worldPulls">0</span><span class="muted">次全服累计抽卡</span></div>
+            <div class="panel-h"><h3>全服奇点进度</h3><span class="side" id="worldBonus">全服加成 —</span></div>
+            <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin-bottom:8px"><span class="num" style="font-size:24px;font-weight:700" id="worldPulls">—</span><span class="muted">次计入里程碑</span></div>
             <div class="bar gold"><i id="worldBar" style="width:0%"></i></div>
             <div class="ms" id="worldMs"></div>
-            <p class="note" style="margin:10px 0 0">每跨过一个里程碑，所有玩家的产出永久 +5%。</p>
+            <p class="note" style="margin:10px 0 0" id="worldTotal">全服上报总抽数：—</p>
+            <p class="note" style="margin:4px 0 0">每个实验室最多计入 <span id="worldCap">2亿</span> 次；每达成一档，所有玩家的产出 +5%。</p>
           </div>
         </div>
         <div class="grid-2" style="margin-top:14px">
@@ -915,6 +968,10 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           <ul><li>顶栏已生效的热点可悬停或轻点查看效果和剩余时间。</li><li>全服页显示在线人数，同一玩家打开多个标签页只计一人。</li><li>新增战力、成就和累计 Token 榜。七项成绩在任意游戏页自动上报；每榜显示前十名，另列自己的全服名次。</li><li>优化前台高速连抽与屏幕外的结果刷新；抽卡概率、保底和实际抽数的计法不变。</li></ul>
           <h4><time datetime="2026-11-25">2026-11-25</time> · 实验室档案</h4>
           <ul><li>排行榜与全服播报的实验室名现在可打开公开档案，查看七项成绩及当前评测战力最高的五张卡。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 经典模型档案</h4>
+          <ul><li>新增 64 款 N 至 UR 的经典模型，每款附原论文及论文日期。图鉴扩至 393 款、1,572 个变体格，旧卡编号不变。</li><li>新增 14 个收藏系列，涵盖视觉、语音、代码、翻译、图文理解等方向。凑齐一组可获得 4%–6% 基础系列产出加成。</li><li>档位、保底和变体概率不变；扩池会改变指定模型的抽取概率。图鉴榜仍按点亮格数排名，超过 1,316 格即可排在旧版满图鉴成绩前面。</li><li>修正全服奇点进度显示：里程碑抽数与进度条、倍率统一口径，全服上报总抽数另列。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 全服管理、聊天与处分通知</h4>
+          <ul><li>全服页新增聊天室。昵称旁标记管理员、限制或封禁状态。</li><li>管理员可在限制或封禁时给目标玩家附一条私密通知。限制通知独立弹出；封禁通知在锁定界面显示。离线未读通知会在玩家下次联网时送达。</li></ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -935,6 +992,36 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 <dialog id="labProfile" aria-labelledby="profileTitle" aria-describedby="profileCaption">
   <header><div><p id="profileCaption">实验室档案</p><h2 id="profileTitle"></h2></div><form method="dialog"><button class="x-btn" aria-label="关闭实验室档案" autofocus>×</button></form></header>
   <div id="profileBody"></div>
+</dialog>
+<dialog id="moderationLock" class="world-dialog notice-dialog" aria-labelledby="moderationTitle">
+  <header><h2 id="moderationTitle">正在确认全服状态</h2></header>
+  <div class="world-dialog-body">
+    <p id="lockDetail" role="status"></p>
+    <section class="notice-body" id="lockNotice" aria-labelledby="lockNoticeTitle" hidden>
+      <h3 id="lockNoticeTitle">管理员通知</h3>
+      <p class="note" id="lockNoticeMeta"></p><p class="notice-message" id="lockNoticeText"></p>
+      <p class="note notice-status" id="lockNoticeStatus" role="status"></p>
+      <button class="btn" id="lockNoticeRead" type="button">确认已读</button>
+    </section>
+    <p class="note notice-status" id="lockStatus" role="status"></p>
+    <div class="world-tools" id="lockActions" hidden><button class="btn ghost" id="checkLock" type="button" autofocus>检查状态</button><button class="btn ghost" id="clearLockedSave" type="button">清除数据重玩</button></div>
+  </div>
+</dialog>
+<dialog id="moderationNotice" class="world-dialog notice-dialog" aria-labelledby="noticeTitle">
+  <header><h2 id="noticeTitle">管理员通知</h2></header>
+  <div class="world-dialog-body"><p class="note" id="noticeMeta"></p><p class="notice-message" id="noticeText"></p><p class="note notice-status" id="noticeStatus" role="status"></p><div class="world-tools"><button class="btn" id="noticeRead" type="button" autofocus>确认已读</button></div></div>
+</dialog>
+<dialog id="adminPanel" class="world-dialog admin-dialog" aria-labelledby="adminTitle">
+  <header><h2 id="adminTitle">全服管理</h2><form method="dialog"><button class="x-btn" aria-label="关闭全服管理">×</button></form></header>
+  <div class="world-dialog-body" id="adminBody"></div>
+</dialog>
+<dialog id="chatRoom" class="world-dialog" aria-labelledby="chatTitle">
+  <header><h2 id="chatTitle">全服聊天室</h2><form method="dialog"><button class="x-btn" aria-label="关闭聊天室">×</button></form></header>
+  <div class="world-dialog-body chat-body">
+    <ol class="chat-messages" id="chatMessages" aria-label="最近消息" tabindex="0"></ol>
+    <p class="note" id="chatStatus" role="status"></p>
+    <form id="chatSend" class="chat-compose"><input class="input" id="chatText" maxlength="240" aria-label="聊天消息" placeholder="输入消息" required><button class="btn" type="submit">发送</button></form>
+  </div>
 </dialog>
 <div class="modal-back" id="modalBack"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
 <div class="cine" id="cine"><div class="rays"></div><div class="wafer"></div><div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div><div class="hint">点击任意处继续</div></div>
@@ -1423,7 +1510,72 @@ const MODELS = [
   { id: 'dsv4pro0813', n: 'DeepSeek-V4-Pro-0813', c: '0813', lab: 'deepseek', a: [8, 6, 7], s: 'ag', d: 'V4-Pro 的八月正式版，强化了智能体能力。在线接口沿用 V4-Pro 名称，图鉴按快照分别收藏。' },
   { id: 'dsv41flash', n: 'DeepSeek-V4.1-Flash', c: 'V4.1 首发版', lab: 'deepseek', a: [8, 6, 7], s: 'mm', d: 'V4.1 首发的原生多模态模型。与 V4-Flash 和后续 1017 快照分别收藏。' },
   { id: 'dsv4flash0731', n: 'DeepSeek-V4-Flash-0731', c: '0731', lab: 'deepseek', a: [7, 5, 6], s: 'ag', d: 'V4-Flash 的七月快照，提升了智能体任务表现。它仍属于 V4，不是九月首发的 V4.1-Flash。' },
-  ...[2, 3, 4, 5].map(i => { const q = '?'.repeat(i); return { id: 'qm'+i, n:q, c:q, lab:'unknown', t:9, s:'all', g:q, k:q, d:q }; })
+  ...[2, 3, 4, 5].map(i => { const q = '?'.repeat(i); return { id: 'qm'+i, n:q, c:q, lab:'unknown', t:9, s:'all', g:q, k:q, d:q }; }),
+  // 2026.11.25: Classic models. Append after all existing catalogue numbers.
+  { id: 'vgg16', n: 'VGG-16', c: '16 层', lab: 'academia', a: [2, 8, 8], s: 'mm', d: '牛津大学视觉几何组的 16 层网络，用连续的小型 3×3 卷积构建深层图像分类器。' },
+  { id: 'mobilenetv1', n: 'MobileNetV1', c: '深度可分离卷积', lab: 'google', a: [2, 7, 8], s: 'ef', d: 'Google 的第一代 MobileNet，把空间卷积与通道混合拆开，减少手机等设备上的视觉计算量。' },
+  { id: 'efficientnetb0', n: 'EfficientNet-B0', c: '复合缩放基线', lab: 'google', a: [2, 7, 6], s: 'ef', d: 'Google 用架构搜索得到的基线网络。更大的 EfficientNet 型号从 B0 出发，同时放大深度、宽度和输入分辨率。' },
+  { id: 'vitb16', n: 'ViT-B/16', c: '16×16 图像块', lab: 'google', a: [3, 9, 8], s: 'mm', d: 'Google Vision Transformer 的 Base 规格。把图像切成 16×16 像素块，再用 Transformer 编码。' },
+  { id: 'unet', n: 'U-Net', c: '生物医学图像分割', lab: 'academia', a: [3, 9, 9], s: 'mm', d: '弗赖堡大学提出的像素级分割网络，通过跳跃连接在上采样时补回空间细节；后来也被用于生成模型。' },
+  { id: 'maskrcnn', n: 'Mask R-CNN', c: '实例分割', lab: 'meta', a: [2, 8, 6], s: 'mm', d: 'Facebook AI Research 在 Faster R-CNN 上加了遮罩分支，不只框出物体，还给每个实例预测像素掩码。' },
+  { id: 'detr', n: 'DETR', c: '端到端检测', lab: 'meta', a: [3, 7, 5], s: 'mm', d: 'Facebook AI Research 将目标检测写成集合预测，用 Transformer 和二分匹配直接预测一组目标。' },
+  { id: 'roberta', n: 'RoBERTa', c: '优化 BERT 预训练', lab: 'meta', a: [2, 7, 7], s: 'ef', d: 'Facebook AI Research 与华盛顿大学重新检验 BERT 的训练配方，包括更长训练、更多数据和动态掩码。' },
+  { id: 'distilbert', n: 'DistilBERT', c: '知识蒸馏', lab: 'academia', a: [1, 7, 6], s: 'ef', d: 'Hugging Face 的轻量编码器，通过知识蒸馏保留 BERT 的大部分语言理解能力，降低推理成本。' },
+  { id: 'albert', n: 'ALBERT', c: '跨层参数共享', lab: 'google', a: [2, 6, 4], s: 'ef', d: '用嵌入矩阵分解和跨层参数共享缩减 BERT 参数，并引入句子顺序预测。' },
+  { id: 'electra', n: 'ELECTRA', c: '替换词检测', lab: 'google', a: [2, 7, 4], s: 'ef', d: '不让编码器只猜被遮住的词，而是判断输入中的每个词是否被小生成器替换，提高预训练样本利用率。' },
+  { id: 'codebert', n: 'CodeBERT', c: '代码与自然语言', lab: 'microsoft', a: [2, 6, 4], s: 'cd', d: '面向代码与自然语言的预训练编码器，可用于自然语言代码搜索和代码文档生成等任务。' },
+  { id: 'wavenet', n: 'WaveNet', c: '直接生成波形', lab: 'google', a: [2, 9, 8], s: 'mm', d: 'DeepMind 的音频生成架构，通过膨胀因果卷积逐采样点预测原始波形。' },
+  { id: 'tacotron2', n: 'Tacotron 2', c: '文本转语音', lab: 'google', a: [2, 7, 5], s: 'mm', d: 'Google 先把文字预测成梅尔频谱，再用受该频谱控制的 WaveNet 生成可播放的语音。' },
+  { id: 'wav2vec2', n: 'wav2vec 2.0', c: '自监督语音表征', lab: 'meta', a: [3, 8, 7], s: 'mm', d: 'Facebook AI Research 先从未标注语音学习表征，再用少量转录数据微调语音识别。' },
+  { id: 'hubert', n: 'HuBERT', c: '预测隐藏单元', lab: 'meta', a: [3, 7, 5], s: 'mm', d: '把聚类产生的离散标签当作训练目标，预测被遮住的语音片段所对应的隐藏单元。' },
+  { id: 'stylegan', n: 'StyleGAN', c: '分层风格控制', lab: 'nvidia', a: [2, 8, 5], s: 'mm', d: 'NVIDIA 在生成器的不同层注入风格信息，可在不同尺度上分别影响图像布局与细节。' },
+  { id: 'stylegan2', n: 'StyleGAN2', c: '权重调制与解调', lab: 'nvidia', a: [3, 8, 7], s: 'mm', d: 'NVIDIA 重做归一化与训练方法，借助权重调制和解调抑制首代模型中常见的图像伪影。' },
+  { id: 'stylegan3', n: 'StyleGAN3', c: '无混叠生成', lab: 'nvidia', a: [3, 6, 4], s: 'mm', d: 'NVIDIA 的第三代风格生成器，通过抑制混叠，让物体平移或旋转时纹理更自然地随物体移动。' },
+  { id: 'vqgan', n: 'VQGAN', c: '离散图像词表', lab: 'academia', a: [2, 7, 5], s: 'mm', d: 'CompVis 研究团队用向量量化和对抗训练把图像压成离散编码，让 Transformer 能在更短的序列上生成高分辨率图像。' },
+  { id: 'gptneox20b', n: 'GPT-NeoX-20B', c: '20B', lab: 'academia', a: [2, 6, 4], s: 'ef', d: 'EleutherAI 公布的 200 亿参数自回归语言模型，使用 The Pile 训练并开放权重。' },
+  { id: 'pythia12b', n: 'Pythia-12B', c: '12B · 训练快照', lab: 'academia', a: [2, 6, 3], s: 'ef', d: 'EleutherAI 开放研究套件的 120 亿参数型号；同一模型的多阶段检查点可用来追踪训练变化。' },
+  { id: 'cerebrasgpt13b', n: 'Cerebras-GPT-13B', c: '13B', lab: 'academia', a: [2, 4, 2], s: 'ef', d: 'Cerebras 在晶圆级计算集群上训练的开放语言模型，所属系列用多个参数规模检验算力最优训练。' },
+  { id: 'olmo1_7b', n: 'OLMo 7B', c: '初代 · 7B', lab: 'academia', a: [3, 6, 4], s: 'ef', d: 'Allen Institute for AI 的初代 OLMo 7B，不是 OLMo 2。团队同时公开了权重、训练数据和训练代码。' },
+  { id: 'glove', n: 'GloVe', c: '全局共现', lab: 'academia', a: [1, 8, 7], s: 'ef', d: '斯坦福团队利用全语料的词共现统计训练词向量，补充仅在局部上下文内学习的思路。' },
+  { id: 'fasttextvec', n: 'fastText 词向量', c: '字符子词', lab: 'meta', a: [1, 7, 7], s: 'ef', d: 'Facebook AI Research 把词向量拆成字符片段的向量之和，让未见过的词也能由片段得到表示。' },
+  { id: 'elmo', n: 'ELMo', c: '双向语言模型', lab: 'academia', a: [2, 7, 6], s: 'ef', d: 'AI2 团队用双向语言模型生成词表示；同一个词放在不同句子里，可以得到不同向量。' },
+  { id: 'sentencebert', n: 'Sentence-BERT', c: '孪生编码器', lab: 'academia', a: [2, 8, 8], s: 'ef', d: '把两个句子分别编码为向量，再比较相似度，不再需要对每一对候选句运行一次联合编码。' },
+  { id: 'simcse', n: 'SimCSE', c: '句向量对比学习', lab: 'academia', a: [2, 5, 5], s: 'ef', d: '普林斯顿团队提出的句向量方法。无监督版本对同一句子使用不同 dropout 掩码，形成正样本对。' },
+  { id: 'simclr', n: 'SimCLR', c: '对比视觉表征', lab: 'google', a: [2, 7, 5], s: 'mm', d: 'Google 的视觉表征模型，将同一张图做不同增强，再拉近这些视图的表示。' },
+  { id: 'moco', n: 'MoCo', c: '动量编码器与队列', lab: 'meta', a: [2, 7, 5], s: 'mm', d: 'Facebook AI Research 用缓慢更新的编码器和特征队列，为对比学习提供大量负样本。' },
+  { id: 'byol', n: 'BYOL', c: '在线网络与目标网络', lab: 'google', a: [2, 6, 4], s: 'mm', d: 'DeepMind 让在线网络预测同张图另一视图的目标表示，不需要显式负样本。' },
+  { id: 'dinov1', n: 'DINO', c: '无标签自蒸馏', lab: 'meta', a: [3, 7, 6], s: 'mm', d: 'Facebook AI Research 的初代 DINO，用教师和学生网络对齐图像不同裁剪区域的表示，不是 DINOv2。' },
+  { id: 'maevision', n: 'MAE', c: '掩码自编码器', lab: 'meta', a: [3, 7, 6], s: 'mm', d: '遮住图像的大部分块，让编码器只读可见部分，再用解码器重建缺失像素。' },
+  { id: 'dqn2013', n: 'DQN', c: '初版 · Atari', lab: 'google', a: [2, 9, 5], s: 'ag', d: 'DeepMind 早期模型，把 Atari 的画面输入卷积网络，用 Q 学习估计各个动作的价值。' },
+  { id: 'doubledqn', n: 'Double DQN', c: '动作选择与估值分离', lab: 'google', a: [2, 6, 3], s: 'ag', d: '用一个网络选动作、另一个网络估值，缓解普通 DQN 对动作价值的高估。' },
+  { id: 'a3c', n: 'A3C', c: '异步优势演员评论家', lab: 'google', a: [2, 6, 3], s: 'ag', d: '多个并行智能体异步与环境交互，共同训练策略和价值估计，不依赖传统经验回放。' },
+  { id: 'rainbowdqn', n: 'Rainbow DQN', c: '六项 DQN 改进', lab: 'google', a: [3, 6, 3], s: 'ag', d: 'DeepMind 把 Double DQN、优先经验回放和分布式价值建模等六项改进合入同一智能体。' },
+  { id: 'muzero', n: 'MuZero', c: '学习模型再规划', lab: 'google', a: [4, 8, 3], s: 'ag', d: 'DeepMind 不向智能体提供环境规则，改用从经验学到的奖励、策略和价值表征进行树搜索。' },
+  { id: 'seq2seq2014', n: 'Seq2Seq', c: 'LSTM 编码与解码', lab: 'google', a: [1, 8, 6], s: 'ef', d: 'Google 用一个 LSTM 读取源语言句子，另一个 LSTM 从编码向量逐词生成译文。' },
+  { id: 'bahdanaunmt', n: 'Bahdanau NMT', c: '软对齐注意力', lab: 'academia', a: [1, 8, 5], s: 'rs', d: '蒙特利尔大学团队让解码器生成每个译词时都能软对齐不同的源词，避免只依赖单一固定向量。' },
+  { id: 'gnmt', n: 'GNMT', c: 'Google 神经机器翻译', lab: 'google', a: [2, 8, 9], s: 'ef', d: 'Google 的生产级神经机器翻译系统，用多层 LSTM、注意力和子词词表处理翻译。' },
+  { id: 'convs2s', n: 'ConvS2S', c: '卷积序列到序列', lab: 'meta', a: [2, 5, 3], s: 'ef', d: 'Facebook AI Research 用卷积而不是循环网络处理序列；训练时可并行计算同一层的不同位置。' },
+  { id: 'nat2017', n: 'NAT', c: '初版 · 非自回归翻译', lab: 'academia', a: [2, 5, 3], s: 'ef', d: '不等前一个译词生成才预测下一个；用词的扩展次数等中间信息支持并行翻译。' },
+  { id: 'sr3', n: 'SR3', c: '扩散超分辨率', lab: 'google', a: [3, 6, 4], s: 'mm', d: '以低分辨率图片为条件，从噪声开始反复去噪，得到高分辨率结果。' },
+  { id: 'adm', n: 'ADM', c: '分类器引导扩散', lab: 'openai', a: [3, 7, 5], s: 'mm', d: 'OpenAI 的图像扩散模型，论文探索借助分类器引导在生成多样性和保真度之间取舍。' },
+  { id: 'glide', n: 'GLIDE', c: '文本引导扩散', lab: 'openai', a: [3, 6, 4], s: 'mm', d: 'OpenAI 的早期文本条件扩散研究，比较不同引导方式，并展示文生图和局部编辑。' },
+  { id: 'ditxl2', n: 'DiT-XL/2', c: '扩散 Transformer', lab: 'academia', a: [3, 8, 7], s: 'mm', d: 'DiT 论文中的 XL 型号，使用 2×2 潜变量图块，用 Transformer 替代扩散模型中常见的 U-Net 骨干。' },
+  { id: 'consistencymodel', n: 'Consistency Model', c: '单步或少步采样', lab: 'openai', a: [3, 6, 4], s: 'mm', d: 'OpenAI 的一致性生成研究，让同一去噪轨迹上的不同噪声状态对应同一个干净结果。' },
+  { id: 'codet5', n: 'CodeT5', c: '标识符感知', lab: 'academia', a: [2, 6, 4], s: 'cd', d: 'Salesforce Research 的代码编码器与解码器，对标识符加入专门的预训练目标，兼顾代码理解和生成。' },
+  { id: 'santacoder', n: 'SantaCoder', c: '1.1B · 补全光标两侧', lab: 'academia', a: [2, 5, 4], s: 'cd', d: 'BigCode 的 11 亿参数模型，支持 Python、Java 和 JavaScript，能利用缺口前后的代码补全中段。' },
+  { id: 'starcoder', n: 'StarCoder', c: '初代 · 15.5B', lab: 'academia', a: [3, 7, 6], s: 'cd', d: 'BigCode 的初代 StarCoder，以代码为主训练，支持中间填充；不是后续的 StarCoder2。' },
+  { id: 'codellama34b', n: 'Code Llama 34B', c: '34B · Base', lab: 'meta', a: [3, 7, 6], s: 'cd', d: 'Meta 从 Llama 2 延续训练的 340 亿参数代码基础模型，与 Python 版和指令版分别命名。' },
+  { id: 'dscoder33b', n: 'DeepSeek-Coder 33B Base', c: '初代 · 33B', lab: 'deepseek', a: [4, 7, 6], s: 'cd', d: 'DeepSeek-Coder 初代的开放权重代码基础模型，支持用文件上下文补全代码，不是 V2 或指令版。' },
+  { id: 'visualbert', n: 'VisualBERT', c: '单流图文编码', lab: 'academia', a: [2, 5, 3], s: 'mm', d: '将文本和检测器提取的视觉区域向量送进同一 Transformer，让图像和文字共同参与注意力计算。' },
+  { id: 'lxmert', n: 'LXMERT', c: '跨模态编码器', lab: 'academia', a: [2, 5, 3], s: 'mm', d: '分别编码视觉区域与文本，再交给跨模态编码器交互，可用于视觉问答。' },
+  { id: 'albef', n: 'ALBEF', c: '先对齐再融合', lab: 'academia', a: [2, 5, 3], s: 'mm', d: 'Salesforce Research 先用对比学习对齐图文表示，再做跨模态融合，并用动量教师减轻噪声影响。' },
+  { id: 'blip', n: 'BLIP', c: '描述生成与筛选', lab: 'academia', a: [3, 7, 5], s: 'mm', d: 'Salesforce Research 用生成器补写图像描述、用过滤器筛去低质量图文对，将理解和生成一起训练。' },
+  { id: 'blip2', n: 'BLIP-2', c: 'Q-Former', lab: 'academia', a: [3, 7, 6], s: 'mm', d: '让可训练的 Q-Former 在冻结的图像编码器和语言模型之间传递信息，不必重新训练两端。' },
+  { id: 't0', n: 'T0', c: '多任务提示', lab: 'academia', a: [2, 6, 4], s: 'rs', d: 'BigScience 研究用统一的自然语言提示训练多种任务，观察模型能否零样本迁移到没见过的任务。' },
+  { id: 'mt5', n: 'mT5', c: '多语种文本到文本', lab: 'google', a: [2, 7, 6], s: 'ef', d: 'Google 将 T5 的文本到文本框架扩展到多语种，用覆盖 101 种语言的 mC4 语料训练。' },
+  { id: 'byt5', n: 'ByT5', c: '字节到字节', lab: 'google', a: [2, 5, 4], s: 'ef', d: '不依赖专用子词词表，直接把 UTF-8 字节作为序列，研究词表无关输入对噪声与拼写的影响。' },
+  { id: 'ul2', n: 'UL2', c: '混合去噪目标', lab: 'google', a: [3, 6, 4], s: 'rs', d: 'Google 将不同的掩码和补全任务混合到一个训练框架，让同一个模型兼顾多类语言任务。' },
+  { id: 'flant5', n: 'Flan-T5', c: '指令微调', lab: 'google', a: [3, 8, 7], s: 'rs', d: 'Google 在 T5 架构上进行多任务指令微调，让同一模型能按自然语言指令处理更多任务。' }
 ];
 // Rarity = 能力 + 影响力 + 调用量 (each 1–10). TIER_CUTS[t] is the lowest total for tier t.
 const TIER_CUTS = [0, 13, 16, 19, 21, 23];
@@ -1468,7 +1620,21 @@ const SERIES = [
   { id: 'pioneer', n: '开源先驱', d: '开放权重运动的早期功臣', b: 0.075, ids: ['gptj', 'bloom', 'llama1', 'alpaca', 'vicuna', 'falcon', 'chatglm6b', 'yi34b'] },
   { id: 'oops', n: '翻车现场', d: '因为出糗而被记住的 AI', b: 0.075, ids: ['tay', 'galactica', 'bard', 'sydney'] },
   { id: 'voice', n: '语音与陪伴', d: '大模型之前就走进日常的助手', b: 0.06, ids: ['siri', 'alexa', 'xiaoice', 'characterai'] },
-  { id: 'sealed', n: '封印档案', d: '受限、叫停、训练中和只存在于传闻里的模型', b: 0.25, ids: ['mythos', 'mythos52', 'grok5', 'astra61', 'doug', 'bel'] }
+  { id: 'sealed', n: '封印档案', d: '受限、叫停、训练中和只存在于传闻里的模型', b: 0.25, ids: ['mythos', 'mythos52', 'grok5', 'astra61', 'doug', 'bel'] },
+  { id: 'visionbackbones', n: '视觉骨干档案', d: '从堆叠卷积、残差和移动端网络，到图像块 Transformer', b: 0.06, ids: ['vgg16', 'resnet', 'mobilenetv1', 'efficientnetb0', 'vitb16'] },
+  { id: 'detectionseg', n: '从边框到像素', d: '目标检测、实例分割与像素级分割的代表作', b: 0.06, ids: ['unet', 'yolo', 'maskrcnn', 'detr', 'sam'] },
+  { id: 'encoderera', n: '编码器时代', d: 'BERT 之后的精简、预训练改进和代码理解', b: 0.05, ids: ['bert', 'roberta', 'distilbert', 'albert', 'codebert', 'electra'] },
+  { id: 'neuralspeech', n: '神经声学馆', d: '从语音合成到自监督表征与语音识别', b: 0.06, ids: ['wavenet', 'tacotron2', 'wav2vec2', 'hubert', 'whisper'] },
+  { id: 'ganworkshop', n: '对抗生成工坊', d: 'GAN、三代 StyleGAN 和离散图像编码', b: 0.05, ids: ['gan', 'stylegan', 'stylegan2', 'vqgan', 'stylegan3'] },
+  { id: 'openweightarchive', n: '开放权重档案', d: '从 GPT-J 到初代 OLMo 的早期开放语言模型', b: 0.05, ids: ['gptj', 'gptneox20b', 'pythia12b', 'cerebrasgpt13b', 'olmo1_7b'] },
+  { id: 'semanticvectors', n: '语义向量馆', d: '从词共现、子词和上下文，到句子级嵌入', b: 0.04, ids: ['word2vec', 'glove', 'fasttextvec', 'elmo', 'sentencebert', 'simcse'] },
+  { id: 'selfsupervisedvision', n: '无标签视觉', d: '对比学习、目标网络、自蒸馏与遮挡重建', b: 0.04, ids: ['moco', 'simclr', 'byol', 'dinov1', 'maevision'] },
+  { id: 'atarilab', n: '街机训练场', d: '从学动作价值到学环境表征并规划', b: 0.04, ids: ['dqn2013', 'doubledqn', 'a3c', 'rainbowdqn', 'muzero'] },
+  { id: 'translationarchive', n: '神经翻译史', d: '早期循环架构、卷积架构和并行翻译', b: 0.04, ids: ['bahdanaunmt', 'seq2seq2014', 'gnmt', 'convs2s', 'nat2017'] },
+  { id: 'diffusionarchive', n: '去噪实验室', d: '扩散生成、超分辨率、Transformer 骨干与少步采样', b: 0.04, ids: ['ddpm', 'sr3', 'adm', 'glide', 'ditxl2', 'consistencymodel'] },
+  { id: 'opencodearchive', n: '代码开源史', d: '从标识符预训练到开放权重的代码基础模型', b: 0.04, ids: ['codet5', 'santacoder', 'starcoder', 'codellama34b', 'dscoder33b'] },
+  { id: 'imagelanguage', n: '图文对齐档案', d: '从区域特征与文本交互到 Q-Former', b: 0.04, ids: ['visualbert', 'lxmert', 'albef', 'blip', 'blip2'] },
+  { id: 'texttotext', n: '文本到文本', d: '多语种、字节输入、混合去噪与指令微调', b: 0.04, ids: ['t5', 'mt5', 'byt5', 't0', 'ul2', 'flant5'] }
 ];
 
 // Packs: r = [tierIdx, prob], pt = pity tier, pn = pity count
@@ -1737,6 +1903,70 @@ const RELEASE_DATES = {
   dsv4pro0813: ["2026-08-13","上线","https://api-docs.deepseek.com/updates/#date-2026-08-13"],
   dsv41flash: ["2026-09-10","上线","https://api-docs.deepseek.com/updates/#date-2026-09-10"],
   dsv4flash0731: ["2026-07-31","上线","https://api-docs.deepseek.com/updates/#date-2026-07-31"],
+  vgg16: ["2014-09-04","预印本首次提交","https://arxiv.org/abs/1409.1556"],
+  mobilenetv1: ["2017-04-17","预印本首次提交","https://arxiv.org/abs/1704.04861"],
+  efficientnetb0: ["2019-05-28","预印本首次提交","https://arxiv.org/abs/1905.11946"],
+  vitb16: ["2020-10-22","预印本首次提交","https://arxiv.org/abs/2010.11929"],
+  unet: ["2015-05-18","预印本首次提交","https://arxiv.org/abs/1505.04597"],
+  maskrcnn: ["2017-03-20","预印本首次提交","https://arxiv.org/abs/1703.06870"],
+  detr: ["2020-05-26","预印本首次提交","https://arxiv.org/abs/2005.12872"],
+  roberta: ["2019-07-26","预印本首次提交","https://arxiv.org/abs/1907.11692"],
+  distilbert: ["2019-10-02","预印本首次提交","https://arxiv.org/abs/1910.01108"],
+  albert: ["2019-09-26","预印本首次提交","https://arxiv.org/abs/1909.11942"],
+  electra: ["2020-03-23","预印本首次提交","https://arxiv.org/abs/2003.10555"],
+  codebert: ["2020-02-19","预印本首次提交","https://arxiv.org/abs/2002.08155"],
+  wavenet: ["2016-09-12","预印本首次提交","https://arxiv.org/abs/1609.03499"],
+  tacotron2: ["2017-12-16","预印本首次提交","https://arxiv.org/abs/1712.05884"],
+  wav2vec2: ["2020-06-20","预印本首次提交","https://arxiv.org/abs/2006.11477"],
+  hubert: ["2021-06-14","预印本首次提交","https://arxiv.org/abs/2106.07447"],
+  stylegan: ["2018-12-12","预印本首次提交","https://arxiv.org/abs/1812.04948"],
+  stylegan2: ["2019-12-03","预印本首次提交","https://arxiv.org/abs/1912.04958"],
+  stylegan3: ["2021-06-23","预印本首次提交","https://arxiv.org/abs/2106.12423"],
+  vqgan: ["2020-12-17","预印本首次提交","https://arxiv.org/abs/2012.09841"],
+  gptneox20b: ["2022-04-14","预印本首次提交","https://arxiv.org/abs/2204.06745"],
+  pythia12b: ["2023-04-03","预印本首次提交","https://arxiv.org/abs/2304.01373"],
+  cerebrasgpt13b: ["2023-04-06","预印本首次提交","https://arxiv.org/abs/2304.03208"],
+  olmo1_7b: ["2024-02-01","预印本首次提交","https://arxiv.org/abs/2402.00838"],
+  glove: ["2014-10","论文发表","https://aclanthology.org/D14-1162/"],
+  fasttextvec: ["2016-07-15","预印本首次提交","https://arxiv.org/abs/1607.04606"],
+  elmo: ["2018-02-15","预印本首次提交","https://arxiv.org/abs/1802.05365"],
+  sentencebert: ["2019-08-27","预印本首次提交","https://arxiv.org/abs/1908.10084"],
+  simcse: ["2021-04-18","预印本首次提交","https://arxiv.org/abs/2104.08821"],
+  simclr: ["2020-02-13","预印本首次提交","https://arxiv.org/abs/2002.05709"],
+  moco: ["2019-11-13","预印本首次提交","https://arxiv.org/abs/1911.05722"],
+  byol: ["2020-06-13","预印本首次提交","https://arxiv.org/abs/2006.07733"],
+  dinov1: ["2021-04-29","预印本首次提交","https://arxiv.org/abs/2104.14294"],
+  maevision: ["2021-11-11","预印本首次提交","https://arxiv.org/abs/2111.06377"],
+  dqn2013: ["2013-12-19","预印本首次提交","https://arxiv.org/abs/1312.5602"],
+  doubledqn: ["2015-09-22","预印本首次提交","https://arxiv.org/abs/1509.06461"],
+  a3c: ["2016-02-04","预印本首次提交","https://arxiv.org/abs/1602.01783"],
+  rainbowdqn: ["2017-10-06","预印本首次提交","https://arxiv.org/abs/1710.02298"],
+  muzero: ["2019-11-19","预印本首次提交","https://arxiv.org/abs/1911.08265"],
+  seq2seq2014: ["2014-09-10","预印本首次提交","https://arxiv.org/abs/1409.3215"],
+  bahdanaunmt: ["2014-09-01","预印本首次提交","https://arxiv.org/abs/1409.0473"],
+  gnmt: ["2016-09-26","预印本首次提交","https://arxiv.org/abs/1609.08144"],
+  convs2s: ["2017-05-08","预印本首次提交","https://arxiv.org/abs/1705.03122"],
+  nat2017: ["2017-11-07","预印本首次提交","https://arxiv.org/abs/1711.02281"],
+  sr3: ["2021-04-15","预印本首次提交","https://arxiv.org/abs/2104.07636"],
+  adm: ["2021-05-11","预印本首次提交","https://arxiv.org/abs/2105.05233"],
+  glide: ["2021-12-20","预印本首次提交","https://arxiv.org/abs/2112.10741"],
+  ditxl2: ["2022-12-19","预印本首次提交","https://arxiv.org/abs/2212.09748"],
+  consistencymodel: ["2023-03-02","预印本首次提交","https://arxiv.org/abs/2303.01469"],
+  codet5: ["2021-09-02","预印本首次提交","https://arxiv.org/abs/2109.00859"],
+  santacoder: ["2023-01-09","预印本首次提交","https://arxiv.org/abs/2301.03988"],
+  starcoder: ["2023-05-09","预印本首次提交","https://arxiv.org/abs/2305.06161"],
+  codellama34b: ["2023-08-24","预印本首次提交","https://arxiv.org/abs/2308.12950"],
+  dscoder33b: ["2024-01-25","预印本首次提交","https://arxiv.org/abs/2401.14196"],
+  visualbert: ["2019-08-09","预印本首次提交","https://arxiv.org/abs/1908.03557"],
+  lxmert: ["2019-08-20","预印本首次提交","https://arxiv.org/abs/1908.07490"],
+  albef: ["2021-07-16","预印本首次提交","https://arxiv.org/abs/2107.07651"],
+  blip: ["2022-01-28","预印本首次提交","https://arxiv.org/abs/2201.12086"],
+  blip2: ["2023-01-30","预印本首次提交","https://arxiv.org/abs/2301.12597"],
+  t0: ["2021-10-15","预印本首次提交","https://arxiv.org/abs/2110.08207"],
+  mt5: ["2020-10-22","预印本首次提交","https://arxiv.org/abs/2010.11934"],
+  byt5: ["2021-05-28","预印本首次提交","https://arxiv.org/abs/2105.13626"],
+  ul2: ["2022-05-10","预印本首次提交","https://arxiv.org/abs/2205.05131"],
+  flant5: ["2022-10-20","预印本首次提交","https://arxiv.org/abs/2210.11416"],
 };
 function releaseDateRow(m) {
   if (['humanity','cosmos','unknown'].includes(m.lab)) return '';
@@ -1822,7 +2052,7 @@ function defaultState() {
     pity: {}, rebirths: 0, stage: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
-    name: randomLabName(), sig: null, log: [], rare: [],
+    name: randomLabName(), sig: null, log: [], rare: [], saveEpoch: '', itemReceipts: [],
     set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, theme: 'auto', cine: undefined, mutedInfo: undefined }
   };
 }
@@ -1851,6 +2081,8 @@ function sanitizeState(st) {
   if (!PACKS.some(p => p.id === st.pack)) st.pack = 1;
   if (!Array.isArray(st.log)) st.log = [];
   if (!Array.isArray(st.rare)) st.rare = [];
+  if (typeof st.saveEpoch !== 'string') st.saveEpoch = '';
+  st.itemReceipts = Array.isArray(st.itemReceipts) ? st.itemReceipts.filter(id => typeof id === 'string').slice(-200) : [];
   if (!Array.isArray(st.redeemed)) st.redeemed = [];
   if (!Array.isArray(st.stats.byTier)) st.stats.byTier = [];
   while (st.stats.byTier.length < TIERS.length) st.stats.byTier.push(0);
@@ -2364,6 +2596,7 @@ function advanceAutoPull(dt) {
 
 /* =================== SAVE =================== */
 function saveLocal() {
+  if (typeof moderation !== 'undefined' && moderation.level === 2) return '';
   S.lastSave = Date.now();
   const json = JSON.stringify(S);
   lsSet(SAVE_KEY, json);
@@ -3229,6 +3462,7 @@ const cloud = {
   status: 'local', freshStart: false
 };
 const WORLD_MS = [1e4, 1e5, 1e6, 1e7, 1e8, 1e9];
+const WORLD_LAB_CAP = 2e8; // Same per-lab cap as leaderboard_totals().
 function cloudBump(priority) { cloud.playerPending = true; if (priority) cloud.priority = true; }
 function withTimeout(p, ms) {
   let timer;
@@ -3281,11 +3515,16 @@ function livePlayers() {
   return list;
 }
 function recomputeWorld() {
-  const list = cloud.ready && !cloud.board ? livePlayers() : [];
-  const sum = cloud.board ? cloud.board.totals?.progress || 0 : list.reduce((a, p) => a + Math.min(p.pulls, 2e8), 0);
-  let k = 0; for (const m of WORLD_MS) if (sum >= m) k++;
+  const loaded = cloud.board ? !!cloud.board.totals : cloud.ready && cloud.gotPlayers;
+  let progress = 0, pulls = 0;
+  if (loaded && cloud.board) ({ progress, pulls } = cloud.board.totals);
+  else if (loaded) for (const p of livePlayers()) {
+    pulls += p.pulls;
+    progress += Math.min(p.pulls, WORLD_LAB_CAP);
+  }
+  let k = 0; for (const m of WORLD_MS) if (progress >= m) k++;
   if (k !== worldMilestones) { worldMilestones = k; markDirty('hud'); }
-  return sum;
+  return { loaded, progress, pulls };
 }
 function cloudError(e) {
   const code = e && e.code;
@@ -3429,7 +3668,7 @@ function validWorldHit(r) {
     typeof r.name === 'string' && r.name.trim().length > 0 && r.name.length <= 16;
 }
 function queueWorldHits(hits) {
-  const b = cloud.board; if (!b) return;
+  const b = cloud.board; if (!b || b.scoreIssue || moderation.level) return;
   b.pending.push(...hits);
   if (b.pending.length > HIT_LIMIT) b.pending.splice(0, b.pending.length - HIT_LIMIT);
   b.changed = true;
@@ -3448,7 +3687,7 @@ function initLeaderboard(config) {
       auth: { detectSessionInUrl: false },
       global: { fetch: (input, init = {}) => fetch(input, { ...init, signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000) }) }
     });
-  } catch { setCloudStatus('warn'); return; }
+  } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
   cloud.board.presence = setupPresence(cloud.board.client);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
   boardTick(false);
@@ -3465,7 +3704,7 @@ async function boardIdentity(b) {
       const saved = JSON.parse(sessionStorage.getItem(`${b.store}:${uid}`) || '[]');
       b.pending = saved.filter(validWorldHit).concat(b.pending).slice(-HIT_LIMIT);
     } catch {}
-    cloud.uid = uid; b.changed = true; cloudBump(true);
+    cloud.uid = uid; b.scoreIssue = null; b.changed = true; cloudBump(true);
   }
   b.presence.connect(uid);
   return uid;
@@ -3475,36 +3714,47 @@ async function boardTick(force = false) {
   persistHits(b);
   b.presence?.connect(cloud.uid);
   if (!b.client || b.busy || now < b.next) return;
+  if (moderation.level === 2 && !force && now < moderation.next) return;
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
   const viewing = currentView === 'world' && !document.hidden;
   const readBoard = viewing && (!b.boards[mode] || now - b.boards[mode].at > 15000);
   const readFeed = viewing && now - b.feedAt > 15000;
   const writeScore = force || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000);
   const writeHits = b.pending.length && (force || now >= b.nextHits);
-  if (!readBoard && !readFeed && !writeScore && !writeHits && now < b.nextTotals) return;
+  if (!readBoard && !readFeed && !writeScore && !writeHits && now < b.nextTotals && now < moderation.next) return;
   b.busy = true;
   try {
     const uid = await boardIdentity(b);
-    if (writeScore) {
+    await syncModeration(b, force);
+    if (moderation.level === 2) return;
+    if (writeScore && !moderation.level) {
       const p = sanitizePlayer(uid, playerDoc());
       cloud.priority = false;
       const base = {player_id:uid, name:p.name, sig:p.sig, sig_variant:p.sigV, tps:p.tps, dex:Math.floor(p.dex), stage:Math.floor(p.stage), pulls:Math.floor(p.pulls)};
+      if (S.saveEpoch) base.save_epoch = S.saveEpoch;
       const write = row => b.client.from('leaderboard_players').upsert(row, {onConflict:'player_id'});
-      if (!(now < b.legacyUntil)) {
-        const seven = {...base, power:p.power, achievements:p.achievements, lifetime:p.lifetime};
-        let reply;
-        if (!(now < b.teamRetryAt)) {
-          reply = await write({...seven, top_cards:p.team});
-          if (missingScoreColumn(reply.error)) { b.teamRetryAt = now + 60000; reply = null; }
+      try {
+        if (!(now < b.legacyUntil)) {
+          const seven = {...base, power:p.power, achievements:p.achievements, lifetime:p.lifetime};
+          let reply;
+          if (!(now < b.teamRetryAt)) {
+            reply = await write({...seven, top_cards:p.team});
+            if (missingScoreColumn(reply.error)) { b.teamRetryAt = now + 60000; reply = null; }
+          }
+          reply ??= await write(seven);
+          if (missingScoreColumn(reply.error)) b.legacyUntil = now + 60000;
+          else unwrap(reply);
         }
-        reply ??= await write(seven);
-        if (missingScoreColumn(reply.error)) b.legacyUntil = now + 60000;
-        else unwrap(reply);
+        if (now < b.legacyUntil) unwrap(await write(base));
+        b.scoreIssue = null;
+      } catch (error) {
+        if (!['FRONTIER_SCORE_HELD', 'FRONTIER_IMPOSSIBLE_TRAINING', 'FRONTIER_SAVE_REPLACED'].includes(error?.message)) throw error;
+        b.scoreIssue = error.message;
+        b.pending = []; b.changed = true; persistHits(b);
       }
-      if (now < b.legacyUntil) unwrap(await write(base));
       cloud.lastPlayerWrite = now;
     }
-    if (writeHits) {
+    if (writeHits && b.pending.length && !b.scoreIssue && !moderation.level) {
       const batch = b.pending.slice(0, 64), ids = new Set(batch.map(r => r.event));
       unwrap(await b.client.from('leaderboard_hits').upsert(batch.map(r => ({player_id: uid, event_id: r.event, name: r.name,
         pack: r.pack, model: r.id, variant: r.v, chance: r.chance, drawn_at: r.ts})), {onConflict: 'player_id,event_id', ignoreDuplicates: true}));
@@ -3525,6 +3775,7 @@ async function boardTick(force = false) {
     }
     b.errors = 0; cloud.ready = true; setCloudStatus('on');
   } catch {
+    finishModerationBoot();
     b.next = Date.now() + Math.min(120000, 2000 * 2 ** Math.min(6, b.errors++));
     setCloudStatus('warn');
   } finally { b.busy = false; }
@@ -3539,7 +3790,11 @@ async function readLabProfile(uid) {
   if (missingScoreColumn(res.error)) res = await read(seven);
   if (missingScoreColumn(res.error)) res = await read(base);
   const r = unwrap(res);
-  return r ? sanitizePlayer(r.player_id,{...r,team:r.top_cards}) : null;
+  if (r) return sanitizePlayer(r.player_id,{...r,team:r.top_cards});
+  const status = await b.client.rpc('frontier_lab_status',{p_player:uid});
+  if (missingWorldRPC(status.error)) return null;
+  const restricted = unwrap(status);
+  return restricted ? {id:uid,name:restricted.name,level:restricted.level} : null;
 }
 
 async function readRanking(client, mode, uid) {
@@ -3560,12 +3815,100 @@ async function readRanking(client, mode, uid) {
   return {rows, mine:player(own), rank:Number.isSafeInteger(ahead.count) ? ahead.count+1 : null};
 }
 
+const MODERATION_KEY = 'frontier:play-lock:' + (WORLD_CONFIG?.url || 'offline');
+const moderation = { booting: !!WORLD_CONFIG, level: WORLD_CONFIG && lsGet(MODERATION_KEY) === '2' ? 2 : 0,
+  next: 0, adminId: null, until: null, reason: null, offlineFrom: 0, ready: false };
+const missingWorldRPC = e => ['PGRST202','42883'].includes(e?.code);
+const verifiedAdmin = id => !!id && moderation.adminId === id;
+let moderationRevision = 0;
+
+function finishModerationBoot(skipOffline = false) {
+  if (!moderation.booting) return;
+  moderation.booting = false;
+  $('.shell').inert = false;
+  if (!skipOffline && moderation.level !== 2 && moderation.offlineFrom) offlineReport = applyOffline(moderation.offlineFrom);
+  moderation.offlineFrom = 0;
+}
+
+function applyModerationStatus(data) {
+  const before = moderation.level;
+  const level = [1,2].includes(data?.level) ? data.level : 0;
+  if (before !== 2 && level === 2) saveLocal();
+  moderation.level = level;
+  moderation.adminId = data.admin_id || null;
+  moderation.until = data.until; moderation.reason = data.reason;
+  moderation.notice = data.notice || null;
+  moderation.ready = true;
+  lsSet(MODERATION_KEY, level === 2 ? '2' : '0');
+  let fresh = false;
+  if (data.epoch && S.saveEpoch !== data.epoch && level !== 2) {
+    const state = defaultState(); state.saveEpoch = data.epoch;
+    state.name = S.name; state.set = S.set;
+    installSave(state); saveLocal(); fresh = true;
+    cloud.lastPlayerWrite = 0;
+    if (cloud.board) { cloud.board.pending = []; cloud.board.changed = true; }
+  }
+  if (before === 2 && level !== 2) { lastT = Date.now(); saveLocal(); cloud.lastPlayerWrite = 0; }
+  finishModerationBoot(before === 2 || level === 2 || fresh);
+  if (level && cloud.board?.pending.length) {
+    cloud.board.pending = []; cloud.board.changed = true; persistHits(cloud.board);
+  }
+  if (before !== level && cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
+  renderModerationLock(); renderModerationNotice(); markDirty('world');
+}
+
+function applyItemOrder(order) {
+  const amount = Number(order.amount);
+  if (!Number.isSafeInteger(amount) || amount < 0 || typeof order.id !== 'string') return false;
+  if (S.itemReceipts.includes(order.id)) return true;
+  if (order.kind === 'gpu') S.gpu = amount;
+  else if (order.kind === 'tokens') S.tokens = amount;
+  else if (order.kind === 'card' && Object.hasOwn(MODEL_BY_ID,order.model) && [0,1,2,3].includes(order.variant)) {
+    const c = S.cards[order.model] ??= [0,0,0,0]; c[order.variant] = amount;
+    if (!total(c) && S.sig === order.model) S.sig = null;
+  } else return false;
+  S.itemReceipts.push(order.id); S.itemReceipts = S.itemReceipts.slice(-200);
+  invalidate(); markDirty(...VIEWS, 'hud');
+  return true;
+}
+
+async function syncModeration(b, force) {
+  if (!force && Date.now() < moderation.next) return;
+  moderation.next = Date.now() + 20000;
+  const revision = moderationRevision;
+  const reply = await b.client.rpc('frontier_session');
+  if (moderationRevision !== revision) return;
+  if (missingWorldRPC(reply.error)) { moderation.next = Date.now() + 120000; finishModerationBoot(); return; }
+  const data = unwrap(reply);
+  if (!data || typeof data !== 'object') { finishModerationBoot(); return; }
+  applyModerationStatus(data);
+  if (moderation.level) return;
+  for (const order of data.orders || []) {
+    if (!applyItemOrder(order)) continue;
+    if (!lsSet(SAVE_KEY, JSON.stringify(S))) break;
+    unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
+    toast('道具数量已更新', '管理员已同步此实验室的道具调整。');
+  }
+}
+
+async function changeModerationSession(action, order = null) {
+  const data = unwrap(await cloud.board.client.rpc('frontier_session', {p_action:action,p_order:order}));
+  // A status poll started before this reply can still carry the old notice.
+  moderationRevision++;
+  applyModerationStatus(data);
+}
+
 const PROFILE_STATS = [ ['tps','每秒产出',' Token/s'], ['dex','图鉴',' 格'], ['stage','评测通关',' 关'],
   ['pulls','累计抽卡',' 抽'], ['power','评测战力',''], ['achievements','已解锁成就',' 项'], ['lifetime','累计 Token',''] ];
 
+function labRole(id, level = 0, isAdmin = verifiedAdmin(id)) {
+  return level === 2 ? ['banned','封禁'] : level === 1 ? ['limited','限制'] : isAdmin ? ['admin','管理员'] : ['', ''];
+}
+function styledLabName(name, role) { return `<span${role ? ` class="lab-name lab-name-${role}"` : ''}>${esc(name)}</span>`; }
+
 function labLink(id, name) {
   if (!id) return esc(name);
-  return `<button type="button" class="lab-link" data-player="${esc(id)}" aria-haspopup="dialog" aria-label="查看${esc(name)}的实验室档案">${esc(name)}</button>`;
+  return `<button type="button" class="lab-link" data-player="${esc(id)}" aria-haspopup="dialog" aria-label="查看${esc(name)}的实验室档案">${styledLabName(name,labRole(id)[0])}</button>`;
 }
 function profileTeamHTML(p) {
   if (p.team == null) return '<p class="profile-note">尚未同步阵容。该玩家下次使用新版上报后显示。</p>';
@@ -3579,7 +3922,7 @@ function profileTeamHTML(p) {
 let profileRequest = 0, profileOrigin = null;
 function labOrigin(link) {
   return {id:link.dataset.player, event:link.closest('[data-event]')?.dataset.event,
-    root:link.closest('tfoot') ? '#lbWrap tfoot' : link.closest('#feed') ? '#feed' : '#lbWrap tbody', link};
+    root:link.closest('#chatMessages') ? '#chatMessages' : link.closest('tfoot') ? '#lbWrap tfoot' : link.closest('#feed') ? '#feed' : '#lbWrap tbody', link};
 }
 function focusLabOrigin({id,event,root,link}) {
   const target = link.isConnected ? link : $$(root+' .lab-link').find(el=>el.dataset.player===id && (!event || el.closest('[data-event]')?.dataset.event===event));
@@ -3588,6 +3931,7 @@ function focusLabOrigin({id,event,root,link}) {
 function openLabProfile(link) {
   profileOrigin = labOrigin(link);
   $('#profileTitle').textContent = link.textContent;
+  $('#profileCaption').textContent = '实验室档案';
   loadLabProfile(link.dataset.player);
 }
 async function loadLabProfile(id) {
@@ -3600,7 +3944,10 @@ async function loadLabProfile(id) {
     const p = await readLabProfile(id);
     if (seq !== profileRequest || !dlg.open) return;
     if (!p) { body.innerHTML = '<p class="profile-note" role="status">这个实验室还没有公开成绩。</p>'; return; }
-    $('#profileTitle').textContent = p.name;
+    const [role, label] = labRole(p.id,p.level);
+    $('#profileTitle').innerHTML = styledLabName(p.name,role);
+    $('#profileCaption').textContent = label ? `实验室档案 · ${label}` : '实验室档案';
+    if (p.level) { body.innerHTML = '<p class="profile-note">此实验室暂不参与公开榜单。</p>'; return; }
     body.innerHTML = `<dl class="profile-stats">${PROFILE_STATS.map(([key,label,unit])=>`<div><dt>${label}</dt><dd>${p[key] == null ? '未上报' : fmt(p[key])+unit}</dd></div>`).join('')}</dl><h3>战力最强的模型</h3>${profileTeamHTML(p)}`;
   } catch {
     if (seq !== profileRequest || !dlg.open) return;
@@ -3640,19 +3987,25 @@ function renderWorld() {
   const sig = S.sig ? MODEL_BY_ID[S.sig] : null;
   $('#mySig').innerHTML = sig ? cardHTML(sig, bestVar(S.cards[sig.id] || [0, 0, 0, 0]), { mini: true }) : `<div class="card mini locked"><div class="art">${logoSVGInline()}</div><div class="body"><div class="nm">未设置</div><div class="cd">镇馆模型</div></div></div>`;
   $('#sigNote').textContent = sig ? `镇馆模型：${sig.n}。在模型库里可以随时更换。` : '在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。';
-  $('#cloudSide').textContent = { local: '仅本机', connecting: '连接中', on: '已同步', warn: '暂时离线', readonly: '只读' }[cloud.status];
-  const sum = recomputeWorld();
-  const loaded = cloud.board ? !!cloud.board.totals : cloud.ready && cloud.gotPlayers;
-  const shownSum = loaded ? sum : 0;
-  $('#worldPulls').textContent = loaded ? fmt(cloud.board?.totals.pulls ?? sum) : '—';
+  $('#ownIdentity').hidden = !cloud.board || !cloud.uid;
+  $('#openChat').hidden = !cloud.board || !cloud.uid;
+  $('#openAdmin').hidden = !verifiedAdmin(cloud.uid);
+  textIfChanged($('#ownPlayerId'), cloud.uid || '');
+  const scoreNotice = moderation.level === 1 ? '限制：不参与全服排名' : cloud.board?.scoreIssue === 'FRONTIER_SCORE_HELD' ? '成绩待管理员复核' :
+    cloud.board?.scoreIssue ? '微调等级异常，成绩未上报' : '';
+  $('#cloudSide').textContent = scoreNotice || { local: '仅本机', connecting: '连接中', on: '已同步', warn: '暂时离线', readonly: '只读' }[cloud.status];
+  const { loaded, progress, pulls } = recomputeWorld();
+  textIfChanged($('#worldPulls'), loaded ? fmt(progress) : '—');
+  textIfChanged($('#worldTotal'), loaded ? `全服上报总抽数：${fmt(pulls)} 次` : '全服上报总抽数：—');
+  textIfChanged($('#worldCap'), fmt(WORLD_LAB_CAP));
   const lo = 3, hi = Math.log10(WORLD_MS[WORLD_MS.length - 1]);
   const pos = x => Math.max(0, Math.min(100, (Math.log10(Math.max(1, x)) - lo) / (hi - lo) * 100));
   const bar = $('#worldBar');
-  bar.style.width = pos(shownSum) + '%';
+  bar.style.width = pos(progress) + '%';
   for (const t of $$('.tick', bar.parentElement)) t.remove();
   bar.parentElement.insertAdjacentHTML('beforeend', WORLD_MS.slice(0, -1).map(m => `<span class="tick" style="left:${pos(m)}%"></span>`).join(''));
-  $('#worldMs').innerHTML = WORLD_MS.map(m => `<span style="left:${pos(m)}%;${shownSum >= m ? 'color:var(--gold);font-weight:700' : ''}">${fmt(m)}</span>`).join('');
-  $('#worldBonus').textContent = `全服加成 ×${fmtMul(worldMul())}`;
+  $('#worldMs').innerHTML = WORLD_MS.map(m => `<span style="left:${pos(m)}%;${progress >= m ? 'color:var(--gold);font-weight:700' : ''}">${fmt(m)}</span>`).join('');
+  textIfChanged($('#worldBonus'), loaded ? `全服加成 ×${fmtMul(worldMul())}` : '全服加成 —');
   for (const b of $$('#lbSeg button')) b.setAttribute('aria-pressed', b.dataset.lb === lbMode);
   if (!loaded) {
     const msg = cloud.status === 'connecting' ? '正在连接全服数据…' : cloud.status === 'warn' ? '全服暂时离线，将自动重试。本机存档不受影响。' : '当前未连接排行榜数据库，进度仅保存在本机。';
@@ -3673,7 +4026,7 @@ function renderWorld() {
     return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : '正在读取…';
-  const ownRow = mine ? row(mine,rank,true) : '<tr><td colspan="4">我的排名 · 尚未上报成绩</td></tr>';
+  const ownRow = mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || '尚未上报成绩'}</td></tr>`;
   setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : waiting}</div>`);
   const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare.map(r=>({...r,owner:p.id}))).sort((a,b) => b.ts - a.ts);
   setWorldList($('#feed'), feed?.length ? feed.slice(0, 30).map(r => {
@@ -3718,6 +4071,213 @@ async function runAI() {
     btn.disabled = false; stop.classList.add('hidden'); aiAbort = null;
   }
 }
+
+const lockDialog = $('#moderationLock');
+const noticeDialog = $('#moderationNotice');
+const noticeMeta = notice => `${notice.level === 2 ? '封禁通知' : '限制通知'} · ${new Date(notice.at).toLocaleString('zh-CN')}`;
+function renderModerationLock() {
+  if (moderation.level !== 2) {
+    if (lockDialog.open) lockDialog.close();
+    return;
+  }
+  $('#moderationTitle').textContent = '该实验室已被封禁';
+  const until = moderation.until ? new Date(moderation.until).toLocaleString('zh-CN') : moderation.ready ? '永久' : '待联网确认';
+  textIfChanged($('#lockDetail'), `解封时间：${until}${moderation.reason ? `。原因：${moderation.reason}` : ''}`);
+  const notice = moderation.notice;
+  $('#lockNotice').hidden = !notice;
+  textIfChanged($('#lockNoticeMeta'),notice ? noticeMeta(notice) : '');
+  textIfChanged($('#lockNoticeText'),notice?.body || '');
+  $('#lockActions').hidden = false;
+  if (!lockDialog.open) { $('#lockStatus').textContent = ''; lockDialog.showModal(); }
+}
+lockDialog.addEventListener('cancel', e => e.preventDefault());
+function renderModerationNotice() {
+  const notice = moderation.notice;
+  if (!notice || moderation.level === 2) { if (noticeDialog.open) noticeDialog.close(); return; }
+  textIfChanged($('#noticeMeta'), `${noticeMeta(notice)}${moderation.level === 0 ? ' · 当前无处分' : ''}`);
+  textIfChanged($('#noticeText'),notice.body);
+  if (!noticeDialog.open) { $('#noticeStatus').textContent = ''; noticeDialog.showModal(); }
+}
+noticeDialog.addEventListener('cancel', e => e.preventDefault());
+for (const [selector,status] of [['#noticeRead','#noticeStatus'],['#lockNoticeRead','#lockNoticeStatus']]) $(selector).onclick = async e => {
+  const button = e.currentTarget, notice = moderation.notice;
+  if (!notice) return;
+  if (!cloud.board?.client) { $(status).textContent = '请联网后确认已读。'; return; }
+  button.disabled = true;
+  $(status).textContent = '正在确认…';
+  try { await changeModerationSession('notice_ack',notice.id); $(status).textContent = ''; }
+  catch {
+    if (moderation.notice?.id === notice.id) {
+      $(moderation.level === 2 ? '#lockNoticeStatus' : '#noticeStatus').textContent = '确认失败，请联网后重试。';
+    }
+  } finally { button.disabled = false; }
+};
+$('#checkLock').onclick = () => { if (cloud.board) boardTick(true); };
+$('#clearLockedSave').onclick = async e => {
+  if (!moderation.ready || !cloud.board?.client) { $('#lockStatus').textContent = '请先联网确认封禁状态。'; return; }
+  if (!window.confirm('清除当前进度及公开成绩，解除封禁并从头开始？此操作不可撤销。')) return;
+  const button = e.currentTarget; button.disabled = true;
+  try {
+    await changeModerationSession('reset');
+    toast('已从头开始', '已清除旧进度。');
+  } catch { $('#lockStatus').textContent = '清档未完成，请检查连接后重试。'; }
+  finally { button.disabled = false; }
+};
+
+const adminDialog = $('#adminPanel'), adminBody = $('#adminBody');
+const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力'};
+let adminSeq = 0, adminOffset = 0, adminResults = [], adminTarget = null;
+async function adminRPC(action, args = {}) {
+  return unwrap(await cloud.board.client.rpc('frontier_admin',{p_action:action,p_args:args}));
+}
+function moderationInfo(level, until) {
+  return level ? `${labRole(null,level)[1]} · ${until ? new Date(until).toLocaleString('zh-CN') : '永久'}` : '正常';
+}
+function reviewText(flags) { return (flags || []).map(flag => reviewLabels[flag] || flag).join('、'); }
+function displayScore(score, key) { return score?.[key] == null ? '—' : fmt(score[key]); }
+$('#openAdmin').onclick = () => {
+  if (!verifiedAdmin(cloud.uid)) return;
+  adminOffset = 0; adminTarget = null;
+  adminBody.innerHTML = `<form id="adminFind" class="admin-tools">
+    <label>实验室名或玩家 ID<input class="input" name="query" maxlength="64"></label>
+    <label>排序<select class="input" name="sort">${PROFILE_STATS.map(([k,n])=>`<option value="${k}"${k==='pulls'?' selected':''}>${n}</option>`).join('')}</select></label>
+    <label class="admin-check"><input type="checkbox" name="flagged">仅疑似异常</label><button class="btn small" type="submit">查询</button>
+    </form><p class="note" id="adminStatus" role="status"></p><div class="admin-table" id="adminResults"></div>
+    <div class="world-tools"><button class="btn ghost small" id="adminPrev" type="button" disabled>上一页</button><button class="btn ghost small" id="adminNext" type="button" disabled>下一页</button></div>
+    <section class="admin-detail" id="adminDetail" aria-label="玩家详情"></section>`;
+  $('#adminFind').onsubmit = e => { e.preventDefault(); adminOffset = 0; loadAdminList(); };
+  $('#adminPrev').onclick = () => { adminOffset = Math.max(0,adminOffset-25); loadAdminList(); };
+  $('#adminNext').onclick = () => { adminOffset += 25; loadAdminList(); };
+  $('#adminResults').onclick = e => {
+    const row = adminResults[Number(e.target.closest('[data-index]')?.dataset.index)];
+    if (row) { adminTarget = row.player_id; loadAdminDetail(); }
+  };
+  adminDialog.showModal(); loadAdminList();
+};
+adminDialog.addEventListener('close', () => { adminSeq++; adminTarget = null; });
+async function loadAdminList() {
+  const req = ++adminSeq, status = $('#adminStatus'), form = $('#adminFind');
+  const args = {query:form.query.value, sort:form.sort.value, flagged:form.flagged.checked, offset:adminOffset};
+  status.textContent = '正在查询…';
+  try {
+    const rows = await adminRPC('list',args);
+    if (!adminDialog.open || adminSeq !== req) return;
+    adminResults = rows;
+    $('#adminResults').innerHTML = rows.length ? `<table class="lb"><thead><tr><th>序号</th><th>实验室</th><th>状态</th>${PROFILE_STATS.map(([,label])=>`<th>${label}</th>`).join('')}</tr></thead><tbody>${rows.map((p,i)=>
+      `<tr><td>${args.offset+i+1}</td><td><button class="lab-link" data-index="${i}">${styledLabName(p.name,labRole(p.player_id,p.level)[0])}</button></td><td>${esc(moderationInfo(p.level,p.expires_at))}${p.flags.length ? `<br><small>${esc(reviewText(p.flags))}</small>` : ''}</td>${PROFILE_STATS.map(([k])=>`<td>${displayScore(p,k)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '<p class="note">没有匹配的实验室。</p>';
+    $('#adminPrev').disabled = !args.offset; $('#adminNext').disabled = rows.length < 25;
+    status.textContent = '';
+  } catch { if (adminSeq === req) status.textContent = '无法查询，请确认管理员权限或稍后重试。'; }
+}
+async function loadAdminDetail() {
+  const id = adminTarget, box = $('#adminDetail');
+  box.textContent = '正在读取…';
+  try {
+    const r = await adminRPC('detail',{player_id:id});
+    if (!adminDialog.open || adminTarget !== id) return;
+    if (!r?.score) { box.textContent = '该实验室没有已上报的数据。'; return; }
+    const p = sanitizePlayer(id,{...r.score,team:r.score.top_cards});
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',self_reset:'清档重玩',chat_delete:'移除聊天消息'};
+    box.innerHTML = `<h3>${esc(p.name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
+      ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
+      <dl class="profile-stats">${PROFILE_STATS.map(([k,n])=>`<div><dt>${n}</dt><dd>${displayScore(p,k)}</dd></div>`).join('')}</dl>
+      ${profileTeamHTML(p)}
+      <form id="adminBan" class="admin-tools"><label>级别<select class="input" name="level"><option value="1">一级限制</option><option value="2">二级封禁</option></select></label>
+      <label>时长<select class="input" name="minutes"><option value="60">1 小时</option><option value="1440">1 天</option><option value="10080">7 天</option><option value="43200">30 天</option><option value="custom">自定义</option><option value="0">永久</option></select></label>
+      <label id="banCustom" hidden>分钟<input name="custom" class="input" type="number" min="1" max="525600" step="1" value="60"></label>
+      <label>原因<input class="input" name="reason" maxlength="200" required></label>
+      <label class="admin-note-input">给玩家的通知<textarea class="input" name="notice" maxlength="500" rows="3" placeholder="选填；在独立通知界面显示"></textarea></label>
+      <button class="btn small">执行</button><button class="btn ghost small" id="adminUnban" type="button"${r.hold?'':' disabled'}>解封</button></form>
+      <form id="adminItems" class="admin-tools"><label>道具<select class="input" name="kind"><option value="gpu">GPU 芯片</option><option value="tokens">Token</option><option value="card">模型卡</option></select></label>
+      <label class="item-card" hidden>模型<select class="input" name="model">${MODELS.map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join('')}</select></label>
+      <label class="item-card" hidden>变体<select class="input" name="variant">${VARIANTS.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('')}</select></label>
+      <label>设为数量<input class="input" type="number" name="amount" min="0" max="9007199254740991" step="1" required></label><button class="btn small">下发调整</button></form>
+      <p class="note">未领取的调整：${r.pending}</p>${r.audit.length ? `<ul class="admin-audit">${r.audit.map(a=>`<li>${esc(new Date(a.at).toLocaleString('zh-CN'))} · ${esc(auditNames[a.action] || a.action)}${a.detail?.reason ? `：${esc(a.detail.reason)}` : ''}</li>`).join('')}</ul>` : ''}<p id="adminActionStatus" class="note" role="status"></p>`;
+    box.scrollIntoView({block:'nearest'});
+    const ban = $('#adminBan'), items = $('#adminItems');
+    const field = (form, name) => form.elements.namedItem(name);
+    field(ban,'minutes').onchange = () => { $('#banCustom').hidden = field(ban,'minutes').value !== 'custom'; };
+    ban.onsubmit = e => { e.preventDefault(); const duration=field(ban,'minutes').value;
+      if (window.confirm(`确定调整「${p.name}」的封禁状态？`)) runAdminAction('ban',id,{level:field(ban,'level').value, minutes:duration==='custom'?field(ban,'custom').value:duration,reason:field(ban,'reason').value,notice:field(ban,'notice').value}); };
+    $('#adminUnban').onclick = () => { if (window.confirm(`确定解除「${p.name}」的封禁？`)) runAdminAction('unban',id); };
+    field(items,'kind').onchange = () => $$('.item-card',items).forEach(el=>{ el.hidden = field(items,'kind').value !== 'card'; });
+    items.onsubmit = e => { e.preventDefault(); const amount=field(items,'amount').value;
+      if (window.confirm(`将「${p.name}」所选道具的数量设为 ${amount}？`)) runAdminAction('items',id,{kind:field(items,'kind').value,model:field(items,'model').value,variant:field(items,'variant').value,amount}); };
+  } catch { if (adminTarget === id) box.textContent = '无法读取玩家资料。'; }
+}
+let adminActionBusy = false;
+async function runAdminAction(action, id, args = {}) {
+  if (adminActionBusy) return;
+  adminActionBusy = true;
+  try {
+    await adminRPC(action,{...args,player_id:id});
+    if (cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
+    toast('操作已提交', action === 'items' ? '道具调整等待玩家联网领取。' : '封禁状态已更新。');
+    if (adminDialog.open) { await loadAdminList(); if (adminTarget === id) await loadAdminDetail(); }
+  } catch { const status = $('#adminActionStatus'); if (status) status.textContent = '操作未完成。请检查权限与输入。'; }
+  finally { adminActionBusy = false; }
+}
+
+const chatDialog = $('#chatRoom'), chatList = $('#chatMessages'), chatText = $('#chatText');
+const chatForm = $('#chatSend'), chatStatus = $('#chatStatus');
+let chatRead = false, chatWrite = false, chatTimer, chatState = null, chatDraftId = null;
+const chatErrors = {
+  FRONTIER_CHAT_RATE:'发得太快，请稍等再试。', FRONTIER_CHAT_RESTRICTED:'封禁期间不能使用聊天室。',
+  FRONTIER_CHAT_NO_LAB:'实验室尚未同步，请联网后再试。'
+};
+function renderChat(messages) {
+  const state = JSON.stringify([moderation.adminId,messages]);
+  if (state === chatState) return;
+  const atBottom = chatList.scrollHeight-chatList.scrollTop-chatList.clientHeight < 48;
+  chatList.innerHTML = messages.map(m => {
+    const [role,label] = labRole(m.player_id,m.level,m.is_admin === true);
+    const who = `<button class="lab-link" data-player="${esc(m.player_id)}" aria-haspopup="dialog">${styledLabName(m.name,role)}</button>`;
+    const when = new Date(m.sent_at).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+    return `<li><div class="chat-meta">${who}${label ? `<span class="role-tag role-${role}">${label}</span>` : ''}<time datetime="${esc(m.sent_at)}">${esc(when)}</time>${verifiedAdmin(cloud.uid) ? `<button type="button" class="x-btn" data-delete="${esc(m.id)}" aria-label="移除消息" title="移除消息">×</button>` : ''}</div><p>${esc(m.body)}</p></li>`;
+  }).join('');
+  if (atBottom || chatState === null) chatList.scrollTop = chatList.scrollHeight;
+  chatState = state;
+}
+async function updateChat(action = 'list', args = {}) {
+  if (!chatDialog.open || !cloud.board?.client || moderation.level === 2) return false;
+  try {
+    const reply = await cloud.board.client.rpc('frontier_chat',{p_action:action,...args});
+    if (!chatDialog.open) return !reply.error;
+    if (missingWorldRPC(reply.error)) { chatStatus.textContent = '聊天室尚未启用。'; return false; }
+    const messages = unwrap(reply);
+    renderChat(messages);
+    if (action !== 'list' || !chatStatus.textContent || chatStatus.textContent === '正在连接…' || chatStatus.textContent === '暂时无法连接。') {
+      chatStatus.textContent = messages.length ? '' : '还没有消息。';
+    }
+    return true;
+  } catch (error) { if (chatDialog.open) chatStatus.textContent = chatErrors[error?.message] || '暂时无法连接。'; return false; }
+}
+async function pollChat() {
+  if (document.hidden || chatRead || chatWrite) return;
+  chatRead = true;
+  try { await updateChat(); } finally { chatRead = false; }
+}
+$('#openChat').onclick = () => {
+  if (!cloud.uid || moderation.level === 2) return;
+  chatList.replaceChildren(); chatState = null; chatStatus.textContent = '正在连接…';
+  chatDialog.showModal(); pollChat(); chatTimer = setInterval(pollChat, 6000);
+};
+chatDialog.addEventListener('close', () => clearInterval(chatTimer));
+chatText.addEventListener('input', () => { chatDraftId = null; });
+chatForm.onsubmit = async e => {
+  e.preventDefault();
+  const message = chatText.value.trim(), send = chatForm.querySelector('button');
+  if (!message || chatWrite) return;
+  chatDraftId ??= newEventId(); chatWrite = true; send.disabled = true; chatText.readOnly = true;
+  try { if (await updateChat('send',{p_id:chatDraftId,p_body:message})) { chatText.value = ''; chatDraftId = null; } }
+  finally { chatWrite = false; send.disabled = false; chatText.readOnly = false; if (chatDialog.open) chatText.focus(); }
+};
+chatList.onclick = e => {
+  const name = e.target.closest('[data-player]');
+  if (name) { openLabProfile(name); return; }
+  const remove = e.target.closest('[data-delete]');
+  if (remove && verifiedAdmin(cloud.uid) && window.confirm('移除这条聊天消息？')) updateChat('delete',{p_id:remove.dataset.delete});
+};
 
 /* =================== ROUTER =================== */
 const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'feats', 'prefs'];
@@ -3830,7 +4390,9 @@ on('#importBtn', 'click', () => {
   if (!text) return toast('没有内容', '先粘贴一段导出的存档文本');
   let st;
   try { st = parseSave(text); } catch (e) { return toast('导入失败', '这段文本不是有效的存档'); }
+  if (S.saveEpoch && S.saveEpoch !== st.saveEpoch) return toast('无法导入', '这份存档早于全服清档。');
   confirmModal('导入存档', '当前进度会被覆盖，确定导入吗？', null, '导入', () => {
+    if (moderation.level === 2 || (S.saveEpoch && S.saveEpoch !== st.saveEpoch)) return;
     installSave(st); saveLocal(); cloudTick(true);
     $('#importText').value = '';
     markDirty(...VIEWS, 'hud'); renderActive(true); toast('导入成功', '欢迎回来，' + S.name);
@@ -3838,7 +4400,8 @@ on('#importBtn', 'click', () => {
 });
 on('#resetBtn', 'click', () => {
   confirmModal('重置进度', '全部卡片、升级、科技和成就都会被清空，并且无法恢复。', null, '确认重置', () => {
-    const fresh = defaultState(); fresh.set = S.set; installSave(fresh);
+    if (moderation.level === 2) return;
+    const fresh = defaultState(); fresh.set = S.set; fresh.saveEpoch = S.saveEpoch; fresh.itemReceipts = S.itemReceipts; installSave(fresh);
     saveLocal(); cloudTick(true); cloudBump(true);
     markDirty(...VIEWS, 'hud'); renderActive(true); toast('进度已重置', `从一张 N 级标准版 ${STARTER.n} 重新开始`);
   });
@@ -3873,6 +4436,7 @@ function updateTimers() {
   if (currentView === 'bench' && benchCooldown && Date.now() >= benchCooldown) { benchCooldown = 0; markDirty('bench'); }
 }
 function advanceSimulation(now, dt) {
+  if (typeof moderation !== 'undefined' && moderation.level === 2) return;
   if (dt > 60) {
     resetAutoPull();
     const off = applyOffline(now - dt * 1000);
@@ -3894,6 +4458,10 @@ function advanceSimulation(now, dt) {
 function tick() {
   const now = Date.now(), dt = (now - lastT) / 1000; lastT = now;
   if (dt <= 0) return;
+  if (moderation.booting || moderation.level === 2) {
+    if (now - lastCloudTick > 1000) { lastCloudTick = now; cloudTick(false); }
+    return;
+  }
   advanceSimulation(now, dt);
   if (now - lastLocalSave > 5000) { lastLocalSave = now; saveLocal(); }
   if (now - lastCloudTick > 1000) { lastCloudTick = now; cloudTick(false); }
@@ -3917,8 +4485,13 @@ function installSave(st) {
   $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
 }
 function init() {
+  $('.shell').inert = moderation.booting;
   const local = loadLocal();
-  if (local) { S = local; offlineReport = applyOffline(S.lastSave); }
+  if (local) {
+    S = local;
+    if (moderation.booting) moderation.offlineFrom = S.lastSave;
+    else if (moderation.level !== 2) offlineReport = applyOffline(S.lastSave);
+  }
   else cloud.freshStart = true;
   applyTheme();
   invalidate();
@@ -3943,6 +4516,7 @@ function init() {
   $('#intro').addEventListener('click', go);
   $('#intro').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
   setInterval(tick, 100);
+  renderModerationLock();
   initCloud();
 }
 init();
