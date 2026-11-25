@@ -145,6 +145,8 @@ button.hud-chip:hover { border-color: var(--line-2); }
 .gpu-ico { width: 16px; height: 16px; }
 .hud-spacer { flex: 1; }
 .buffs { display: flex; gap: 6px; flex-wrap: wrap; }
+.buff-wrap { position:relative; display:inline-flex; }
+.buff-tip { z-index:2; right:auto; line-height:1.5; }
 .buff { font-size: 12px; padding: 4px 9px; border-radius: 999px; background: color-mix(in srgb, var(--copper) 16%, transparent); color: var(--copper); border: 1px solid color-mix(in srgb, var(--copper) 40%, transparent); white-space: nowrap; }
 .news-pill {
   display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 8px; border-radius: 999px; border: 0;
@@ -167,6 +169,8 @@ button.hud-chip:hover { border-color: var(--line-2); }
 .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .view-title { font-size: 26px; font-weight: 900; margin: 0; letter-spacing: .01em; line-height: 1.15; }
 .view-sub { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 70ch; }
+.world-online { margin:0; color:var(--ink-2); font-size:13px; white-space:nowrap; }
+.world-online strong { display:inline-block; min-width:4.5em; margin-left:.45em; color:var(--ink); font-variant-numeric:tabular-nums; }
 
 .panel { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-l); padding: 16px; box-shadow: var(--shadow); }
 .panel + .panel { margin-top: 14px; }
@@ -317,6 +321,8 @@ button.card { transition: transform .12s; }
 .card.mini .body { min-height: 46px; padding: 5px 7px 6px; }
 .card.mini .nm { font-size: 11.5px; }
 .card.mini .cnt, .card.mini .newb { bottom: 50px; }
+.results:is(.bulk-offscreen,.static-fx) .card::before,
+.results:is(.bulk-offscreen,.static-fx) .art::after { animation-play-state: paused; }
 
 /* ========== Models (vault) ========== */
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
@@ -449,6 +455,11 @@ button.card { transition: transform .12s; }
 .input:focus { outline: 2px solid var(--copper); outline-offset: 0; border-color: transparent; }
 .lb { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .lb-wrap { overflow-x: auto; }
+#lbSeg { flex-wrap: wrap; }
+.panel-h:has(#lbSeg) { flex-wrap: wrap; }
+.panel:has(.lb-wrap) { min-width: 0; }
+.lb tfoot td { border-top: 2px solid var(--copper); }
+.lb tfoot small { display: block; color: var(--ink-2); }
 .lb th { text-align: left; font-weight: 500; font-size: 12px; color: var(--ink-3); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .lb td { padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .lb tr.me td { background: color-mix(in srgb, var(--copper) 10%, transparent); }
@@ -763,8 +774,9 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         <div class="view-head">
           <div>
             <h2 class="view-title" id="h-world">全服</h2>
-            <p class="view-sub">四项排行各取前 50 名，全服播报收录最近 30 条。</p>
+            <p class="view-sub">七项排行各取前 10 名，另列我的排名。全服播报收录最近 30 条。</p>
           </div>
+          <p class="world-online" role="status" title="相同玩家身份的多个标签页只计一人">在线人数 <strong id="onlinePlayers">连接中</strong></p>
         </div>
         <div class="world-top">
           <div class="panel">
@@ -794,6 +806,9 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
                 <button data-lb="dex" aria-pressed="false">图鉴</button>
                 <button data-lb="stage" aria-pressed="false">评测</button>
                 <button data-lb="pulls" aria-pressed="false">抽卡</button>
+                <button data-lb="power" aria-pressed="false">战力</button>
+                <button data-lb="achievements" aria-pressed="false">成就</button>
+                <button data-lb="lifetime" aria-pressed="false">累计 Token</button>
               </div>
             </div>
             <div class="lb-wrap" id="lbWrap"></div>
@@ -866,10 +881,10 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           <ul><li>前台连抽改为分帧结算，抽卡页分别显示目标倍率、实测倍率和每秒抽数。</li></ul>
           <h4><time datetime="2026-11-25">2026-11-25</time> · 一键微调</h4>
           <ul><li>模型详情新增「一键微调」，显示可升到的等级和总费用。科技与热点折扣照常生效，也可继续逐级微调。</li></ul>
-          <h4><time datetime="2026-11-25">2026-11-25</time> · 自定义每批抽数</h4>
-          <ul><li>测试时可在控制台输入 <code>setPullCount(100)</code> 设置每批 100 张；输入 <code>setPullCount()</code> 恢复研究升级数量。</li></ul>
           <h4><time datetime="2026-11-25">2026-11-25</time> · 排行榜与稀有抽卡播报</h4>
           <ul><li>四榜展示实验室名、成绩和镇馆模型。全服仅播报当次卡池中具体模型与变体的单抽概率不高于十万分之一的结果。</li></ul>
+          <h4><time datetime="2026-11-25">2026-11-25</time> · 排行榜扩展与高速连抽</h4>
+          <ul><li>顶栏已生效的热点可悬停或轻点查看效果和剩余时间。</li><li>全服页显示在线人数，同一玩家打开多个标签页只计一人。</li><li>新增战力、成就和累计 Token 榜。七项成绩在任意游戏页自动上报；每榜显示前十名，另列自己的全服名次。</li><li>优化前台高速连抽与屏幕外的结果刷新；抽卡概率、保底和实际抽数的计法不变。</li></ul>
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
@@ -1994,38 +2009,74 @@ function rebirthGpu() { return 3 + 2 * S.rebirths; }
 function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
 /* =================== PULL =================== */
-function settlePull(p) {
+// A slot is used only while settling this synchronous batch. Never retain the previous result list.
+const drawSlots = new Array((MODELS.length + 1) * 4);
+let bulkOdds;
+function oddsForRotation(lab, focus) {
+  if (!bulkOdds || bulkOdds.lab !== lab || bulkOdds.focus !== focus) {
+    const odds = new Float64Array(MODELS.length + 1);
+    for (const m of MODELS) odds[m.idx] = modelChance(m, lab, focus);
+    bulkOdds = { lab, focus, odds };
+  }
+  return bulkOdds.odds;
+}
+function settlePull(p, compact = false) {
   const n = multi(), cost = pullCost(p);
   if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
   const clone = cloneN(), table = drawTables.get(p);
   const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
-  const res = [];
+  const res = [], stats = S.stats, cards = S.cards, focus = upChance();
+  const now = Date.now(), rotation = upInfo(now);
+  // At the rotation boundary retain the regular per-roll clock check.
+  const odds = compact && rotation.ends - now > 1000 ? oddsForRotation(rotation.lab, focus) : null;
+  const hits = compact ? [] : null;
   let structural = false;
   for (let i = 0; i < n; i++) {
-    S.stats.pulls++;
-    if (Math.random() < leak) { if (!S.leaks) structural = true; S.leaks++; res.push({ leak: true, t: 7, v: 3, prob: leak, hitProb: leak, n: 1 }); continue; }
+    if (Math.random() < leak) {
+      if (!S.leaks) structural = true;
+      S.leaks++;
+      if (compact && drawSlots[0]) drawSlots[0].n++;
+      else {
+        const r = { leak: true, t: 7, v: 3, prob: leak, hitProb: leak, n: 1 };
+        res.push(r); if (compact) drawSlots[0] = r;
+      }
+      if (compact && isBroadcastHit(leak)) hits.push({leak:true, v:3, hitProb:leak});
+      continue;
+    }
     const pc = (S.pity[p.id] || 0) + 1;
     let t, viaPity = false;
     if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p, table);
     S.pity[p.id] = t >= p.pt ? 0 : pc;
-    const up = upInfo().lab, focus = upChance();
+    const up = odds ? rotation.lab : upInfo().lab;
     const m = pickModel(t, up, focus), v = rollVariant(variants);
-    const hitProb = (1 - leak) * (viaPity ? 1 : table.rates[t]) * modelChance(m, up, focus) * variants[v];
-    let c = S.cards[m.id];
-    const isNew = !total(c);
-    if (!c) c = S.cards[m.id] = [0, 0, 0, 0];
+    const hitProb = (1 - leak) * (viaPity ? 1 : table.rates[t]) * (odds ? odds[m.idx] : modelChance(m, up, focus)) * variants[v];
+    let c = cards[m.id];
+    if (!c) c = cards[m.id] = [0, 0, 0, 0];
+    const isNew = c[v] === 0 && !total(c);
     if (c[v] === 0) structural = true;
     c[v] += clone;
-    if (!structural) updateDuplicate(m, c);
-    S.stats.byTier[t]++;
-    if (t > S.stats.maxTier) S.stats.maxTier = t;
-    if (v > S.stats.maxVar) S.stats.maxVar = v;
-    res.push({ id: m.id, v, t, isNew, prob: table.rates[t] * variants[v], hitProb, pity: viaPity, n: clone });
+    if (!compact && !structural) updateDuplicate(m, c);
+    stats.byTier[t]++;
+    if (t > stats.maxTier) stats.maxTier = t;
+    if (v > stats.maxVar) stats.maxVar = v;
+    const slot = m.idx * 4 + v;
+    if (compact && drawSlots[slot]) drawSlots[slot].n += clone;
+    else {
+      const r = { id: m.id, v, t, isNew, prob: table.rates[t] * variants[v], hitProb, pity: viaPity, n: clone };
+      res.push(r); if (compact) drawSlots[slot] = r;
+    }
+    if (compact && isBroadcastHit(hitProb)) hits.push({id:m.id, v, hitProb});
+  }
+  stats.pulls += n;
+  if (compact) for (const r of res) {
+    if (r.leak) { drawSlots[0] = undefined; continue; }
+    const m = MODEL_BY_ID[r.id]; drawSlots[m.idx * 4 + r.v] = undefined;
+    if (!structural) updateDuplicate(m, cards[r.id]);
   }
   if (structural) invalidate();
-  return { res, structural };
+  return { res, structural, count:n, hits };
 }
 
 /* =================== REBIRTH / UPGRADES / TECH =================== */
@@ -2202,13 +2253,16 @@ function checkAch() {
   if (got) { playRare(false); markDirty('feats', 'research', 'hud'); }
 }
 
-/* Only the simulation tick earns batches. Animation frames consume existing credit. */
+/* Only the simulation tick earns batches. Continuations spend existing credit. */
 let pullSpeed = 1, autoAcc = 0, pullFrame = null, pullShort = false;
+let pullTimer = null;
 let meterSeconds = 0, meterBase = 0, meterBatches = 0, meterCards = 0, pullSample = null;
 let autoClockStart = performance.now();
 
 function resetAutoPull() {
   if (pullFrame !== null) cancelAnimationFrame(pullFrame);
+  if (pullTimer !== null) clearTimeout(pullTimer);
+  pullTimer = null;
   pullFrame = null; autoAcc = 0; pullShort = false; pullSample = null;
   meterSeconds = meterBase = meterBatches = meterCards = 0;
   autoClockStart = performance.now();
@@ -2238,8 +2292,11 @@ function drainAutoPull() {
     if (performance.now() >= deadline) break;
   }
   meterCards += S.stats.pulls - before;
-  if (autoAcc >= 1 && pullFrame === null) {
-    pullFrame = requestAnimationFrame(() => { pullFrame = null; drainAutoPull(); });
+  if (autoAcc >= 1 && pullFrame === null && pullTimer === null) {
+    // Slow paints must not gate every 4 ms of bulk work. Yield between slices.
+    if (pullSpeed > 1 && multi() >= 64) {
+      pullTimer = setTimeout(() => { pullTimer = null; drainAutoPull(); }, 1);
+    } else pullFrame = requestAnimationFrame(() => { pullFrame = null; drainAutoPull(); });
   }
 }
 function advanceAutoPull(dt) {
@@ -2500,13 +2557,13 @@ let lastResultMeta = null;
 let nextFastNotice = 0;
 function isBroadcastHit(p) { return Number.isFinite(p) && p > 0 && p <= 1e-5; }
 function doPull(auto, originEl, paced = false) {
-  const p = curPack(), draw = settlePull(p);
+  const p = curPack(), draw = settlePull(p, auto && paced && multi() >= 64);
   if (!draw) {
     if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(pullCost(p))} Token`);
     return false;
   }
   if (draw.structural) markDirty('dex');
-  afterPull(draw.res, auto, p, originEl, paced);
+  afterPull(draw.res, auto, p, originEl, paced, draw.hits, draw.count);
   return true;
 }
 function resultScore(r) { return r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
@@ -2517,20 +2574,24 @@ function cinePick(sorted, auto) {
   const r = sorted[0];
   if (r && (r.leak || r.t >= 6 || ((r.isNew || r.v === 3) && r.t >= 4) || r.prob <= 1e-4)) return r;
 }
-function afterPull(res, auto, p, originEl, paced = false) {
+function afterPull(res, auto, p, originEl, paced = false, hits = null, count = res.length) {
   const now = Date.now();
   // aggregate for display
-  const map = new Map();
-  const rareBatch = [];
-  for (const r of res) {
-    if (isBroadcastHit(r.hitProb)) rareBatch.push({ event: newEventId(), pack: p.id, id: r.leak ? 'leak' : r.id,
-      v: r.v, chance: r.hitProb, ts: now, name: S.name });
-    const k = r.leak ? 'leak' : r.id + '|' + r.v;
-    const e = map.get(k);
-    if (e) { e.n += r.n; e.isNew = e.isNew || r.isNew; } else map.set(k, Object.assign({}, r));
+  if (!hits) {
+    hits = [];
+    const map = new Map();
+    for (const r of res) {
+      if (isBroadcastHit(r.hitProb)) hits.push(r);
+      const k = r.leak ? 'leak' : r.id + '|' + r.v;
+      const e = map.get(k);
+      if (e) { e.n += r.n; e.isNew = e.isNew || r.isNew; } else map.set(k, Object.assign({}, r));
+    }
+    res = Array.from(map.values());
   }
-  lastResults = Array.from(map.values()).sort((a, b) => resultScore(b) - resultScore(a));
-  lastResultMeta = { auto, pack: p.id, count: res.length, at: now, fly: !auto };
+  const rareBatch = hits.map(r => ({event:newEventId(), pack:p.id, id:r.leak ? 'leak' : r.id,
+    v:r.v, chance:r.hitProb, ts:now, name:S.name}));
+  lastResults = res.sort((a, b) => resultScore(b) - resultScore(a));
+  lastResultMeta = { auto, pack: p.id, count, at: now, fly: !auto };
   // log & rare broadcast
   const logBatch = [];
   for (const r of lastResults) {
@@ -2566,11 +2627,73 @@ function afterPull(res, auto, p, originEl, paced = false) {
 }
 
 
+// Keep the badge element alive as its countdown changes, including keyboard focus.
+const buffBadges = new Map();
+let openBuff = null, buffSerial = 0;
+function buffEffect(b) {
+  const mul = '×' + fmtMul(b.mul);
+  switch (b.type) {
+    case 'luck': return `思考、满血和全息变体概率 ${mul}（各自有上限）`;
+    case 'lab': return `${LABS[b.lab].name} 的模型产出 ${mul}`;
+    case 'frenzy': return `全部模型产出 ${mul}`;
+    case 'sale': return `卡池抽取费用 ${mul}`;
+    case 'train': return `模型微调费用 ${mul}`;
+    case 'rush': return `自动抽卡速度 ${mul}`;
+    case 'bench': return `评测战力 ${mul}`;
+    case 'leak': return `权重泄露概率 ${mul}（最高 2%）`;
+    default: return b.label;
+  }
+}
+function closeBuffTip() {
+  if (!openBuff) return;
+  openBuff.tip.hidden = true; openBuff.btn.setAttribute('aria-expanded','false'); openBuff = null;
+}
+function positionBuffTip() {
+  if (!openBuff) return;
+  const {tip,btn} = openBuff, left = btn.getBoundingClientRect().left;
+  tip.style.left = Math.round(Math.max(8, Math.min(left, document.documentElement.clientWidth - tip.offsetWidth - 8)) - left) + 'px';
+}
+function makeBuffBadge(b, parent) {
+  const wrap = document.createElement('span'), btn = document.createElement('button'), tip = document.createElement('span');
+  const clock = document.createTextNode(''), time = document.createElement('span'), effect = document.createElement('strong');
+  wrap.className = 'buff-wrap'; btn.className = 'buff'; btn.type = 'button'; tip.className = 'news-tip buff-tip';
+  tip.hidden = true; tip.id = 'buff-tip-' + (++buffSerial); tip.setAttribute('role','tooltip');
+  btn.setAttribute('aria-describedby',tip.id); btn.setAttribute('aria-expanded','false');
+  btn.append(b.label + ' · ',clock); effect.textContent = buffEffect(b); tip.append(effect,time);
+  wrap.append(btn,tip); parent.append(wrap);
+  const badge = {btn, wrap, tip, clock, time, seconds:-1};
+  function open() {
+    if (openBuff === badge) return;
+    closeBuffTip(); openBuff = badge; tip.hidden = false; btn.setAttribute('aria-expanded','true'); positionBuffTip();
+  }
+  wrap.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') open(); });
+  wrap.addEventListener('pointerleave', () => { if (openBuff === badge && !btn.matches(':focus-visible')) closeBuffTip(); });
+  btn.addEventListener('focus', open);
+  btn.addEventListener('blur', () => { if (openBuff === badge) closeBuffTip(); });
+  btn.addEventListener('click', open);
+  return badge;
+}
+function renderBuffBadges(parent, now) {
+  for (const [b, row] of buffBadges) if (!buffs.includes(b)) {
+    if (openBuff === row) closeBuffTip(); row.wrap.remove(); buffBadges.delete(b);
+  }
+  for (const b of buffs) {
+    let row = buffBadges.get(b);
+    if (!row) { row = makeBuffBadge(b,parent); buffBadges.set(b,row); }
+    const seconds = Math.max(0,Math.ceil((b.until-now)/1000));
+    if (seconds !== row.seconds) {
+      row.seconds = seconds; row.clock.data = seconds + 's'; row.time.textContent = `剩余 ${seconds} 秒`;
+    }
+  }
+}
+document.addEventListener('pointerdown', e => { if (openBuff && !openBuff.wrap.contains(e.target)) closeBuffTip(); });
+window.addEventListener('resize', positionBuffTip);
+
 /* =================== RENDER: HUD =================== */
 const dirty = new Set(['pull', 'models', 'dex', 'bench', 'research', 'world', 'feats', 'prefs', 'hud']);
 function markDirty(...v) { for (const x of v) dirty.add(x); }
 let currentView = 'pull';
-let hud, previousBuffs;
+let hud;
 function renderHUD() {
   hud ??= Object.fromEntries(['hudTokens','hudRate','hudGpu','hudMul','hudBuffs','dotFeats','dotResearch'].map(id => [id, document.getElementById(id)]));
   textIfChanged(hud.hudTokens, fmt(S.tokens));
@@ -2578,8 +2701,7 @@ function renderHUD() {
   textIfChanged(hud.hudGpu, fmt(S.gpu));
   textIfChanged(hud.hudMul, '×' + fmtMul(globalMul()));
   const now = Date.now();
-  const html = buffs.map(b => `<span class="buff">${esc(b.label)} · ${Math.ceil((b.until - now) / 1000)}s</span>`).join('');
-  if (html !== previousBuffs) { hud.hudBuffs.innerHTML = html; previousBuffs = html; }
+  renderBuffBadges(hud.hudBuffs, now);
   hud.dotFeats.classList.toggle('hidden', !dailyAvail());
   const canTech = TECH.some(t => (t.max === null || S.tech[t.key] < t.max) && S.gpu >= t.cost(S.tech[t.key]));
   hud.dotResearch.classList.toggle('hidden', !canTech && S.tokens < rebirthCost());
@@ -2657,9 +2779,31 @@ function renderPullBox() {
   $('#metaPulls').textContent = fmt(S.stats.pulls);
 }
 let resultNodes = new Map();
+const pullPanels = new Map();
+let pullObserver;
+function deferBulkPanel(el, render) {
+  if (!lastResultMeta?.auto || lastResultMeta.count < 64 || pullSpeed <= 1 || typeof IntersectionObserver !== 'function') return false;
+  if (!pullPanels.has(el)) {
+    pullPanels.set(el, {visible:false, pending:false, render});
+    pullObserver ??= new IntersectionObserver(entries => {
+      for (const entry of entries) {
+        const s = pullPanels.get(entry.target);
+        s.visible = entry.isIntersecting;
+        entry.target.classList.toggle('bulk-offscreen', !s.visible);
+        if (s.visible && s.pending && currentView === 'pull') { s.pending = false; s.render(); }
+      }
+    });
+    pullObserver.observe(el);
+  }
+  const state = pullPanels.get(el);
+  state.pending = !state.visible;
+  return state.pending;
+}
 function renderResults() {
   const box = $('#results');
   if (!lastResults.length) return;
+  if (deferBulkPanel(box, renderResults)) return;
+  box.classList.toggle('static-fx', !S.set.fx);
   const show = lastResults.slice(0, 24);
   const fly = lastResultMeta && lastResultMeta.fly && S.set.fx;
   const html = (r,i) => cardHTML(modelOrLeak(r.leak ? 'leak' : r.id), r.v, {mini:true, count:r.n, isNew:r.isNew, fly, delay:fly ? i*35 : 0, button:!r.leak});
@@ -2696,6 +2840,7 @@ function renderLog() {
   const panel = el.closest('.panel');
   panel.hidden = isInfoMuted('log');
   if (panel.hidden) return;
+  if (deferBulkPanel(el, renderLog)) return;
   const minute = Math.floor(Date.now() / 60000);
   if (previousLogHead === S.log[0] && previousLogMinute === minute) return;
   previousLogHead = S.log[0]; previousLogMinute = minute;
@@ -3070,13 +3215,17 @@ function sanitizePlayer(id, d) {
     id, name: String(d.name || '无名实验室').slice(0, 16), sig: Object.hasOwn(MODEL_BY_ID, d.sig) ? d.sig : null,
     sigV: [0, 1, 2, 3].includes(d.sigV) ? d.sigV : 0,
     tps: num(d.tps, 1e300), dex: num(d.dex, 4000), stage: num(d.stage, 1e6), pulls: num(d.pulls, 1e15), reb: num(d.reb, 1e6),
+    power: d.power == null ? null : num(d.power, 1e300), achievements: d.achievements == null ? null : num(d.achievements, 1e6),
+    lifetime: d.lifetime == null ? null : num(d.lifetime, 1e300),
     rare, ts: num(d.ts, Date.now() + 6e4)
   };
 }
 function playerDoc() {
   return {
     name: S.name.slice(0, 16), sig: S.sig || null, sigV: S.sig ? bestVar(S.cards[S.sig] || [0, 0, 0, 0]) : 0,
-    tps: lastYield, dex: dexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
+    tps: computeYield(), dex: dexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
+    power: bestTeam(benchInfo(S.stage).s).reduce((sum, x) => sum + x.pw, 0),
+    achievements: ACH.filter(a => S.ach[a.id]).length, lifetime: S.lifetime,
     rare: S.rare.slice(0, 5), ts: Date.now()
   };
 }
@@ -3086,7 +3235,7 @@ function livePlayers() {
   return list;
 }
 function recomputeWorld() {
-  const list = cloud.ready ? livePlayers() : [];
+  const list = cloud.ready && !cloud.board ? livePlayers() : [];
   const sum = cloud.board ? cloud.board.totals?.progress || 0 : list.reduce((a, p) => a + Math.min(p.pulls, 2e8), 0);
   let k = 0; for (const m of WORLD_MS) if (sum >= m) k++;
   if (k !== worldMilestones) { worldMilestones = k; markDirty('hud'); }
@@ -3169,8 +3318,55 @@ async function cloudTick(force) {
 }
 
 
+/* =================== ONLINE PLAYERS =================== */
+function setupPresence(client) {
+  let channel = null, key = null, retryAt = 0, away = false;
+  const state = { count:null, status:'connecting', connect };
+  function show(count, status) {
+    if (state.count === count && state.status === status) return;
+    state.count = count; state.status = status; markDirty('world');
+  }
+  function leave() {
+    const old = channel; channel = null;
+    if (old) client.removeChannel(old).catch(() => {});
+    show(null, 'offline');
+  }
+  function connect(uid) {
+    if (!uid || away || !navigator.onLine) return;
+    if (key !== uid) { leave(); key = uid; retryAt = 0; }
+    if (channel || Date.now() < retryAt) return;
+    show(null, 'connecting');
+    let ch;
+    function fail() {
+      if (channel !== ch) return;
+      retryAt = Date.now() + 30000; leave();
+    }
+    try {
+      ch = channel = client.channel('frontier-online-v1', {config:{presence:{key:uid}}});
+      ch.on('presence', {event:'sync'}, () => {
+        if (channel !== ch) return;
+        const members = ch.presenceState();
+        // Ignore the initial snapshot until it includes this player's join.
+        if (members[uid]?.length) show(Object.values(members).filter(sessions => sessions.length).length, 'on');
+      }).subscribe(async status => {
+        if (channel !== ch) return;
+        if (status !== 'SUBSCRIBED') { fail(); return; }
+        try { if (await ch.track({active:true}) !== 'ok') fail(); } catch { fail(); }
+      });
+    } catch { retryAt = Date.now() + 30000; leave(); }
+  }
+  const resume = () => { retryAt = 0; connect(key); };
+  window.addEventListener('offline', leave);
+  window.addEventListener('online', resume);
+  window.addEventListener('pagehide', () => { away = true; leave(); });
+  window.addEventListener('pageshow', () => { away = false; resume(); });
+  return state;
+}
+
 /* =================== PAGES LEADERBOARD =================== */
-const BOARD_KEYS = ['tps', 'dex', 'stage', 'pulls'];
+const EXTRA_SCORES = ['power', 'achievements', 'lifetime'];
+const BOARD_KEYS = ['tps', 'dex', 'stage', 'pulls', ...EXTRA_SCORES];
+const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
 const HIT_LIMIT = 256;
 function newEventId() {
   // getRandomValues also works on HTTP LAN previews, without touching the draw RNG.
@@ -3207,6 +3403,7 @@ function initLeaderboard(config) {
       global: { fetch: (input, init = {}) => fetch(input, { ...init, signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000) }) }
     });
   } catch { setCloudStatus('warn'); return; }
+  cloud.board.presence = setupPresence(cloud.board.client);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
   boardTick(false);
 }
@@ -3224,11 +3421,13 @@ async function boardIdentity(b) {
     } catch {}
     cloud.uid = uid; b.changed = true; cloudBump(true);
   }
+  b.presence.connect(uid);
   return uid;
 }
 async function boardTick(force = false) {
   const b = cloud.board, now = Date.now();
   persistHits(b);
+  b.presence?.connect(cloud.uid);
   if (!b.client || b.busy || now < b.next) return;
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
   const viewing = currentView === 'world' && !document.hidden;
@@ -3243,8 +3442,14 @@ async function boardTick(force = false) {
     if (writeScore) {
       const p = sanitizePlayer(uid, playerDoc());
       cloud.priority = false;
-      unwrap(await b.client.from('leaderboard_players').upsert({ player_id: uid, name: p.name, sig: p.sig,
-        sig_variant: p.sigV, tps: p.tps, dex: Math.floor(p.dex), stage: Math.floor(p.stage), pulls: Math.floor(p.pulls) }, {onConflict: 'player_id'}));
+      const base = {player_id:uid, name:p.name, sig:p.sig, sig_variant:p.sigV, tps:p.tps, dex:Math.floor(p.dex), stage:Math.floor(p.stage), pulls:Math.floor(p.pulls)};
+      const write = row => b.client.from('leaderboard_players').upsert(row, {onConflict:'player_id'});
+      if (!(now < b.legacyUntil)) {
+        const reply = await write({...base, power:p.power, achievements:p.achievements, lifetime:p.lifetime});
+        if (missingScoreColumn(reply.error)) b.legacyUntil = now + 60000;
+        else unwrap(reply);
+      }
+      if (now < b.legacyUntil) unwrap(await write(base));
       cloud.lastPlayerWrite = now;
     }
     if (writeHits) {
@@ -3257,9 +3462,8 @@ async function boardTick(force = false) {
       b.totals = unwrap(await b.client.rpc('leaderboard_totals')); b.nextTotals = now + 60000; recomputeWorld();
     }
     if (readBoard) {
-      const rows = unwrap(await b.client.from('leaderboard_players').select('player_id,name,sig,sig_variant,tps,dex,stage,pulls')
-        .order(mode, {ascending:false}).order('player_id').limit(50));
-      b.boards[mode] = { at: now, rows: rows.map(r => ({...sanitizePlayer(r.player_id, {...r, sigV:r.sig_variant}), me:r.player_id === uid})) };
+      if (now < b.legacyUntil && EXTRA_SCORES.includes(mode)) b.boards[mode] = {at:now, migrating:true};
+      else b.boards[mode] = {at:now, ...await readRanking(b.client, mode, uid)};
     }
     if (readFeed) {
       const hits = unwrap(await b.client.from('leaderboard_hits').select('event_id,name,pack,model,variant,chance,drawn_at')
@@ -3274,9 +3478,31 @@ async function boardTick(force = false) {
   } finally { b.busy = false; }
 }
 
+async function readRanking(client, mode, uid) {
+  if (!BOARD_KEYS.includes(mode)) throw new Error('Unknown ranking');
+  const table = () => client.from('leaderboard_players');
+  const fields = 'player_id,name,sig,sig_variant,' + mode;
+  const player = r => ({...sanitizePlayer(r.player_id, {...r,sigV:r.sig_variant}), me:r.player_id === uid});
+  const rows = unwrap(await table().select(fields).not(mode,'is',null).order(mode,{ascending:false}).order('player_id').limit(10)).map(player);
+  const pos = rows.findIndex(p => p.me);
+  if (pos >= 0) return {rows, mine:rows[pos], rank:pos+1};
+  const own = unwrap(await table().select(fields).eq('player_id',uid).maybeSingle());
+  if (!own || own[mode] == null) return {rows, mine:null, rank:null};
+  // Count the exact same ordering as the top ten; a HEAD query returns no player list.
+  const value = own[mode];
+  const ahead = await table().select('player_id',{head:true,count:'exact'})
+    .or(mode+'.gt.'+value+',and('+mode+'.eq.'+value+',player_id.lt.'+uid+')');
+  unwrap(ahead);
+  return {rows, mine:player(own), rank:Number.isSafeInteger(ahead.count) ? ahead.count+1 : null};
+}
+
 /* =================== RENDER: WORLD =================== */
 let lbMode = 'tps';
 function renderWorld() {
+  const presence = cloud.board?.presence;
+  const pending = presence?.status === 'connecting' && cloud.status !== 'warn';
+  textIfChanged($('#onlinePlayers'), presence?.status === 'on' ? `${presence.count.toLocaleString('zh-CN')} 人` :
+    navigator.onLine && pending ? '连接中' : '暂不可用');
   const nameIn = $('#labName');
   if (document.activeElement !== nameIn) nameIn.value = S.name;
   const sig = S.sig ? MODEL_BY_ID[S.sig] : null;
@@ -3303,15 +3529,21 @@ function renderWorld() {
     return;
   }
   const key = lbMode;
-  const list = cloud.board ? cloud.board.boards[key]?.rows : livePlayers().sort((a, b) => b[key] - a[key] || b.ts - a.ts);
-  const label = { tps: 'Token/s', dex: '图鉴格', stage: '评测关', pulls: '抽卡数' }[key];
-  const rows = (list || []).slice(0, 50).map((p, i) => {
+  const live = cloud.board ? null : livePlayers();
+  const list = live?.filter(p => p[key] != null).sort((a,b) => b[key]-a[key] || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const board = cloud.board?.boards[key];
+  const top = board?.rows || list?.slice(0,10);
+  const mine = board?.mine || list?.find(p => p.me);
+  const rank = board?.rank ?? (mine && list && cloud.players.length < 500 ? list.indexOf(mine)+1 : null);
+  const label = { tps:'Token/s', dex:'图鉴格', stage:'评测关', pulls:'抽卡数', power:'评测战力', achievements:'已解锁成就', lifetime:'累计 Token' }[key];
+  function row(p, n, own) {
     const sm = p.sig ? MODEL_BY_ID[p.sig] : null;
-    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${i < 3 ? 'g' + (i + 1) : ''}">${i + 1}</td><td>${esc(p.name)}${p.me ? ' <span class="muted">（你）</span>' : ''}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${cardArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
-  }).join('');
+    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${esc(p.name)}${p.me && !own ? '（你）' : ''}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${cardArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
+  }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : '正在读取…';
-  $('#lbWrap').innerHTML = rows ? `<table class="lb"><thead><tr><th>#</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${rows}</tbody></table>` : `<div class="empty">${list ? '尚无成绩' : waiting}</div>`;
-  const feed = cloud.board ? cloud.board.feed : list.flatMap(p => p.rare).sort((a,b) => b.ts - a.ts);
+  const ownRow = mine ? row(mine,rank,true) : '<tr><td colspan="4">我的排名 · 尚未上报成绩</td></tr>';
+  $('#lbWrap').innerHTML = top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : waiting}</div>`;
+  const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare).sort((a,b) => b.ts - a.ts);
   $('#feed').innerHTML = feed?.length ? feed.slice(0, 30).map(r => {
     const m = modelOrLeak(r.id);
     const what = r.id === 'leak' ? '泄露的权重' : `${VARIANTS[r.v].name}版 ${m.n}`;
@@ -3486,6 +3718,7 @@ document.addEventListener('pointerdown', e => { if (!$('#newsTip').hidden && !e.
 on('#cine', 'click', closeCine);
 on('#modalBack', 'click', e => { if (e.target.id === 'modalBack') closeModal(); });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && openBuff) { closeBuffTip(); return; }
   if (e.key === 'Escape') { setNewsTip(false); if ($('#cine').classList.contains('open')) closeCine(); else if ($('#modalBack').classList.contains('open')) closeModal(); return; }
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName);
   if (typing) return;
