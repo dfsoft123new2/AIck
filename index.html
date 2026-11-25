@@ -523,6 +523,7 @@ button.card { transition: transform .12s; }
 #profileBody { overflow: auto; overscroll-behavior: contain; padding: 16px 22px 20px; }
 .profile-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr)); margin: 0 0 18px; gap: 10px 14px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .profile-stats dd { margin: 0; font: 700 15px/1.55 var(--font-num); overflow-wrap: anywhere; }
+.profile-rank:not([hidden]) { display: inline-block; margin-inline-start: 4px; color: var(--ink-2); font: 500 12px/1.5 var(--font-ui); white-space: nowrap; }
 .profile-note { margin: 3px 0 10px; }
 .profile-team { list-style: none; margin: 0; padding: 0; counter-reset: card-rank; }
 .profile-team li { counter-increment: card-rank; display: grid; grid-template-columns: 18px 44px minmax(0, 1fr) auto; align-items: center; gap: 9px; padding: 10px 0; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 12px; overflow-wrap: anywhere; }
@@ -4071,6 +4072,8 @@ function setupPresence(client) {
 /* =================== PAGES LEADERBOARD =================== */
 const EXTRA_SCORES = ['power', 'achievements', 'lifetime'];
 const BOARD_KEYS = ['tps', 'dex', 'stage', 'pulls', ...EXTRA_SCORES];
+const PROFILE_RANK_LIMIT = 100;
+const BOARD_REFRESH_MS = 15000;
 const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
 const HIT_LIMIT = 256;
 function newEventId() {
@@ -4138,7 +4141,7 @@ async function boardTick(force = false) {
   if (moderation.level === 2 && !force && now < moderation.next) return;
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
   const viewing = currentView === 'world' && !document.hidden;
-  const readBoard = viewing && (!b.boards[mode] || now - b.boards[mode].at > 15000);
+  const readBoard = viewing && (!b.boards[mode] || now - b.boards[mode].at > BOARD_REFRESH_MS);
   const readFeed = viewing && now - b.feedAt > 15000;
   const writeScore = force || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000);
   const writeHits = b.pending.length && (force || now >= b.nextHits);
@@ -4258,12 +4261,39 @@ async function readLabProfile(uid) {
   return restricted ? {id:uid,name:restricted.name,level:restricted.level} : null;
 }
 
+async function readTopBoard(client, mode, fields, limit) {
+  return unwrap(await client.from('leaderboard_players').select(fields)
+    .not(mode,'is',null).order(mode,{ascending:false}).order('player_id').limit(limit));
+}
+
+function profileRankIds(b, cache, mode) {
+  const now = Date.now();
+  const cached = cache[mode];
+  if (cached && now - cached.at < BOARD_REFRESH_MS) return cached.ids;
+  const entry = {at:now, ids:readTopBoard(b.client, mode, 'player_id', PROFILE_RANK_LIMIT)
+    .then(rows => rows.map(row => row.player_id))
+    .catch(() => {
+      if (cache[mode] === entry) delete cache[mode];
+      return [];
+    })};
+  cache[mode] = entry;
+  return entry.ids;
+}
+
+async function readLabRank(player, mode) {
+  const b = cloud.board, viewer = cloud.uid;
+  if (!b?.client || !viewer || !BOARD_KEYS.includes(mode) || player[mode] == null) return 0;
+  if (b.profileRanks?.viewer !== viewer) b.profileRanks = {viewer, boards:{}};
+  const ids = await profileRankIds(b, b.profileRanks.boards, mode);
+  return viewer === cloud.uid ? ids.indexOf(player.id) + 1 : 0;
+}
+
 async function readRanking(client, mode, uid) {
   if (!BOARD_KEYS.includes(mode)) throw new Error('Unknown ranking');
   const table = () => client.from('leaderboard_players');
   const fields = 'player_id,name,sig,sig_variant,' + mode;
   const player = r => ({...sanitizePlayer(r.player_id, {...r,sigV:r.sig_variant}), me:r.player_id === uid});
-  const rows = unwrap(await table().select(fields).not(mode,'is',null).order(mode,{ascending:false}).order('player_id').limit(10)).map(player);
+  const rows = (await readTopBoard(client, mode, fields, 10)).map(player);
   const pos = rows.findIndex(p => p.me);
   if (pos >= 0) return {rows, mine:rows[pos], rank:pos+1};
   const own = unwrap(await table().select(fields).eq('player_id',uid).maybeSingle());
@@ -4559,7 +4589,14 @@ async function loadLabProfile(id) {
     $('#profileTitle').innerHTML = styledLabName(p.name,role) + labTitleBadge(titles[id],true);
     $('#profileCaption').textContent = label ? `实验室档案 · ${label}` : '实验室档案';
     if (p.level) { body.innerHTML = '<p class="profile-note">此实验室暂不参与公开榜单。</p>'; return; }
-    body.innerHTML = `<dl class="profile-stats">${PROFILE_STATS.map(([key,label,unit])=>`<div><dt>${label}</dt><dd>${p[key] == null ? '未上报' : fmt(p[key])+unit}</dd></div>`).join('')}</dl><h3>战力最强的模型</h3>${profileTeamHTML(p)}`;
+    body.innerHTML = `<dl class="profile-stats">${PROFILE_STATS.map(([key,label,unit])=>`<div><dt>${label} <span class="profile-rank" data-rank="${key}" hidden></span></dt><dd>${p[key] == null ? '未上报' : fmt(p[key])+unit}</dd></div>`).join('')}</dl><h3>战力最强的模型</h3>${profileTeamHTML(p)}`;
+    for (const badge of $$('.profile-rank',body)) {
+      readLabRank(p,badge.dataset.rank).then(rank => {
+        if (!rank || seq !== profileRequest || !dlg.open) return;
+        badge.textContent = `第 ${rank} 名`;
+        badge.hidden = false;
+      });
+    }
   } catch {
     if (seq !== profileRequest || !dlg.open) return;
     body.innerHTML = '<p role="status" class="profile-note">未能读取实验室档案。</p><button type="button" class="btn ghost small">重新读取</button>';
