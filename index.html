@@ -645,13 +645,55 @@ button.card { transition: transform .12s; }
 .packet-details-table th:nth-child(2) { width:34%; }
 .packet-details-table th:last-child,.packet-details-table td:last-child { text-align:end; }
 .packet-details-table time { color:var(--ink-2); font-size:12px; }
-.lab-title { display:inline-block; max-inline-size:12em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; vertical-align:middle; border-inline-start:1px solid var(--title-color); padding-inline:5px; background:color-mix(in srgb,var(--title-color) 17%,var(--bg-3)); color:var(--ink); font-size:12px; font-weight:650; border-radius:3px; }
+.lab-title {
+  --title-edge:color-mix(in srgb,var(--title-color) 55%,var(--line-2));
+  --title-mark:color-mix(in srgb,var(--title-color) 58%,var(--ink));
+  display:inline-flex; align-items:center; gap:.38em; position:relative; isolation:isolate;
+  max-inline-size:min(15em,100%); vertical-align:middle; overflow:hidden; padding:.13em .57em;
+  border:1px solid var(--title-edge); border-radius:4px; background:color-mix(in srgb,var(--title-color) 13%,var(--bg-3));
+  color:var(--ink); font-size:12px; font-weight:700; line-height:1.45;
+}
+.lab-title-mark { inline-size:1.17em; block-size:1.17em; flex:none; color:var(--title-mark); }
+.lab-title-name { min-inline-size:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lab-title[data-style=foil] {
+  --title-mark:color-mix(in srgb,var(--title-color) 48%,#e5fff5);
+  border-color:color-mix(in srgb,var(--title-color) 62%,#9fe1d9); border-radius:2px 8px 2px 8px;
+  color:#f2fffc; background:linear-gradient(125deg,#10272c 24%,color-mix(in srgb,var(--title-color) 29%,#132e39) 55%,#1c2e3a 68%);
+}
+.lab-title[data-style=seal] {
+  --title-mark:color-mix(in srgb,var(--title-color) 42%,#ffe2a1);
+  padding-inline:.65em; color:#fff4d9; border-color:color-mix(in srgb,var(--title-color) 56%,#d5ac60); border-radius:2px;
+  box-shadow:inset 0 0 0 1px #2a221c;
+  background:linear-gradient(0deg,#241b18,color-mix(in srgb,var(--title-color) 19%,#35271c));
+}
+.lab-title[data-style=eclipse] {
+  --title-mark:color-mix(in srgb,var(--title-color) 48%,#fff0fc);
+  padding-inline:.54em .93em; color:#fff3fd; border-radius:2px 8px 2px 8px;
+  border-color:color-mix(in srgb,var(--title-color) 63%,#f6b4e1);
+  background:linear-gradient(110deg,color-mix(in srgb,var(--title-color) 27%,#271835),#1b1630 62%,#302041);
+  box-shadow:0 2px 7px color-mix(in srgb,var(--title-color) 25%,transparent),inset 0 0 0 1px #2a213d;
+}
+.lab-title[data-style=eclipse]::after {
+  content:""; position:absolute; inset-block-start:0; inset-inline-end:.36em;
+  inline-size:.27em; block-size:.45em; border-inline:1px solid var(--title-mark); transform:skew(-27deg); pointer-events:none;
+}
 .lab-title-picker { margin-block:8px; }
 .lab-title-picker .world-tools { align-items:center; flex-wrap:wrap; }
 .lab-title-picker select { max-width:min(100%,18em); }
 .lab-title-picker [hidden],.lab-title-picker #ownTitleBadge:empty { display:none; }
 .lab-title-inline { margin-inline-start:6px; }
 .admin-tools input[type=color] { inline-size:60px; block-size:40px; padding:4px; cursor:pointer; }
+.admin-tools.title-editor { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 14px; }
+.title-editor .title-editor-wide { grid-column:1/-1; }
+.title-editor .input { box-sizing:border-box; inline-size:100%; min-block-size:44px; max-inline-size:none; }
+.title-editor input[type=color] { inline-size:60px; }
+.title-preview { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; min-block-size:56px; padding:9px 0; border-block:1px solid var(--line); }
+.title-preview-label { color:var(--ink-2); font-size:13px; }
+#adminTitlePreview { min-inline-size:0; max-inline-size:100%; }
+#adminTitlePreview .lab-title { font-size:15px; max-inline-size:min(23em,100%); }
+#adminTitlePreview .lab-title-name { white-space:normal; overflow-wrap:anywhere; }
+.title-editor-actions { display:flex; justify-content:flex-end; }
+.title-editor-actions .btn { box-sizing:border-box; min-block-size:44px; }
 .inventory-tools label { max-inline-size:100%; }
 .inventory-table { min-width:32rem; }
 .inventory-table th[scope=row] { font-size:13px; color:var(--ink); white-space:normal; overflow-wrap:anywhere; min-inline-size:8em; }
@@ -6211,9 +6253,20 @@ async function readPacketDetails() {
 packetDetailRefresh.onclick = readPacketDetails;
 packetDetailsDialog.addEventListener('close', () => { if (!packetDetailsDialog.open) packetDetailsSeq++; });
 
+const TITLE_STYLES = Object.freeze({
+  auto:'自动', circuit:'晶格铭牌', foil:'极光镀层', seal:'王冠刻印', eclipse:'零点蚀环'
+});
+const TITLE_MARKS = Object.freeze({
+  circuit:'<path d="M3 5h6v6H3zM9 8h4m-7 3v3M6 2v3"/><path d="M12 6v4"/>',
+  foil:'<path d="m8 2 5 6-5 6-5-6 5-6Zm0 0v12M3 8h10"/>',
+  seal:'<path d="m2 5 3 3 3-5 3 5 3-3-1.5 7h-9L2 5Zm2 9h8"/>',
+  eclipse:'<path d="M11.6 4.4a5.1 5.1 0 1 1-7.2 7.2m0 0a5.1 5.1 0 0 1 7.2-7.2M1.5 12.5l13-9"/><circle cx="8" cy="8" r="1.25" fill="currentColor" stroke="none"/>'
+});
+
 function labTitleBadge(title, inline = false) {
   if (typeof title?.name !== 'string' || !/^#[0-9a-f]{6}$/i.test(title.color)) return '';
-  return `<bdi class="lab-title${inline ? ' lab-title-inline' : ''}" style="--title-color:${title.color}" title="${esc(title.name)}">${esc(title.name)}</bdi>`;
+  const style = Object.hasOwn(TITLE_MARKS,title.style) ? title.style : title.name === '零点见证者' ? 'eclipse' : 'circuit';
+  return `<bdi class="lab-title${inline ? ' lab-title-inline' : ''}" data-style="${style}" style="--title-color:${title.color}" title="${esc(title.name)}"><svg class="lab-title-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">${TITLE_MARKS[style]}</svg><span class="lab-title-name">${esc(title.name)}</span></bdi>`;
 }
 
 async function readWornTitles(ids) {
@@ -6291,35 +6344,51 @@ ownTitleChoice.onchange = async () => {
 
 function adminTitlePanelHTML() {
   return `<details class="admin-notice" id="adminTitles"><summary>发放称号</summary>
-    <form class="admin-tools" id="adminTitleForm">
-      <label class="notice-recipient">玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"></label>
-      <label>称号名称<input class="input" name="name" maxlength="24" required></label>
-      <label>颜色<input class="input" name="color" type="color" value="#c89158"></label>
-      <span id="adminTitlePreview"></span><button class="btn small" type="submit">发放称号</button>
+    <form class="admin-tools title-editor" id="adminTitleForm">
+      <label class="title-editor-wide">玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"></label>
+      <label class="title-editor-wide">称号名称<input class="input" name="name" maxlength="24" required></label>
+      <label>徽章样式<select class="input" name="style">${Object.entries(TITLE_STYLES).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>
+      <label>强调色<input class="input" name="color" type="color" value="#c89158"></label>
+      <div class="title-preview title-editor-wide"><span class="title-preview-label">实时预览</span><span id="adminTitlePreview"></span></div>
+      <div class="title-editor-wide title-editor-actions"><button class="btn small" type="submit">保存称号</button></div>
     </form><p class="note notice-status" id="adminTitleStatus" role="status"></p>
   </details>`;
 }
 function bindAdminTitlePanel() {
   const form = $('#adminTitleForm'), status = $('#adminTitleStatus'), fields = form.elements;
-  const name = fields.namedItem('name'), player = fields.player, color = fields.color, submit = form.querySelector('[type=submit]');
+  const name = fields.namedItem('name'), player = fields.player, color = fields.color, style = fields.namedItem('style');
+  const submit = form.querySelector('[type=submit]'), preview = $('#adminTitlePreview');
+  const controls = [name,player,color,style,submit];
   let busy = false;
-  form.oninput = () => { $('#adminTitlePreview').innerHTML = name.value.trim() ? labTitleBadge({name:name.value.trim(),color:color.value}) : ''; };
+  const updatePreview = () => {
+    preview.innerHTML = labTitleBadge({name:name.value.trim() || '称号预览', color:color.value, style:style.value});
+  };
+  form.oninput = e => { if (e.target !== player) updatePreview(); };
+  updatePreview();
   form.onsubmit = async e => {
     e.preventDefault();
     if (busy || !verifiedAdmin(cloud.uid) || !cloud.board?.client) return;
-    const p_player = player.value.toLowerCase(), p_name = name.value.trim(), p_color = color.value;
+    const p_player = player.value.trim().toLowerCase(), p_name = name.value.trim(), p_color = color.value, p_style = style.value;
     if (!p_name) { status.textContent = '请输入称号名称。'; name.focus(); return; }
-    busy = submit.disabled = player.disabled = name.disabled = color.disabled = true;
-    status.textContent = '正在发放…';
+    busy = true;
+    for (const control of controls) control.disabled = true;
+    status.textContent = '正在保存…';
     try {
-      unwrap(await cloud.board.client.rpc('frontier_title_grant',{p_player,p_name,p_color}));
-      status.textContent = `已发放「${p_name}」。`;
+      const client = cloud.board.client;
+      const args = {p_player,p_name,p_color};
+      let reply = await client.rpc('frontier_title_customize',{...args,p_style});
+      if (p_style === 'auto' && missingWorldRPC(reply.error)) reply = await client.rpc('frontier_title_grant',args);
+      unwrap(reply);
+      status.textContent = `已保存「${p_name}」。`;
       titlePublicSeq++; titlePublicAt = 0;
       if (p_player === cloud.uid) { titleReadSeq++; titleListAt = 0; }
       markDirty('world');
     } catch (error) {
-      status.textContent = missingWorldRPC(error) ? '尚未安装称号数据库更新。' : error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : '发放失败，请检查权限和称号名称。';
-    } finally { busy = submit.disabled = player.disabled = name.disabled = color.disabled = false; }
+      status.textContent = missingWorldRPC(error) ? '正式库尚未安装新版称号更新。' : error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : '保存失败，请检查权限和称号名称。';
+    } finally {
+      busy = false;
+      for (const control of controls) control.disabled = false;
+    }
   };
 }
 function chooseTitleRecipient(id) {
