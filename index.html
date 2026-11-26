@@ -2930,7 +2930,7 @@ function trainModel(id, limit = 1, maxCost = Infinity) {
   S.tokens = quote.remaining;
   if (isAdminCard(id)) {
     if (!adminCardProgressMatches() && S.sig === id) S.sig = null;
-    S.adminCardProgress = {uid:cloud.uid, level};
+    S.adminCardProgress = {uid:adminCard.uid, level};
     saveLocal(); cloudBump(true);
   } else S.train[id] = level;
   invalidateProduction();
@@ -3917,7 +3917,7 @@ function openDetail(id) {
     };
     el.querySelector('[data-act=sig]').onclick = () => {
       if (!owned(m)) return;
-      if (exclusive && !adminCardProgressMatches()) S.adminCardProgress = {uid:cloud.uid,level:0};
+      if (exclusive && !adminCardProgressMatches()) S.adminCardProgress = {uid:adminCard.uid,level:0};
       S.sig = m.id;
       if (exclusive) saveLocal();
       markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n);
@@ -4421,6 +4421,7 @@ function initLeaderboard(config) {
       global: { fetch: boardFetch(config) }
     });
   } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
+  cloud.board.client.auth.onAuthStateChange((_event, session) => bindAdminCardIdentity(session?.user?.id));
   cloud.board.presence = setupPresence(cloud.board.client);
   startAccount(cloud.board);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
@@ -4471,7 +4472,6 @@ async function boardIdentity(b) {
   if (!await accountIdentity(session)) return null;
   const uid = session.user.id;
   if (uid !== cloud.uid) {
-    clearAdminCard();
     if (cloud.uid) { persistHits(b); b.pending = []; }
     try {
       const saved = JSON.parse(sessionStorage.getItem(`${b.store}:${uid}`) || '[]');
@@ -4718,7 +4718,6 @@ function accountMark() { markDirty('prefs'); renderAccountPanel(); }
 
 function accountLock(message) {
   account.blocked = message; account.pending = false;
-  clearAdminCard();
   pullTest.reset();
   resetAutoPull(); cloud.board?.presence?.disconnect();
   showAccountLock(message);
@@ -4949,7 +4948,6 @@ function applyModerationStatus(data) {
   moderation.until = data.until; moderation.reason = data.reason;
   moderation.notice = data.notice || null;
   moderation.ready = true;
-  void refreshAdminCard();
   lsSet(MODERATION_KEY, level === 2 ? '2' : '0');
   let fresh = false;
   if (data.epoch && S.saveEpoch !== data.epoch && level !== 2) {
@@ -5070,14 +5068,15 @@ function syncModeration(b, force) {
 }
 
 async function readModerationStatus(b) {
-  const revision = moderationRevision;
+  const revision = moderationRevision, uid = cloud.uid, cardIdentity = adminCard;
   const reply = await b.client.rpc('frontier_session');
+  if (moderationRevision !== revision || uid !== cloud.uid) return;
   if (accountStale(reply.error)) { accountFault(reply.error); return; }
-  if (moderationRevision !== revision) return;
   if (missingWorldRPC(reply.error)) { moderation.next = Date.now() + 120000; finishModerationBoot(); return; }
   const data = unwrap(reply);
   if (!data || typeof data !== 'object') { finishModerationBoot(); return; }
   applyModerationStatus(data);
+  if (cardIdentity === adminCard) observeAdminCardRole(uid, data.admin_id);
   if (moderation.level) return;
   for (const order of data.orders || []) {
     if (order.kind === 'all_cards') {
@@ -6897,17 +6896,19 @@ function installSave(st) {
 }
 const ADMIN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇异', t:EXCLAMATION_TIER + 1,
   base:1e20, lab:'horizon', s:'all', d:'事件视界闭合后留下的最后一道回波。', copies:Object.freeze([1,1,1,1])});
-let adminCard = {uid:null, owned:false, ready:false, busy:false, expires:0, error:''};
-let adminCardClient;
+const isAdminCardUID = id => typeof id === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
+const adminCardKey = uid => `frontier:admin-card:${WORLD_CONFIG.url}:${uid}`;
+const adminCardState = (uid, owned = false) => ({uid, owned, role:null, ready:false, busy:false, error:''});
+let adminCard = adminCardState(null);
 
 function adminCardEligible() {
-  return moderation.ready && !moderation.level && !accountPaused() && verifiedAdmin(cloud.uid) && navigator.onLine;
+  return adminCard.role === true && adminCard.uid === cloud.uid && !moderation.level && !accountPaused() && navigator.onLine;
 }
 function adminCardValid() {
-  return adminCardEligible() && adminCard.uid === cloud.uid && adminCard.ready && performance.now() < adminCard.expires;
+  return adminCardEligible() && adminCard.ready;
 }
-function hasAdminCard() { return adminCard.owned && adminCardValid(); }
-function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === cloud.uid; }
+function hasAdminCard() { return adminCard.owned; }
+function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === adminCard.uid; }
 function liveAdminCardBase() { return hasAdminCard() ? rawUnits(ADMIN_CARD.copies) * ADMIN_CARD.base * trainMul(ADMIN_CARD.id) : 0; }
 function adminCardChanged() {
   if (!hasAdminCard() && $('.detail[data-train-id="admin-nullpoint"]')) closeModal();
@@ -6915,50 +6916,56 @@ function adminCardChanged() {
   markDirty('models','bench','world','hud');
   cloudBump(true);
 }
-function clearAdminCard() {
-  if (!adminCard.uid) return;
-  adminCard = {uid:null, owned:false, ready:false, busy:false, expires:0, error:''};
+function bindAdminCardIdentity(uid) {
+  uid = isAdminCardUID(uid) ? uid : null;
+  if (adminCard.uid === uid) return;
+  // A receipt is outside exported saves and scoped to this server and the active Auth identity.
+  adminCard = adminCardState(uid, !!uid && lsGet(adminCardKey(uid)) === '1');
+  const dialog = $('#adminCardReveal');
+  if (dialog.open) dialog.close();
+  adminCardChanged();
+}
+function observeAdminCardRole(uid, adminId) {
+  if (!uid || uid !== adminCard.uid || (adminId !== null && !isAdminCardUID(adminId))) return;
+  if (adminId === uid) {
+    adminCard.role = true;
+    void refreshAdminCard();
+    return;
+  }
+  if (adminCard.role === false) return;
+  lsDel(adminCardKey(uid));
+  adminCard = adminCardState(uid);
+  adminCard.role = false;
   const dialog = $('#adminCardReveal');
   if (dialog.open) dialog.close();
   adminCardChanged();
 }
 async function refreshAdminCard(claim = false) {
-  if (!adminCardEligible()) { clearAdminCard(); return; }
+  if (!adminCardEligible() || adminCard.owned) return;
   const client = cloud.board?.client, uid = cloud.uid;
   if (!client) return;
-  if (client !== adminCardClient) {
-    adminCardClient = client;
-    client.auth.onAuthStateChange((_event, session) => {
-      if (adminCard.uid && adminCard.uid !== session?.user?.id) clearAdminCard();
-    });
-  }
-  if (adminCard.uid !== uid) {
-    clearAdminCard();
-    adminCard.uid = uid;
-  }
-  if (adminCard.busy || (claim && (!adminCardValid() || adminCard.owned))) return;
+  if (adminCard.busy || (claim && !adminCardValid())) return;
   const check = adminCard;
   const wasOwned = hasAdminCard();
   check.busy = claim ? 'claim' : 'status'; check.error = '';
   if (claim) renderAdminCard();
   try {
     const reply = await client.rpc('frontier_admin_card', {p_claim:claim}).abortSignal(AbortSignal.timeout(8000));
-    if (check !== adminCard || uid !== cloud.uid || !adminCardEligible()) return;
+    if (check !== adminCard || uid !== cloud.uid || check.role !== true) return;
     if (accountStale(reply.error)) { accountFault(reply.error); return; }
     const data = unwrap(reply);
     if (data?.player_id !== uid || typeof data.owned !== 'boolean' || (claim && !data.owned)) throw Error('Unverified card response');
     check.owned = data.owned;
     check.ready = true;
-    check.expires = performance.now() + 30000;
+    if (check.owned) lsSet(adminCardKey(uid), '1');
     if (claim) {
       if (S.set.fx) showAdminCardReveal();
       else toast('??!! 已入库', '四种变体各 1 张');
     }
   } catch {
     if (check !== adminCard || uid !== cloud.uid) return;
-    check.ready = false; check.owned = false;
+    check.ready = false;
     check.error = claim ? '未能确认领取，可重试查询。' : '暂时无法验证专属档案。';
-    if ($('#adminCardReveal').open) $('#adminCardReveal').close();
   } finally {
     if (check === adminCard) {
       check.busy = false;
@@ -7020,7 +7027,7 @@ function initAdminCard() {
     if (!slot.hidden) action.focus();
     else { renderModels(); $('#vault [data-model="admin-nullpoint"]')?.focus(); }
   });
-  window.addEventListener('offline',clearAdminCard);
+  window.addEventListener('offline',renderAdminCard);
 }
 
 function init() {
