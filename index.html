@@ -566,6 +566,21 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .tech .d { font-size: 12.5px; color: var(--ink-2); }
 .tech .e { font-size: 12.5px; color: var(--ok); font-family: var(--font-num); }
 
+.gpu-exchange-head { flex-wrap:wrap; }
+.gpu-exchange-row {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto;
+  gap:8px 14px; align-items:center; padding:9px 0; border-top:1px solid var(--line);
+}
+.gpu-exchange-row:last-child { padding-bottom:0; }
+.gpu-exchange-row .gpu-exchange-duration { color:var(--ink-2); font-size:13px; }
+.gpu-exchange-row .gpu-exchange-yield { color:var(--ok); font-family:var(--font-num); font-weight:700; overflow-wrap:anywhere; }
+.gpu-exchange-row .btn { min-height:44px; white-space:nowrap; }
+@media (max-width:420px) {
+  .gpu-exchange-row { grid-template-columns:minmax(0,1fr) auto; column-gap:10px; row-gap:2px; }
+  .gpu-exchange-row .btn { grid-area:1 / 2 / span 2; }
+  .gpu-exchange-row .gpu-exchange-yield { grid-area:2 / 1; }
+}
+
 /* ========== World ========== */
 .world-top { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
 .me-card { display: flex; gap: 14px; align-items: center; }
@@ -742,6 +757,11 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 }
 .lab-title-mark { inline-size:1.11em; block-size:1.11em; }
 .lab-title-name { min-inline-size:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lab-title[data-no-crest] { padding-inline-start:.52em; }
+.lab-title-suffix {
+  flex:0 0 auto; max-inline-size:min(8em,55%); padding-inline-start:.35em; border-inline-start:1px solid var(--title-edge);
+  color:var(--title-metal); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
 .lab-title-rank { display:inline-flex; flex:none; gap:.13em; align-items:center; margin-inline-start:.1em; }
 .lab-title-rank i { inline-size:.19em; block-size:.59em; background:var(--title-metal); transform:skewX(-21deg); }
 .lab-title[data-prime] { border-block-start-color:var(--title-metal); }
@@ -773,6 +793,21 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .lab-title[data-style=vector] { --title-surface:#152c3d; border-radius:8px 3px; }
 .lab-title[data-style=vector] .lab-title-rank i { block-size:.44em; }
 .lab-title[data-style=archive] { --title-surface:#18332b; --title-crest:inset(0 round 2px); border-radius:3px 3px 8px 3px; }
+.lab-title[data-style=obsidian] {
+  --title-surface:#27282c; --title-crest:polygon(24% 0,100% 0,76% 100%,0 100%);
+  border-radius:2px; border-block-start-color:var(--title-metal);
+}
+.lab-title[data-style=relay] {
+  --title-surface:#132f3a; --title-crest:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+  border-radius:7px 2px; border-block-end-color:var(--title-metal);
+}
+.lab-title[data-style=nova] {
+  --title-surface:#391f24; --title-crest:circle(48%); border-radius:14px 4px 14px 4px;
+  background:linear-gradient(110deg,var(--title-mid),var(--title-surface) 66%);
+}
+.lab-title[data-style=nova] .lab-title-crest {
+  background:var(--title-surface); color:var(--title-metal); border:1px solid var(--title-edge); border-radius:50%;
+}
 .lab-title[data-style=eclipse] {
   --title-surface:#1b142e; --title-metal:color-mix(in srgb,var(--title-color) 54%,#ffe0f5);
   border-radius:14px 3px 12px 14px;
@@ -793,17 +828,26 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .lab-title-picker [hidden],.lab-title-picker #ownTitleBadge:empty { display:none; }
 .lab-title-inline { margin-inline-start:6px; }
 .admin-tools input[type=color] { inline-size:60px; block-size:40px; padding:4px; cursor:pointer; }
-.admin-tools.title-editor { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 14px; }
+.admin-tools.title-editor { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 14px; }
 .title-editor .title-editor-wide { grid-column:1/-1; }
+.title-editor [hidden] { display:none; }
+.title-recipient,.title-appearance { display:grid; align-items:end; gap:10px; }
+.title-recipient { grid-template-columns:minmax(0,1fr) auto; }
+.title-appearance { grid-template-columns:repeat(2,minmax(0,1fr)) auto; }
 .title-editor .input { box-sizing:border-box; inline-size:100%; min-block-size:44px; max-inline-size:none; }
 .title-editor input[type=color] { inline-size:60px; }
+.title-editor .btn { box-sizing:border-box; min-block-size:44px; }
 .title-preview { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; min-block-size:56px; padding:9px 0; border-block:1px solid var(--line); }
 .title-preview-label { color:var(--ink-2); font-size:13px; }
 #adminTitlePreview { min-inline-size:0; max-inline-size:100%; }
 #adminTitlePreview .lab-title { font-size:15px; max-inline-size:min(23em,100%); }
 #adminTitlePreview .lab-title-name { white-space:normal; overflow-wrap:anywhere; }
 .title-editor-actions { display:flex; justify-content:flex-end; }
-.title-editor-actions .btn { box-sizing:border-box; min-block-size:44px; }
+@media (max-width:430px) {
+  .title-appearance { grid-template-columns:minmax(0,1fr) auto; }
+  .title-appearance .title-color { grid-area:1 / 2; }
+  .title-appearance label:nth-child(2) { grid-column:1/-1; }
+}
 .inventory-tools label { max-inline-size:100%; }
 .inventory-table { min-width:32rem; }
 .inventory-table th[scope=row] { font-size:13px; color:var(--ink); white-space:normal; overflow-wrap:anywhere; min-inline-size:8em; }
@@ -1462,7 +1506,11 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           <div class="upg-list" id="upgList"></div>
         </div>
         <div class="panel" id="rebirthPanel"></div>
-        <div class="panel">
+        <section class="panel" id="gpuTokenExchange" aria-labelledby="gpuTokenExchangeTitle">
+          <div class="panel-h gpu-exchange-head"><h3 id="gpuTokenExchangeTitle" tabindex="-1">GPU 兑换 Token</h3><span class="side" id="gpuTokenRate"></span></div>
+          <div id="gpuTokenOffers"></div>
+        </section>
+                <div class="panel">
           <div class="panel-h"><h3>GPU 科技树</h3><span class="side">消耗 GPU 芯片，永久保留</span></div>
           <div class="tech-grid" id="techGrid"></div>
         </div>
@@ -3306,6 +3354,36 @@ function buyTech(key) {
   toast('科技已研发', `${t.name} → ${t.eff(S.tech[key])}`);
   markDirty('research', 'pull', 'bench', 'hud');
 }
+const GPU_TOKEN_EXCHANGE = Object.freeze({5:30, 15:60, 60:180});
+function gpuTokenRate() { return computeYield() * eventMultiplier('tokens'); }
+function gpuTokenQuote(minutes, rate = gpuTokenRate()) {
+  if (!Object.hasOwn(GPU_TOKEN_EXCHANGE, minutes)) return null;
+  const tokens = rate * (Number(minutes) * 60);
+  return Number.isFinite(tokens) && tokens > 0 ? {cost:GPU_TOKEN_EXCHANGE[minutes],tokens} : null;
+}
+function gpuTokenTradeStatus(quote) {
+  if (moderation.booting || moderation.level === 2 || accountPaused()) return 'paused';
+  if (!quote) return 'rate';
+  if (S.gpu < quote.cost) return 'balance';
+  const gpu = S.gpu - quote.cost, tokens = S.tokens + quote.tokens, lifetime = S.lifetime + quote.tokens;
+  return Number.isFinite(gpu) && gpu < S.gpu && Number.isFinite(tokens) && tokens > S.tokens && Number.isFinite(lifetime) ? 'ready' : 'limit';
+}
+function exchangeGpuTokens(minutes, expectedTokens) {
+  const quote = gpuTokenQuote(minutes);
+  const status = gpuTokenTradeStatus(quote);
+  if (status !== 'ready') return status;
+  if (quote.tokens !== expectedTokens) return 'changed';
+  const before = {gpu:S.gpu, tokens:S.tokens, lifetime:S.lifetime, lastSave:S.lastSave};
+  S.gpu -= quote.cost;
+  addTokens(quote.tokens);
+  if (!saveLocal(true)) {
+    Object.assign(S,before);
+    return 'storage';
+  }
+  markDirty('hud','research','pull','world');
+  cloudBump(true);
+  return 'ok';
+}
 function doRebirth(auto) {
   const cost = rebirthCost();
   if (S.tokens < cost) return;
@@ -4704,6 +4782,47 @@ function renderBench() {
 }
 
 /* =================== RENDER: RESEARCH =================== */
+const GPU_EXCHANGE_ERRORS = {
+  paused:'存档暂不可用，请稍后再试。', rate:'当前没有可兑换的产量。', balance:'GPU 余额不足。',
+  limit:'数值超出可结算范围。', storage:'无法写入本机存档，没有扣除 GPU。'
+};
+function refreshGpuTokenOffers() {
+  const grid = $('#gpuTokenOffers');
+  const rate = gpuTokenRate();
+  const rateText = rate > 0 && rate < .001 ? rate.toExponential(2)
+    : rate < 1e4 ? rate.toLocaleString('en-US',{maximumSignificantDigits:6}) : fmt(rate);
+  textIfChanged($('#gpuTokenRate'), Number.isFinite(rate) ? `当前产量 ${rateText} Token/s` : '当前产量不可用');
+  if (!grid.firstElementChild) grid.innerHTML = Object.entries(GPU_TOKEN_EXCHANGE).map(([minutes, cost]) =>
+    `<div class="gpu-exchange-row"><span class="gpu-exchange-duration" id="gpuExchangeTerm${minutes}">${minutes} 分钟产量</span>
+    <strong class="gpu-exchange-yield" id="gpuExchangeYield${minutes}"></strong>
+    <button type="button" class="btn small ghost" data-gpu-exchange="${minutes}" aria-describedby="gpuExchangeTerm${minutes} gpuExchangeYield${minutes}">兑换<span class="cost">${cost} GPU</span></button></div>`).join('');
+  for (const button of $$('[data-gpu-exchange]',grid)) {
+    const quote = gpuTokenQuote(button.dataset.gpuExchange,rate), status = gpuTokenTradeStatus(quote);
+    textIfChanged(button.previousElementSibling, quote ? `+${fmt(quote.tokens)} Token` : '不可兑换');
+    if (button.disabled !== (status !== 'ready')) button.disabled = status !== 'ready';
+    const hint = GPU_EXCHANGE_ERRORS[status] || '';
+    if (button.title !== hint) button.title = hint;
+  }
+}
+function confirmGpuTokenExchange(button) {
+  const minutes = button.dataset.gpuExchange, owner = activeSaveKey(), quote = gpuTokenQuote(minutes);
+  const status = gpuTokenTradeStatus(quote);
+  if (status !== 'ready') { refreshGpuTokenOffers(); return; }
+  confirmModal('兑换 Token', `用 ${quote.cost} GPU 兑换 ${minutes} 分钟产量：${fmt(quote.tokens)} Token，确认后立即到账。`, null, '确认兑换', () => {
+    const result = owner === activeSaveKey() ? exchangeGpuTokens(minutes,quote.tokens) : 'paused';
+    refreshGpuTokenOffers();
+    if (result === 'changed') {
+      toast('产量已更新', '请确认新的兑换金额。');
+      confirmGpuTokenExchange(button);
+      return;
+    }
+    if (result === 'ok') {
+      playTick(); renderHUD();
+      toast('兑换成功', `扣除 ${quote.cost} GPU，到账 ${fmt(quote.tokens)} Token。`);
+    } else toast('未兑换', GPU_EXCHANGE_ERRORS[result]);
+    (button.disabled ? $('#gpuTokenExchangeTitle') : button).focus({preventScroll:true});
+  });
+}
 function renderResearch() {
   $('#upgList').innerHTML = UPGRADES.map(u => {
     const lv = S.up[u.key], maxed = u.max !== null && lv >= u.max, c = upCost(u);
@@ -4725,6 +4844,7 @@ function renderResearch() {
     return `<div class="tech">${pins}<div class="n">${esc(t.name)}${t.max === null ? ` <span class="muted num" style="font-weight:500">Lv.${lv}</span>` : ''}</div><div class="d">${esc(t.desc)}</div><div class="e">${esc(t.eff(lv))}${maxed ? '' : ' → ' + esc(t.eff(lv + 1))}</div>
       <button class="btn small ghost" data-tech="${t.key}" ${maxed ? 'disabled' : ''} ${!maxed && S.gpu < c ? 'disabled' : ''} data-gpu="${maxed ? '' : c}">${maxed ? '已完成' : `研发<span class="cost">${c} GPU</span>`}</button></div>`;
   }).join('');
+  refreshGpuTokenOffers();
 }
 
 /* =================== RENDER: FEATS / PREFS =================== */
@@ -4777,6 +4897,7 @@ function refreshAfford() {
     if (b.dataset.gpu === '') continue;
     const disabled = S.gpu < Number(b.dataset.gpu); if (b.disabled !== disabled) b.disabled = disabled;
   }
+  if (currentView === 'research') refreshGpuTokenOffers();
   const detail = $('#modal [data-train-id]');
   if (detail) refreshTrainButtons(detail);
 }
@@ -6844,7 +6965,10 @@ packetDetailRefresh.onclick = readPacketDetails;
 packetDetailsDialog.addEventListener('close', () => { if (!packetDetailsDialog.open) packetDetailsSeq++; });
 
 const TITLE_STYLES = Object.freeze({
-  auto:'按称号自动匹配', circuit:'晶格铭牌', foil:'极光镀层', seal:'王冠刻印', eclipse:'零点蚀环'
+  auto:'按称号自动匹配', circuit:'晶格铭牌', foil:'极光镀层', seal:'王冠刻印', eclipse:'零点蚀环',
+  signal:'警戒信标', anomaly:'相位棱镜', reactor:'反应堆铭牌', vector:'矢量回路', trial:'评测纹章',
+  archive:'档案钢印', treasury:'金库铭牌', force:'破界战徽', codex:'典藏书脊',
+  obsidian:'曜石断面', relay:'量子中继', nova:'超新星环'
 });
 const TITLE_MARKS = Object.freeze({
   circuit:'<rect x="4" y="4" width="8" height="8" rx="1"/><path d="M6 2v2m4-2v2m-4 8v2m4-2v2M2 6h2m-2 4h2m8-4h2m-2 4h2M6.5 6.5h3v3h-3z"/>',
@@ -6890,9 +7014,27 @@ const MILESTONE_BADGES = Object.freeze({
   '成就收藏家':['archive','archive']
 });
 const AUTO_TITLE_STYLES = ['circuit','foil','seal'];
+const TITLE_STYLE_MARKS = Object.freeze({
+  anomaly:'aperture', reactor:'engine', vector:'trace', trial:'gate', force:'rupture', codex:'folio',
+  obsidian:'blade', relay:'loop', nova:'star'
+});
+const TITLE_MARK_LABELS = Object.freeze({
+  auto:'跟随徽章', none:'不显示图标', circuit:'晶格芯片', foil:'折光晶石', seal:'王冠', eclipse:'蚀环',
+  signal:'信标', aperture:'未知窗口', engine:'引擎', cell:'能源电芯', node:'算力方舱', forge:'叠层炉心',
+  loop:'循环箭头', trace:'信号曲线', star:'四芒星', flag:'旗帜', tower:'堡垒', gate:'拱门', archive:'档案盒',
+  reserve:'能量储罐', treasury:'金库', vault:'保险箱', blade:'锋刃', bastion:'盾牌', rupture:'裂隙',
+  folio:'展开书页', index:'索引册', lineage:'谱系树', collation:'校勘镜', cosmos:'寰宇书卷'
+});
+const TITLE_SUFFIX_MAX = 8;
+const TITLE_SUFFIX_PRESETS = ['✦','✧✧','//','Ω','∞','〔零〕'];
+
+function validTitleSuffix(suffix) {
+  return typeof suffix === 'string' && [...suffix].length <= TITLE_SUFFIX_MAX &&
+    !/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u202a-\u202e\u2066-\u2069]/u.test(suffix);
+}
 
 function titleDesign(name, selected) {
-  if (selected !== 'auto' && Object.hasOwn(TITLE_STYLES,selected)) return [selected,selected];
+  if (selected !== 'auto' && Object.hasOwn(TITLE_STYLES,selected)) return [selected,TITLE_STYLE_MARKS[selected] ?? selected];
   if (Object.hasOwn(MILESTONE_BADGES,name)) return MILESTONE_BADGES[name];
   // Keep legacy/custom titles varied without making their appearance depend on the viewer.
   let hash = 0;
@@ -6903,10 +7045,14 @@ function titleDesign(name, selected) {
 
 function labTitleBadge(title, inline = false) {
   if (typeof title?.name !== 'string' || typeof title.color !== 'string' || !/^#[0-9a-f]{6}$/i.test(title.color)) return '';
-  const [style,mark,rank] = titleDesign(title.name,title.style);
-  const notches = rank ? `<span class="lab-title-rank" aria-hidden="true">${'<i></i>'.repeat(rank)}</span>` : '';
+  const [style,defaultMark,rank] = titleDesign(title.name,title.style);
+  const mark = title.mark === 'none' || Object.hasOwn(TITLE_MARKS,title.mark) ? title.mark : defaultMark;
+  const suffix = validTitleSuffix(title.suffix) ? title.suffix : null;
+  const tail = suffix === null ? (rank ? `<span class="lab-title-rank" aria-hidden="true">${'<i></i>'.repeat(rank)}</span>` : '') :
+    (suffix ? `<bdi class="lab-title-suffix">${esc(suffix)}</bdi>` : '');
+  const crest = mark === 'none' ? '' : `<span class="lab-title-crest"><svg class="lab-title-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">${TITLE_MARKS[mark]}</svg></span>`;
   const prime = rank === (style === 'codex' ? 5 : 3);
-  return `<bdi class="lab-title${inline ? ' lab-title-inline' : ''}" data-style="${style}"${prime ? ' data-prime' : ''} style="--title-color:${title.color}" title="${esc(title.name)}"><span class="lab-title-crest"><svg class="lab-title-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">${TITLE_MARKS[mark]}</svg></span><span class="lab-title-name">${esc(title.name)}</span>${notches}</bdi>`;
+  return `<bdi class="lab-title${inline ? ' lab-title-inline' : ''}" data-style="${style}"${prime ? ' data-prime' : ''}${crest ? '' : ' data-no-crest'} style="--title-color:${title.color}" title="${esc(suffix ? `${title.name} ${suffix}` : title.name)}">${crest}<span class="lab-title-name">${esc(title.name)}</span>${tail}</bdi>`;
 }
 
 async function readWornTitles(ids) {
@@ -6983,12 +7129,27 @@ ownTitleChoice.onchange = async () => {
 };
 
 function adminTitlePanelHTML() {
-  return `<details class="admin-notice" id="adminTitles"><summary>发放称号</summary>
+  const options = entries => Object.entries(entries).map(([id,label])=>`<option value="${id}">${label}</option>`).join('');
+  return `<details class="admin-notice" id="adminTitles"><summary>发放与编辑称号</summary>
     <form class="admin-tools title-editor" id="adminTitleForm">
-      <label class="title-editor-wide">玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"></label>
+      <div class="title-recipient title-editor-wide">
+        <label>玩家 ID<input class="input" name="player" spellcheck="false" autocomplete="off" required pattern="[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}"></label>
+        <button class="btn small" type="button" id="adminTitleLoad">载入已有</button>
+      </div>
+      <label class="title-editor-wide" id="adminTitleExisting" hidden>已有称号<select class="input" name="existing"></select></label>
       <label class="title-editor-wide">称号名称<input class="input" name="name" maxlength="24" required></label>
-      <label>徽章样式<select class="input" name="style">${Object.entries(TITLE_STYLES).map(([id,label])=>`<option value="${id}">${label}</option>`).join('')}</select></label>
-      <label>强调色<input class="input" name="color" type="color" value="#c89158"></label>
+      <div class="title-appearance title-editor-wide">
+        <label>徽章样式<select class="input" name="style">${options(TITLE_STYLES)}</select></label>
+        <label>徽章图标<select class="input" name="mark">${options(TITLE_MARK_LABELS)}</select></label>
+        <label class="title-color">强调色<input class="input" name="color" type="color" value="#c89158"></label>
+      </div>
+      <label>末尾符号<select class="input" name="suffixMode">
+        <option value="auto">自动刻纹</option><option value="none">不显示</option><option value="custom">自定义</option>
+      </select></label>
+      <label id="adminTitleSuffix" hidden>自定义符号（最多 ${TITLE_SUFFIX_MAX} 个字符）
+        <input class="input" name="suffix" maxlength="${TITLE_SUFFIX_MAX*2}" list="adminTitleSuffixPresets" spellcheck="false" autocomplete="off" disabled>
+      </label>
+      <datalist id="adminTitleSuffixPresets">${TITLE_SUFFIX_PRESETS.map(s=>`<option value="${s}"></option>`).join('')}</datalist>
       <div class="title-preview title-editor-wide"><span class="title-preview-label">实时预览</span><span id="adminTitlePreview"></span></div>
       <div class="title-editor-wide title-editor-actions"><button class="btn small" type="submit">保存称号</button></div>
     </form><p class="note notice-status" id="adminTitleStatus" role="status"></p>
@@ -6997,44 +7158,104 @@ function adminTitlePanelHTML() {
 function bindAdminTitlePanel() {
   const form = $('#adminTitleForm'), status = $('#adminTitleStatus'), fields = form.elements;
   const name = fields.namedItem('name'), player = fields.player, color = fields.color, style = fields.namedItem('style');
-  const submit = form.querySelector('[type=submit]'), preview = $('#adminTitlePreview');
-  const controls = [name,player,color,style,submit];
-  let busy = false;
-  const updatePreview = () => {
-    preview.innerHTML = labTitleBadge({name:name.value.trim() || '称号预览', color:color.value, style:style.value});
+  const {mark,suffixMode,suffix,existing} = fields;
+  const load = $('#adminTitleLoad'), existingField = $('#adminTitleExisting'), suffixField = $('#adminTitleSuffix');
+  const preview = $('#adminTitlePreview'), controls = [...fields];
+  let busy = false, loaded = null;
+  const getSuffix = () => suffixMode.value === 'auto' ? null : suffixMode.value === 'none' ? '' : suffix.value.trim();
+  const setBusy = value => {
+    busy = value;
+    for (const control of controls) control.disabled = value;
+    suffix.disabled = value || suffixMode.value !== 'custom';
   };
-  form.oninput = e => { if (e.target !== player) updatePreview(); };
+  const updatePreview = () => {
+    const custom = suffixMode.value === 'custom', tail = getSuffix();
+    suffixField.hidden = !custom;
+    suffix.disabled = busy || !custom;
+    suffix.setCustomValidity(custom && (!tail || !validTitleSuffix(tail)) ? `请输入 1–${TITLE_SUFFIX_MAX} 个字符，不含控制符。` : '');
+    preview.innerHTML = labTitleBadge({name:name.value.trim() || '称号预览',color:color.value,style:style.value,mark:mark.value,suffix:tail});
+  };
+  const setExisting = (list, selected = '') => {
+    loaded = list;
+    existingField.hidden = !list?.length;
+    existing.replaceChildren(new Option('新建称号',''),...(list ?? []).map(t=>new Option(t.name,t.id)));
+    existing.value = selected;
+    name.readOnly = !!existing.value;
+  };
+  const setAppearance = t => {
+    name.value = t?.name ?? '';
+    color.value = t?.color ?? color.defaultValue;
+    style.value = Object.hasOwn(TITLE_STYLES,t?.style) ? t.style : 'auto';
+    mark.value = Object.hasOwn(TITLE_MARK_LABELS,t?.mark) ? t.mark : 'auto';
+    suffix.value = t?.suffix ?? '';
+    suffixMode.value = t?.suffix == null ? 'auto' : t.suffix === '' ? 'none' : 'custom';
+    updatePreview();
+  };
+  const titleError = (error,fallback) => missingWorldRPC(error) ? '正式库尚未安装新版称号更新。' :
+    error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : fallback;
+  form.oninput = e => {
+    if (e.target === player) { setExisting(null); status.textContent = ''; }
+    else if (e.target !== existing) updatePreview();
+  };
+  existing.onchange = () => {
+    const t = loaded?.find(t=>t.id===existing.value);
+    name.readOnly = !!t;
+    setAppearance(t);
+    status.textContent = '';
+  };
   updatePreview();
+  load.onclick = async () => {
+    const uid = cloud.uid, client = cloud.board?.client;
+    if (busy || !verifiedAdmin(uid) || !client || !player.reportValidity()) return;
+    setBusy(true);
+    status.textContent = '正在载入…';
+    try {
+      const rows = unwrap(await client.rpc('frontier_admin_title_inventory',{p_player:player.value.trim().toLowerCase()}));
+      if (uid !== cloud.uid || !verifiedAdmin(uid)) return;
+      setExisting(rows, rows.some(t=>t.id===existing.value) ? existing.value : '');
+      status.textContent = rows.length ? '' : '该玩家还没有称号。';
+    } catch (error) { status.textContent = titleError(error,'载入失败，请重试。'); }
+    finally { setBusy(false); }
+  };
   form.onsubmit = async e => {
     e.preventDefault();
     if (busy || !verifiedAdmin(cloud.uid) || !cloud.board?.client) return;
     const p_player = player.value.trim().toLowerCase(), p_name = name.value.trim(), p_color = color.value, p_style = style.value;
+    const p_mark = mark.value, p_suffix = getSuffix();
     if (!p_name) { status.textContent = '请输入称号名称。'; name.focus(); return; }
-    busy = true;
-    for (const control of controls) control.disabled = true;
+    setBusy(true);
     status.textContent = '正在保存…';
     try {
       const client = cloud.board.client;
       const args = {p_player,p_name,p_color};
-      let reply = await client.rpc('frontier_title_customize',{...args,p_style});
-      if (p_style === 'auto' && missingWorldRPC(reply.error)) reply = await client.rpc('frontier_title_grant',args);
-      unwrap(reply);
+      let reply = await client.rpc('frontier_title_customize',{...args,p_style,p_mark,p_suffix});
+      if (!loaded && p_mark === 'auto' && p_suffix === null && ['auto','circuit','foil','seal','eclipse'].includes(p_style) && missingWorldRPC(reply.error)) {
+        reply = await client.rpc('frontier_title_customize',{...args,p_style});
+        if (p_style === 'auto' && missingWorldRPC(reply.error)) reply = await client.rpc('frontier_title_grant',args);
+      }
+      const id = unwrap(reply);
+      if (loaded) {
+        const saved = {id,name:p_name,color:p_color,style:p_style,mark:p_mark,suffix:p_suffix};
+        setExisting([...loaded.filter(t=>t.id!==id),saved].sort((a,b)=>a.name.localeCompare(b.name,'zh-CN')),id);
+      }
       status.textContent = `已保存「${p_name}」。`;
       titlePublicSeq++; titlePublicAt = 0;
       if (p_player === cloud.uid) { titleReadSeq++; titleListAt = 0; }
       markDirty('world');
     } catch (error) {
-      status.textContent = missingWorldRPC(error) ? '正式库尚未安装新版称号更新。' : error?.code === 'PT404' ? '找不到该玩家，请核对玩家 ID。' : '保存失败，请检查权限和称号名称。';
+      status.textContent = titleError(error,'保存失败，请检查权限和称号内容。');
     } finally {
-      busy = false;
-      for (const control of controls) control.disabled = false;
+      setBusy(false);
     }
   };
 }
 function chooseTitleRecipient(id) {
   const form = $('#adminTitleForm');
   if (form.elements.player.disabled) return;
-  form.elements.player.value = id;
+  if (form.elements.player.value !== id) {
+    form.elements.player.value = id;
+    form.elements.player.dispatchEvent(new Event('input',{bubbles:true}));
+  }
   $('#adminTitleStatus').textContent = '';
   $('#adminTitles').open = true;
   form.elements.namedItem('name').focus();
@@ -7603,6 +7824,10 @@ on('#rebirthPanel', 'click', e => {
   else if (e.target.closest('#autoRebSw')) { S.autoReb = !S.autoReb; renderResearch(); }
 });
 on('#techGrid', 'click', e => { const b = e.target.closest('[data-tech]'); if (b) { initAudio(); buyTech(b.dataset.tech); renderActive(true); } });
+on('#gpuTokenOffers', 'click', e => {
+  const button = e.target.closest('[data-gpu-exchange]');
+  if (button && !button.disabled) { initAudio(); confirmGpuTokenExchange(button); }
+});
 on('#lbSeg', 'click', e => { const b = e.target.closest('[data-lb]'); if (!b) return; lbMode = b.dataset.lb; renderWorld(); });
 for (const root of ['#lbWrap','#feed']) on(root, 'click', e => {
   const link = e.target.closest('.lab-link');
