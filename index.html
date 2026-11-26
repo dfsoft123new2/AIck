@@ -566,21 +566,6 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .tech .d { font-size: 12.5px; color: var(--ink-2); }
 .tech .e { font-size: 12.5px; color: var(--ok); font-family: var(--font-num); }
 
-.gpu-exchange-head { flex-wrap:wrap; }
-.gpu-exchange-row {
-  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) auto;
-  gap:8px 14px; align-items:center; padding:9px 0; border-top:1px solid var(--line);
-}
-.gpu-exchange-row:last-child { padding-bottom:0; }
-.gpu-exchange-row .gpu-exchange-duration { color:var(--ink-2); font-size:13px; }
-.gpu-exchange-row .gpu-exchange-yield { color:var(--ok); font-family:var(--font-num); font-weight:700; overflow-wrap:anywhere; }
-.gpu-exchange-row .btn { min-height:44px; white-space:nowrap; }
-@media (max-width:420px) {
-  .gpu-exchange-row { grid-template-columns:minmax(0,1fr) auto; column-gap:10px; row-gap:2px; }
-  .gpu-exchange-row .btn { grid-area:1 / 2 / span 2; }
-  .gpu-exchange-row .gpu-exchange-yield { grid-area:2 / 1; }
-}
-
 /* ========== World ========== */
 .world-top { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
 .me-card { display: flex; gap: 14px; align-items: center; }
@@ -1506,10 +1491,6 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
           <div class="upg-list" id="upgList"></div>
         </div>
         <div class="panel" id="rebirthPanel"></div>
-        <section class="panel" id="gpuTokenExchange" aria-labelledby="gpuTokenExchangeTitle">
-          <div class="panel-h gpu-exchange-head"><h3 id="gpuTokenExchangeTitle" tabindex="-1">GPU 兑换 Token</h3><span class="side" id="gpuTokenRate"></span></div>
-          <div id="gpuTokenOffers"></div>
-        </section>
                 <div class="panel">
           <div class="panel-h"><h3>GPU 科技树</h3><span class="side">消耗 GPU 芯片，永久保留</span></div>
           <div class="tech-grid" id="techGrid"></div>
@@ -3354,36 +3335,6 @@ function buyTech(key) {
   toast('科技已研发', `${t.name} → ${t.eff(S.tech[key])}`);
   markDirty('research', 'pull', 'bench', 'hud');
 }
-const GPU_TOKEN_EXCHANGE = Object.freeze({5:30, 15:60, 60:180});
-function gpuTokenRate() { return computeYield() * eventMultiplier('tokens'); }
-function gpuTokenQuote(minutes, rate = gpuTokenRate()) {
-  if (!Object.hasOwn(GPU_TOKEN_EXCHANGE, minutes)) return null;
-  const tokens = rate * (Number(minutes) * 60);
-  return Number.isFinite(tokens) && tokens > 0 ? {cost:GPU_TOKEN_EXCHANGE[minutes],tokens} : null;
-}
-function gpuTokenTradeStatus(quote) {
-  if (moderation.booting || moderation.level === 2 || accountPaused()) return 'paused';
-  if (!quote) return 'rate';
-  if (S.gpu < quote.cost) return 'balance';
-  const gpu = S.gpu - quote.cost, tokens = S.tokens + quote.tokens, lifetime = S.lifetime + quote.tokens;
-  return Number.isFinite(gpu) && gpu < S.gpu && Number.isFinite(tokens) && tokens > S.tokens && Number.isFinite(lifetime) ? 'ready' : 'limit';
-}
-function exchangeGpuTokens(minutes, expectedTokens) {
-  const quote = gpuTokenQuote(minutes);
-  const status = gpuTokenTradeStatus(quote);
-  if (status !== 'ready') return status;
-  if (quote.tokens !== expectedTokens) return 'changed';
-  const before = {gpu:S.gpu, tokens:S.tokens, lifetime:S.lifetime, lastSave:S.lastSave};
-  S.gpu -= quote.cost;
-  addTokens(quote.tokens);
-  if (!saveLocal(true)) {
-    Object.assign(S,before);
-    return 'storage';
-  }
-  markDirty('hud','research','pull','world');
-  cloudBump(true);
-  return 'ok';
-}
 function doRebirth(auto) {
   const cost = rebirthCost();
   if (S.tokens < cost) return;
@@ -4782,47 +4733,6 @@ function renderBench() {
 }
 
 /* =================== RENDER: RESEARCH =================== */
-const GPU_EXCHANGE_ERRORS = {
-  paused:'存档暂不可用，请稍后再试。', rate:'当前没有可兑换的产量。', balance:'GPU 余额不足。',
-  limit:'数值超出可结算范围。', storage:'无法写入本机存档，没有扣除 GPU。'
-};
-function refreshGpuTokenOffers() {
-  const grid = $('#gpuTokenOffers');
-  const rate = gpuTokenRate();
-  const rateText = rate > 0 && rate < .001 ? rate.toExponential(2)
-    : rate < 1e4 ? rate.toLocaleString('en-US',{maximumSignificantDigits:6}) : fmt(rate);
-  textIfChanged($('#gpuTokenRate'), Number.isFinite(rate) ? `当前产量 ${rateText} Token/s` : '当前产量不可用');
-  if (!grid.firstElementChild) grid.innerHTML = Object.entries(GPU_TOKEN_EXCHANGE).map(([minutes, cost]) =>
-    `<div class="gpu-exchange-row"><span class="gpu-exchange-duration" id="gpuExchangeTerm${minutes}">${minutes} 分钟产量</span>
-    <strong class="gpu-exchange-yield" id="gpuExchangeYield${minutes}"></strong>
-    <button type="button" class="btn small ghost" data-gpu-exchange="${minutes}" aria-describedby="gpuExchangeTerm${minutes} gpuExchangeYield${minutes}">兑换<span class="cost">${cost} GPU</span></button></div>`).join('');
-  for (const button of $$('[data-gpu-exchange]',grid)) {
-    const quote = gpuTokenQuote(button.dataset.gpuExchange,rate), status = gpuTokenTradeStatus(quote);
-    textIfChanged(button.previousElementSibling, quote ? `+${fmt(quote.tokens)} Token` : '不可兑换');
-    if (button.disabled !== (status !== 'ready')) button.disabled = status !== 'ready';
-    const hint = GPU_EXCHANGE_ERRORS[status] || '';
-    if (button.title !== hint) button.title = hint;
-  }
-}
-function confirmGpuTokenExchange(button) {
-  const minutes = button.dataset.gpuExchange, owner = activeSaveKey(), quote = gpuTokenQuote(minutes);
-  const status = gpuTokenTradeStatus(quote);
-  if (status !== 'ready') { refreshGpuTokenOffers(); return; }
-  confirmModal('兑换 Token', `用 ${quote.cost} GPU 兑换 ${minutes} 分钟产量：${fmt(quote.tokens)} Token，确认后立即到账。`, null, '确认兑换', () => {
-    const result = owner === activeSaveKey() ? exchangeGpuTokens(minutes,quote.tokens) : 'paused';
-    refreshGpuTokenOffers();
-    if (result === 'changed') {
-      toast('产量已更新', '请确认新的兑换金额。');
-      confirmGpuTokenExchange(button);
-      return;
-    }
-    if (result === 'ok') {
-      playTick(); renderHUD();
-      toast('兑换成功', `扣除 ${quote.cost} GPU，到账 ${fmt(quote.tokens)} Token。`);
-    } else toast('未兑换', GPU_EXCHANGE_ERRORS[result]);
-    (button.disabled ? $('#gpuTokenExchangeTitle') : button).focus({preventScroll:true});
-  });
-}
 function renderResearch() {
   $('#upgList').innerHTML = UPGRADES.map(u => {
     const lv = S.up[u.key], maxed = u.max !== null && lv >= u.max, c = upCost(u);
@@ -4844,7 +4754,6 @@ function renderResearch() {
     return `<div class="tech">${pins}<div class="n">${esc(t.name)}${t.max === null ? ` <span class="muted num" style="font-weight:500">Lv.${lv}</span>` : ''}</div><div class="d">${esc(t.desc)}</div><div class="e">${esc(t.eff(lv))}${maxed ? '' : ' → ' + esc(t.eff(lv + 1))}</div>
       <button class="btn small ghost" data-tech="${t.key}" ${maxed ? 'disabled' : ''} ${!maxed && S.gpu < c ? 'disabled' : ''} data-gpu="${maxed ? '' : c}">${maxed ? '已完成' : `研发<span class="cost">${c} GPU</span>`}</button></div>`;
   }).join('');
-  refreshGpuTokenOffers();
 }
 
 /* =================== RENDER: FEATS / PREFS =================== */
@@ -4897,7 +4806,6 @@ function refreshAfford() {
     if (b.dataset.gpu === '') continue;
     const disabled = S.gpu < Number(b.dataset.gpu); if (b.disabled !== disabled) b.disabled = disabled;
   }
-  if (currentView === 'research') refreshGpuTokenOffers();
   const detail = $('#modal [data-train-id]');
   if (detail) refreshTrainButtons(detail);
 }
@@ -7824,10 +7732,6 @@ on('#rebirthPanel', 'click', e => {
   else if (e.target.closest('#autoRebSw')) { S.autoReb = !S.autoReb; renderResearch(); }
 });
 on('#techGrid', 'click', e => { const b = e.target.closest('[data-tech]'); if (b) { initAudio(); buyTech(b.dataset.tech); renderActive(true); } });
-on('#gpuTokenOffers', 'click', e => {
-  const button = e.target.closest('[data-gpu-exchange]');
-  if (button && !button.disabled) { initAudio(); confirmGpuTokenExchange(button); }
-});
 on('#lbSeg', 'click', e => { const b = e.target.closest('[data-lb]'); if (!b) return; lbMode = b.dataset.lb; renderWorld(); });
 for (const root of ['#lbWrap','#feed']) on(root, 'click', e => {
   const link = e.target.closest('.lab-link');
