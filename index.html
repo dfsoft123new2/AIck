@@ -1432,7 +1432,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 'use strict';
 const SELF_HOST_TEST = false;
 const DEV_BUILD = false;
-const WORLD_CONFIG = {"url":"https://oovwnjjuzdelajikfodr.supabase.co","key":"sb_publishable_hw4Ht-cNifTYGE2mawgAmQ_yzMlYpnq"};
+const LOCAL_SAVE_SOURCE_URL = "https://oovwnjjuzdelajikfodr.supabase.co";
+const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE"};
 const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, reset() {}, refresh() {} });
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
@@ -3057,6 +3058,28 @@ function loadLocal() {
   const raw = lsGet(SAVE_KEY);
   if (!raw) return null;
   try { return parseSave(raw); } catch (e) { return null; }
+}
+
+function continueLocalSaveAfterCutover() {
+  if (!LOCAL_SAVE_SOURCE_URL || !WORLD_CONFIG?.url || LOCAL_SAVE_SOURCE_URL === WORLD_CONFIG.url) return;
+  const target = `${SAVE_KEY}:account:${WORLD_CONFIG.url}`;
+  const receipt = `${target}:cutover:${LOCAL_SAVE_SOURCE_URL}`;
+  if (lsGet(target) || lsGet(receipt)) return;
+
+  const legacy = `${SAVE_KEY}:account:${LOCAL_SAVE_SOURCE_URL}`;
+  const uid = lsGet(legacy), guestRaw = lsGet(SAVE_KEY), guest = loadLocal();
+  const read = key => {
+    const raw = lsGet(key);
+    try { return raw ? parseSave(raw) : null; } catch { return null; }
+  };
+  const draft = uid && (read(`${legacy}:${uid}`) || (!guest && read(`${legacy}:guest-backup:${uid}`)));
+  if (!draft && !guest?.packetDebit) { lsSet(receipt, '1'); return; }
+
+  // Keep both original saves; an in-flight packet from the old backend cannot be replayed here.
+  const backup = `${receipt}:guest-backup`;
+  if (guestRaw && !lsGet(backup) && !lsSet(backup, guestRaw)) return;
+  if (!lsSet(receipt, '1')) return;
+  if (!lsSet(SAVE_KEY, JSON.stringify({...(draft || guest), packetDebit:null}))) lsDel(receipt);
 }
 
 function savePacketDebit(debit, settled = null) {
@@ -6761,6 +6784,7 @@ function installSave(st) {
 }
 function init() {
   $('.shell').inert = moderation.booting;
+  continueLocalSaveAfterCutover();
   const local = account.pending ? null : loadLocal();
   if (local) {
     S = local;
