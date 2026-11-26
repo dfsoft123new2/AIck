@@ -163,6 +163,12 @@ button { cursor: pointer; }
 }
 .hud-chip b { font-family: var(--font-num); font-weight: 700; }
 button.hud-chip:hover { border-color: var(--line-2); }
+.hud-event { display:inline-flex; gap:6px; align-items:center; min-width:0; max-width:100%; color:var(--copper); }
+.hud-event[hidden] { display:none; }
+.hud-event > b, #worldEventBadgeTime { flex:none; }
+#worldEventBadgeTitle { text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+#worldEventBadgeTime { min-inline-size:7ch; text-align:end; }
+#worldEventDetailsTitle { overflow-wrap:anywhere; }
 .gpu-ico { width: 16px; height: 16px; }
 .hud-spacer { flex: 1; }
 .buffs { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -245,8 +251,18 @@ button.hud-chip:hover { border-color: var(--line-2); }
   border: 1px dashed var(--copper); background: color-mix(in srgb, var(--copper) 9%, var(--bg-2));
 }
 .up-banner .el { flex: none; }
-.up-banner strong { font-size: 15px; }
-.up-banner .timer { margin-left: auto; font-family: var(--font-num); color: var(--copper); font-weight: 700; white-space: nowrap; }
+.up-banner-copy { flex: 1; min-width: 0; }
+.up-banner label { display: block; font-size: 15px; font-weight: 700; }
+.up-banner p { margin: 2px 0 0; font-size: 12.5px; }
+.up-banner strong { color: var(--ink); font-family: var(--font-num); }
+.up-picker { flex: 0 1 15rem; min-width: 0; display: grid; gap: 4px; }
+.up-picker select { width: 100%; min-height: 44px; }
+.up-picker select:disabled { opacity: .8; }
+#upCooldown { font-family: var(--font-num); font-size: 12px; }
+@media (max-width: 540px) {
+  .up-banner { flex-wrap: wrap; gap: 8px 12px; }
+  .up-picker { flex: 0 0 100%; }
+}
 .packs { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
 .pack {
   position: relative; text-align: left; border: 1px solid var(--line); border-radius: var(--r-m); background: var(--bg-3);
@@ -567,6 +583,19 @@ button.card { transition: transform .12s; }
 .admin-notice .admin-tools { margin-top:6px; }
 .admin-notice .notice-recipient { flex:1 1 100%; }
 .admin-notice .note { overflow-wrap:anywhere; }
+.event-form > label:first-child { flex:2 1 160px; }
+.event-form > label:nth-child(2) { flex:1 1 105px; }
+.event-form .input { box-sizing:border-box; width:100%; min-width:0; }
+.event-options { flex:1 1 100%; min-width:0; margin:4px 0; padding:8px; border:1px solid var(--line); border-radius:var(--r-s); display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 12px; }
+.event-options legend { padding:0 4px; font-size:13px; color:var(--ink-2); }
+.event-option { display:grid; grid-template-columns:minmax(0,1fr) 64px auto; align-items:center; gap:5px; }
+.admin-tools .event-toggle { display:flex; align-items:center; gap:6px; min-block-size:40px; }
+.event-toggle input { margin:0; flex:none; accent-color:var(--copper); }
+.event-option .input { min-height:34px; padding-inline:6px; }
+.event-option .input:disabled { opacity:.52; }
+.event-effect-list { margin:8px 0 12px; padding:0; list-style:none; }
+.event-effect-list li { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--line); }
+@media (max-width:540px) { .event-options { grid-template-columns:minmax(0,1fr); } }
 .admin-detail:not(:empty) { margin-top:16px; border-top:1px solid var(--line); padding-top:12px; }
 .admin-detail:first-child:not(:empty) { margin:0 0 16px; padding:0 0 16px; border-top:0; border-bottom:1px solid var(--line); }
 .admin-detail h3 { margin:0; overflow-wrap:anywhere; }
@@ -668,6 +697,12 @@ button.card { transition: transform .12s; }
 .pref:last-child { border-bottom: 0; }
 .pref .n { font-weight: 700; }
 .pref .d { font-size: 12.5px; color: var(--ink-3); }
+#accountPref { flex-wrap:wrap; gap:6px 16px; }
+#accountPref[hidden] { display:none; }
+#accountPref .d { overflow-wrap:anywhere; }
+#accountPref .world-tools { margin:0; }
+.account-form label { display:grid; gap:4px; margin-bottom:10px; font-size:13px; color:var(--ink-2); }
+.account-form .input { width:100%; }
 .cine-pref { display: block; }
 .cine-pref .mode { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .pref-checks { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 6px; }
@@ -885,6 +920,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
       <span class="hud-chip" title="GPU 芯片：用于研发科技"><svg class="gpu-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="var(--gold)" stroke-width="2"/><rect x="9" y="9" width="6" height="6" fill="var(--gold)"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" stroke="var(--gold)" stroke-width="2"/></svg><b id="hudGpu">0</b> GPU</span>
       <button class="hud-chip" id="hudMulBtn" title="查看全部倍率">倍率 <b id="hudMul">×1</b></button>
       <div class="buffs" id="hudBuffs"></div>
+      <button class="hud-chip hud-event" id="worldEventBadge" type="button" aria-haspopup="dialog" hidden><b>全服活动</b><span id="worldEventBadgeTitle"></span><span class="num" id="worldEventBadgeTime"></span></button>
       <span class="hud-spacer"></span>
       <div class="news-slot hidden" id="newsSlot">
         <button class="news-pill" id="newsPill" aria-describedby="newsTip"><span class="tag">热点</span><span id="newsText"></span></button>
@@ -902,7 +938,17 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
             <p class="view-sub">选一座集群开始抽卡。集群越大，抽出高稀有度模型的概率越高。每张卡都会持续为你产出 Token。</p>
           </div>
         </div>
-        <div class="up-banner" id="upBanner"></div>
+        <div class="up-banner" id="upBanner">
+          <span class="el" id="upMark" aria-hidden="true"></span>
+          <div class="up-banner-copy">
+            <label for="upLab">自选 UP 实验室</label>
+            <p class="muted" id="upOdds">同档有该实验室模型时：<strong id="upChance"></strong> 定向抽取，其余抽同档全池。</p>
+          </div>
+          <div class="up-picker">
+            <select class="input" id="upLab" aria-describedby="upOdds upCooldown"></select>
+            <span class="muted" id="upCooldown" role="timer"></span>
+          </div>
+        </div>
         <div class="packs" id="packs"></div>
         <div class="grid-2" style="margin-top:14px">
           <div class="panel">
@@ -1178,6 +1224,10 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         </details>
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
+          <div class="pref" id="accountPref" hidden>
+            <div><div class="n">云存档</div><div class="d" id="accountSummary" role="status"></div></div>
+            <div class="world-tools"><button type="button" class="btn ghost small" id="accountRegister" aria-haspopup="dialog">注册并同步</button><button type="button" class="btn small" id="accountLogin" aria-haspopup="dialog">登录</button><button type="button" class="btn ghost small" id="accountLogout" hidden>退出账号</button></div>
+          </div>
           <div class="pref"><div><div class="n">重置进度</div><div class="d">清空全部卡片、升级和科技，无法恢复。</div></div><button class="btn danger small" id="resetBtn">重置</button></div>
         </div>
       </section>
@@ -1186,9 +1236,32 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 </div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<dialog id="accountLock" class="world-dialog notice-dialog" aria-labelledby="accountLockTitle">
+  <header><h2 id="accountLockTitle">云存档连接暂停</h2></header>
+  <div class="world-dialog-body"><p class="notice-message" id="accountLockDetail"></p><p class="note notice-status" id="accountLockStatus" role="status"></p>
+    <div class="world-tools"><button class="btn" id="accountLockLogin" type="button" autofocus>重新登录</button><button class="btn ghost" id="accountGuest" type="button">返回访客模式</button></div>
+  </div>
+</dialog>
+<dialog id="accountDialog" class="world-dialog" aria-labelledby="accountDialogTitle">
+  <header><h2 id="accountDialogTitle"></h2><form method="dialog"><button class="x-btn" aria-label="关闭账号面板">×</button></form></header>
+  <form class="world-dialog-body account-form" id="accountForm">
+    <label id="accountEmailField">邮箱<input class="input" name="email" type="email" autocomplete="email" maxlength="254" required></label>
+    <label id="accountCodeField" hidden>邮箱验证码（已点邮件链接可留空）<input class="input" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10"></label>
+    <label id="accountPasswordField">密码<input class="input" name="password" type="password" autocomplete="current-password" maxlength="72" required></label>
+    <p class="note notice-status" id="accountFormStatus" role="status"></p>
+    <div class="world-tools"><button type="submit" class="btn" id="accountSubmit"></button><button type="button" class="btn ghost" id="accountResend" hidden>重发验证邮件</button></div>
+  </form>
+</dialog>
 <dialog id="labProfile" aria-labelledby="profileTitle" aria-describedby="profileCaption">
   <header><div><p id="profileCaption">实验室档案</p><h2 id="profileTitle"></h2></div><div class="profile-actions"><button class="btn ghost small" id="profileManage" type="button" aria-haspopup="dialog" hidden>管理此玩家</button><form method="dialog"><button class="x-btn" aria-label="关闭实验室档案" autofocus>×</button></form></div></header>
   <div id="profileBody"></div>
+</dialog>
+<dialog id="worldEventDetails" class="world-dialog" aria-labelledby="worldEventDetailsTitle">
+  <header><h2 id="worldEventDetailsTitle">全服活动</h2><form method="dialog"><button class="x-btn" aria-label="关闭">×</button></form></header>
+  <div class="world-dialog-body">
+    <p class="note" id="worldEventDetailsTime"></p>
+    <ul class="event-effect-list" id="worldEventDetailsEffects"></ul>
+  </div>
 </dialog>
 <dialog id="moderationLock" class="world-dialog notice-dialog" aria-labelledby="moderationTitle">
   <header><h2 id="moderationTitle">正在确认全服状态</h2></header>
@@ -1355,8 +1428,12 @@ var supabase=(function(e){function t(e,t){var n={};for(var r in e)Object.prototy
 Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/auth-js: Invalid SIWE message field "resources". Every resource must be a valid string. Provided value: ${t}`);e+=`\n- ${t}`}m+=e}return`${p}\n${m}`}var Q=class extends Error{constructor({message:e,code:t,cause:n,name:r}){super(e,{cause:n}),this.__isWebAuthnError=!0,this.name=r??(n instanceof Error?n.name:void 0)??`Unknown Error`,this.code=t}toJSON(){return{name:this.name,message:this.message,code:this.code}}},Pi=class extends Q{constructor(e,t){super({code:`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`,cause:t,message:e}),this.name=`WebAuthnUnknownError`,this.originalError=t}};function Fi({error:e,options:t}){let{publicKey:n}=t;if(!n)throw Error(`options was missing required publicKey property`);if(e.name===`AbortError`){if(t.signal instanceof AbortSignal)return new Q({message:`Registration ceremony was sent an abort signal`,code:`ERROR_CEREMONY_ABORTED`,cause:e})}else if(e.name===`ConstraintError`){if(n.authenticatorSelection?.requireResidentKey===!0)return new Q({message:`Discoverable credentials were required but no available authenticator supported it`,code:`ERROR_AUTHENTICATOR_MISSING_DISCOVERABLE_CREDENTIAL_SUPPORT`,cause:e});if(t.mediation===`conditional`&&n.authenticatorSelection?.userVerification===`required`)return new Q({message:`User verification was required during automatic registration but it could not be performed`,code:`ERROR_AUTO_REGISTER_USER_VERIFICATION_FAILURE`,cause:e});if(n.authenticatorSelection?.userVerification===`required`)return new Q({message:`User verification was required but no available authenticator supported it`,code:`ERROR_AUTHENTICATOR_MISSING_USER_VERIFICATION_SUPPORT`,cause:e})}else if(e.name===`InvalidStateError`)return new Q({message:`The authenticator was previously registered`,code:`ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED`,cause:e});else if(e.name===`NotAllowedError`)return new Q({message:e.message,code:`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`,cause:e});else if(e.name===`NotSupportedError`)return n.pubKeyCredParams.filter(e=>e.type===`public-key`).length===0?new Q({message:`No entry in pubKeyCredParams was of type "public-key"`,code:`ERROR_MALFORMED_PUBKEYCREDPARAMS`,cause:e}):new Q({message:`No available authenticator supported any of the specified pubKeyCredParams algorithms`,code:`ERROR_AUTHENTICATOR_NO_SUPPORTED_PUBKEYCREDPARAMS_ALG`,cause:e});else if(e.name===`SecurityError`){let t=window.location.hostname;if(Hi(t)){if(n.rp.id!==t)return new Q({message:`The RP ID "${n.rp.id}" is invalid for this domain`,code:`ERROR_INVALID_RP_ID`,cause:e})}else return new Q({message:`${window.location.hostname} is an invalid domain`,code:`ERROR_INVALID_DOMAIN`,cause:e})}else if(e.name===`TypeError`){if(n.user.id.byteLength<1||n.user.id.byteLength>64)return new Q({message:`User ID was not between 1 and 64 characters`,code:`ERROR_INVALID_USER_ID_LENGTH`,cause:e})}else if(e.name===`UnknownError`)return new Q({message:`The authenticator was unable to process the specified options, or could not create a new credential`,code:`ERROR_AUTHENTICATOR_GENERAL_ERROR`,cause:e});return new Q({message:`a Non-Webauthn related error has occurred`,code:`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`,cause:e})}function Ii({error:e,options:t}){let{publicKey:n}=t;if(!n)throw Error(`options was missing required publicKey property`);if(e.name===`AbortError`){if(t.signal instanceof AbortSignal)return new Q({message:`Authentication ceremony was sent an abort signal`,code:`ERROR_CEREMONY_ABORTED`,cause:e})}else if(e.name===`NotAllowedError`)return new Q({message:e.message,code:`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`,cause:e});else if(e.name===`SecurityError`){let t=window.location.hostname;if(Hi(t)){if(n.rpId!==t)return new Q({message:`The RP ID "${n.rpId}" is invalid for this domain`,code:`ERROR_INVALID_RP_ID`,cause:e})}else return new Q({message:`${window.location.hostname} is an invalid domain`,code:`ERROR_INVALID_DOMAIN`,cause:e})}else if(e.name===`UnknownError`)return new Q({message:`The authenticator was unable to process the specified options, or could not create a new assertion signature`,code:`ERROR_AUTHENTICATOR_GENERAL_ERROR`,cause:e});return new Q({message:`a Non-Webauthn related error has occurred`,code:`ERROR_PASSTHROUGH_SEE_CAUSE_PROPERTY`,cause:e})}let Li=new class{createNewAbortSignal(){if(this.controller){let e=Error(`Cancelling existing WebAuthn API call for new one`);e.name=`AbortError`,this.controller.abort(e)}let e=new AbortController;return this.controller=e,e.signal}cancelCeremony(){if(this.controller){let e=Error(`Manually cancelling existing WebAuthn API call`);e.name=`AbortError`,this.controller.abort(e),this.controller=void 0}}};function Ri(e){if(!e)throw Error(`Credential creation options are required`);if(typeof PublicKeyCredential<`u`&&`parseCreationOptionsFromJSON`in PublicKeyCredential&&typeof PublicKeyCredential.parseCreationOptionsFromJSON==`function`)return PublicKeyCredential.parseCreationOptionsFromJSON(e);let{challenge:n,user:r,excludeCredentials:i}=e,a=t(e,[`challenge`,`user`,`excludeCredentials`]),o=kr(n).buffer,s=Object.assign(Object.assign({},r),{id:kr(r.id).buffer}),c=Object.assign(Object.assign({},a),{challenge:o,user:s});if(i&&i.length>0){c.excludeCredentials=Array(i.length);for(let e=0;e<i.length;e++){let t=i[e];c.excludeCredentials[e]=Object.assign(Object.assign({},t),{id:kr(t.id).buffer,type:t.type||`public-key`,transports:t.transports})}}return c}function zi(e){if(!e)throw Error(`Credential request options are required`);if(typeof PublicKeyCredential<`u`&&`parseRequestOptionsFromJSON`in PublicKeyCredential&&typeof PublicKeyCredential.parseRequestOptionsFromJSON==`function`)return PublicKeyCredential.parseRequestOptionsFromJSON(e);let{challenge:n,allowCredentials:r}=e,i=t(e,[`challenge`,`allowCredentials`]),a=kr(n).buffer,o=Object.assign(Object.assign({},i),{challenge:a});if(r&&r.length>0){o.allowCredentials=Array(r.length);for(let e=0;e<r.length;e++){let t=r[e];o.allowCredentials[e]=Object.assign(Object.assign({},t),{id:kr(t.id).buffer,type:t.type||`public-key`,transports:t.transports})}}return o}function Bi(e){if(`toJSON`in e&&typeof e.toJSON==`function`)return e.toJSON();let t=e;return{id:e.id,rawId:e.id,response:{attestationObject:z(new Uint8Array(e.response.attestationObject)),clientDataJSON:z(new Uint8Array(e.response.clientDataJSON))},type:`public-key`,clientExtensionResults:e.getClientExtensionResults(),authenticatorAttachment:t.authenticatorAttachment??void 0}}function Vi(e){if(`toJSON`in e&&typeof e.toJSON==`function`)return e.toJSON();let t=e,n=e.getClientExtensionResults(),r=e.response;return{id:e.id,rawId:e.id,response:{authenticatorData:z(new Uint8Array(r.authenticatorData)),clientDataJSON:z(new Uint8Array(r.clientDataJSON)),signature:z(new Uint8Array(r.signature)),userHandle:r.userHandle?z(new Uint8Array(r.userHandle)):void 0},type:`public-key`,clientExtensionResults:n,authenticatorAttachment:t.authenticatorAttachment??void 0}}function Hi(e){return e===`localhost`||/^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(e)}function Ui(){return!!(B()&&`PublicKeyCredential`in window&&window.PublicKeyCredential&&`credentials`in navigator&&typeof(navigator==null?void 0:navigator.credentials)?.create==`function`&&typeof(navigator==null?void 0:navigator.credentials)?.get==`function`)}async function Wi(e){try{let t=await navigator.credentials.create(e);return t?t instanceof PublicKeyCredential?{data:t,error:null}:{data:null,error:new Pi(`Browser returned unexpected credential type`,t)}:{data:null,error:new Pi(`Empty credential response`,t)}}catch(t){return{data:null,error:Fi({error:t,options:e})}}}async function Gi(e){try{let t=await navigator.credentials.get(e);return t?t instanceof PublicKeyCredential?{data:t,error:null}:{data:null,error:new Pi(`Browser returned unexpected credential type`,t)}:{data:null,error:new Pi(`Empty credential response`,t)}}catch(t){return{data:null,error:Ii({error:t,options:e})}}}let Ki={hints:[`security-key`],authenticatorSelection:{authenticatorAttachment:`cross-platform`,requireResidentKey:!1,userVerification:`preferred`,residentKey:`discouraged`},attestation:`direct`},qi={userVerification:`preferred`,hints:[`security-key`],attestation:`direct`};function Ji(...e){let t=e=>typeof e==`object`&&!!e&&!Array.isArray(e),n=e=>e instanceof ArrayBuffer||ArrayBuffer.isView(e),r={};for(let i of e)if(i)for(let e in i){let a=i[e];if(a!==void 0)if(Array.isArray(a))r[e]=a;else if(n(a))r[e]=a;else if(t(a)){let n=r[e];t(n)?r[e]=Ji(n,a):r[e]=Ji(a)}else r[e]=a}return r}function Yi(e,t){return Ji(Ki,e,t||{})}function Xi(e,t){return Ji(qi,e,t||{})}var Zi=class{constructor(e){this.client=e,this.enroll=this._enroll.bind(this),this.challenge=this._challenge.bind(this),this.verify=this._verify.bind(this),this.authenticate=this._authenticate.bind(this),this.register=this._register.bind(this)}async _enroll(e){return this.client.mfa.enroll(Object.assign(Object.assign({},e),{factorType:`webauthn`}))}async _challenge({factorId:e,webauthn:t,friendlyName:n,signal:r},i){try{let{data:a,error:o}=await this.client.mfa.challenge({factorId:e,webauthn:t});if(!a)return{data:null,error:o};let s=r??Li.createNewAbortSignal();if(a.webauthn.type===`create`){let{user:e}=a.webauthn.credential_options.publicKey;if(!e.name){let t=n;if(t)e.name=`${e.id}:${t}`;else{let t=(await this.client.getUser()).data.user,n=t?.user_metadata?.name||t?.email||t?.id||`User`;e.name=`${e.id}:${n}`}}e.displayName||=e.name}switch(a.webauthn.type){case`create`:{let{data:t,error:n}=await Wi({publicKey:Yi(a.webauthn.credential_options.publicKey,i?.create),signal:s});return t?{data:{factorId:e,challengeId:a.id,webauthn:{type:a.webauthn.type,credential_response:t}},error:null}:{data:null,error:n}}case`request`:{let t=Xi(a.webauthn.credential_options.publicKey,i?.request),{data:n,error:r}=await Gi(Object.assign(Object.assign({},a.webauthn.credential_options),{publicKey:t,signal:s}));return n?{data:{factorId:e,challengeId:a.id,webauthn:{type:a.webauthn.type,credential_response:n}},error:null}:{data:null,error:r}}}}catch(e){return P(e)?{data:null,error:e}:{data:null,error:new F(`Unexpected error in challenge`,e)}}}async _verify({challengeId:e,factorId:t,webauthn:n}){return this.client.mfa.verify({factorId:t,challengeId:e,webauthn:n})}async _authenticate({factorId:e,webauthn:{rpId:t=typeof window<`u`?window.location.hostname:void 0,rpOrigins:n=typeof window<`u`?[window.location.origin]:void 0,signal:r}={}},i){if(!t)return{data:null,error:new rr(`rpId is required for WebAuthn authentication`)};try{if(!Ui())return{data:null,error:new F(`Browser does not support WebAuthn`,null)};let{data:a,error:o}=await this.challenge({factorId:e,webauthn:{rpId:t,rpOrigins:n},signal:r},{request:i});if(!a)return{data:null,error:o};let{webauthn:s}=a;return this._verify({factorId:e,challengeId:a.challengeId,webauthn:{type:s.type,rpId:t,rpOrigins:n,credential_response:s.credential_response}})}catch(e){return P(e)?{data:null,error:e}:{data:null,error:new F(`Unexpected error in authenticate`,e)}}}async _register({friendlyName:e,webauthn:{rpId:t=typeof window<`u`?window.location.hostname:void 0,rpOrigins:n=typeof window<`u`?[window.location.origin]:void 0,signal:r}={}},i){if(!t)return{data:null,error:new rr(`rpId is required for WebAuthn registration`)};try{if(!Ui())return{data:null,error:new F(`Browser does not support WebAuthn`,null)};let{data:a,error:o}=await this._enroll({friendlyName:e});if(!a)return await this.client.mfa.listFactors().then(t=>t.data?.all.find(t=>t.factor_type===`webauthn`&&t.friendly_name===e&&t.status===`unverified`)).then(e=>e?this.client.mfa.unenroll({factorId:e?.id}):void 0),{data:null,error:o};let{data:s,error:c}=await this._challenge({factorId:a.id,friendlyName:a.friendly_name,webauthn:{rpId:t,rpOrigins:n},signal:r},{create:i});return s?this._verify({factorId:a.id,challengeId:s.challengeId,webauthn:{rpId:t,rpOrigins:n,type:s.webauthn.type,credential_response:s.webauthn.credential_response}}):{data:null,error:c}}catch(e){return P(e)?{data:null,error:e}:{data:null,error:new F(`Unexpected error in register`,e)}}}};ki();let Qi={url:`http://localhost:9999`,storageKey:`supabase.auth.token`,autoRefreshToken:!0,persistSession:!0,detectSessionInUrl:!0,headers:$n,flowType:`implicit`,debug:!1,hasCustomAuthorizationHeader:!1,throwOnError:!1,lockAcquireTimeout:5e3,skipAutoInitialize:!1,experimental:{}},$={},$i=!1;var ea=class e{get jwks(){return $[this.storageKey]?.jwks??{keys:[]}}set jwks(e){$[this.storageKey]=Object.assign(Object.assign({},$[this.storageKey]),{jwks:e})}get jwks_cached_at(){return $[this.storageKey]?.cachedAt??-(2**53-1)}set jwks_cached_at(e){$[this.storageKey]=Object.assign(Object.assign({},$[this.storageKey]),{cachedAt:e})}constructor(t){var n;this.userStorage=null,this.memoryStorage=null,this.stateChangeEmitters=new Map,this.autoRefreshTicker=null,this.autoRefreshTickTimeout=null,this.visibilityChangedCallback=null,this.refreshingDeferred=null,this.lastRefreshFailure=null,this._sessionRemovalEpoch=0,this.initializePromise=null,this._pendingInitNotifications=null,this.detectSessionInUrl=!0,this.hasCustomAuthorizationHeader=!1,this.suppressGetSessionWarning=!1,this.lock=null,this.lockAcquired=!1,this.pendingInLock=[],this.broadcastChannel=null,this.logger=console.log;let r=Object.assign(Object.assign({},Qi),t);if(this.storageKey=r.storageKey,this.instanceID=e.nextInstanceID[this.storageKey]??0,e.nextInstanceID[this.storageKey]=this.instanceID+1,this.logDebugMessages=!!r.debug,typeof r.debug==`function`&&(this.logger=r.debug),this.instanceID>0&&B()){let e=`${this._logPrefix()} Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.`;console.warn(e),this.logDebugMessages&&console.trace(e)}if(this.persistSession=r.persistSession,this.autoRefreshToken=r.autoRefreshToken,this.experimental=r.experimental??{},this.admin=new xi({url:r.url,headers:r.headers,fetch:r.fetch,experimental:this.experimental}),this.url=r.url,this.headers=r.headers,this.fetch=Fr(r.fetch),this.detectSessionInUrl=r.detectSessionInUrl,this.flowType=r.flowType,this.hasCustomAuthorizationHeader=r.hasCustomAuthorizationHeader,this.throwOnError=r.throwOnError,this.lockAcquireTimeout=r.lockAcquireTimeout,r.lock!=null&&(this.lock=r.lock,$i||($i=!0,console.warn(`${this._logPrefix()} The "lock" option is deprecated and will be removed in v3. The client now coordinates session refreshes without a lock, so most apps can drop the option. See https://github.com/supabase/supabase-js/blob/master/packages/core/auth-js/migrations/lockless-coordination.md`))),this.jwks||(this.jwks={keys:[]},this.jwks_cached_at=-(2**53-1)),this.mfa={verify:this._verify.bind(this),enroll:this._enroll.bind(this),unenroll:this._unenroll.bind(this),challenge:this._challenge.bind(this),listFactors:this._listFactors.bind(this),challengeAndVerify:this._challengeAndVerify.bind(this),getAuthenticatorAssuranceLevel:this._getAuthenticatorAssuranceLevel.bind(this),webauthn:new Zi(this),recoveryCodes:{getStatus:this._getRecoveryCodesStatus.bind(this),generate:this._generateRecoveryCodes.bind(this),verify:this._verifyRecoveryCode.bind(this),regenerate:this._regenerateRecoveryCodes.bind(this),unenroll:this._unenrollRecoveryCodes.bind(this)}},this.oauth={getAuthorizationDetails:this._getAuthorizationDetails.bind(this),approveAuthorization:this._approveAuthorization.bind(this),denyAuthorization:this._denyAuthorization.bind(this),listGrants:this._listOAuthGrants.bind(this),revokeGrant:this._revokeOAuthGrant.bind(this)},this.passkey={startRegistration:this._startPasskeyRegistration.bind(this),verifyRegistration:this._verifyPasskeyRegistration.bind(this),startAuthentication:this._startPasskeyAuthentication.bind(this),verifyAuthentication:this._verifyPasskeyAuthentication.bind(this),list:this._listPasskeys.bind(this),update:this._updatePasskey.bind(this),delete:this._deletePasskey.bind(this)},this.persistSession?(r.storage?this.storage=r.storage:Nr()?this.storage=globalThis.localStorage:(this.memoryStorage={},this.storage=Si(this.memoryStorage)),r.userStorage&&(this.userStorage=r.userStorage)):(this.memoryStorage={},this.storage=Si(this.memoryStorage)),B()&&globalThis.BroadcastChannel&&this.persistSession&&this.storageKey){try{this.broadcastChannel=new globalThis.BroadcastChannel(this.storageKey)}catch(e){console.error(`Failed to create a new BroadcastChannel, multi-tab state changes will not be available`,e)}(n=this.broadcastChannel)==null||n.addEventListener(`message`,async e=>{this._debug(`received broadcast notification from other tab or client`,e),(e.data.event===`TOKEN_REFRESHED`||e.data.event===`SIGNED_IN`)&&(this.lastRefreshFailure=null);try{await this._notifyAllSubscribers(e.data.event,e.data.session,!1)}catch(e){this._debug(`#broadcastChannel`,`error`,e)}})}r.skipAutoInitialize||this.initialize().catch(e=>{this._debug(`#initialize()`,`error`,e)})}isThrowOnErrorEnabled(){return this.throwOnError}_returnResult(e){if(this.throwOnError&&e&&e.error)throw e.error;return e}_logPrefix(){return`GoTrueClient@${this.storageKey}:${this.instanceID} (${Zn}) ${new Date().toISOString()}`}_debug(...e){return this.logDebugMessages&&this.logger(this._logPrefix(),...e),this}async initialize(){if(this.initializePromise)return await this.initializePromise;this._pendingInitNotifications=[],this.initializePromise=(async()=>this.lock==null?await this._initialize():await this._acquireLock(this.lockAcquireTimeout,async()=>await this._initialize()))();let e=await this.initializePromise,t=this._pendingInitNotifications??[];this._pendingInitNotifications=null;for(let e of t)await this._notifyAllSubscribers(e.event,e.session,e.broadcast);return e}async _initialize(){try{let e={},t=`none`;if(B()&&(e=Pr(window.location.href),this._isImplicitGrantCallback(e)?t=`implicit`:await this._isPKCECallback(e)&&(t=`pkce`)),B()&&this.detectSessionInUrl&&t!==`none`){let{data:n,error:r}=await this._getSessionFromURL(e,t);if(r){if(this._debug(`#_initialize()`,`error detecting session from URL`,r),lr(r)){let e=r.details?.code;if(e===`identity_already_exists`||e===`identity_not_found`||e===`single_identity_not_deletable`)return{error:r}}return{error:r}}let{session:i,redirectType:a}=n;return this._debug(`#_initialize()`,`detected session in URL`,i,`redirect type`,a),await this._saveSession(i),setTimeout(async()=>{a===`recovery`?await this._notifyAllSubscribers(`PASSWORD_RECOVERY`,i):await this._notifyAllSubscribers(`SIGNED_IN`,i)},0),{error:null}}return await this._recoverAndRefresh(),{error:null}}catch(e){return P(e)?this._returnResult({error:e}):this._returnResult({error:new F(`Unexpected error during initialization`,e)})}finally{await this._handleVisibilityChange(),this._debug(`#_initialize()`,`end`)}}async signInAnonymously(e){try{let{data:t,error:n}=await J(this.fetch,`POST`,`${this.url}/signup`,{headers:this.headers,body:{data:e?.options?.data??{},gotrue_meta_security:{captcha_token:e?.options?.captchaToken}},xform:Y});if(n||!t)return this._returnResult({data:{user:null,session:null},error:n});let r=t.session,i=t.user;return t.session&&(await this._saveSession(t.session),await this._notifyAllSubscribers(`SIGNED_IN`,r)),this._returnResult({data:{user:i,session:r},error:null})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signUp(e){let t=null;try{let n;if(`email`in e){let{email:r,password:i,options:a}=e,o=null,s=null;this.flowType===`pkce`&&([o,s,t]=await this._getCodeChallengeAndMethod()),n=await J(this.fetch,`POST`,`${this.url}/signup`,{headers:this.headers,redirectTo:this._maybeAppendFlowIdToRedirect(a?.emailRedirectTo,t),body:{email:r,password:i,data:a?.data??{},gotrue_meta_security:{captcha_token:a?.captchaToken},code_challenge:o,code_challenge_method:s},xform:Y})}else if(`phone`in e){let{phone:t,password:r,options:i}=e;n=await J(this.fetch,`POST`,`${this.url}/signup`,{headers:this.headers,body:{phone:t,password:r,data:i?.data??{},channel:i?.channel??`sms`,gotrue_meta_security:{captcha_token:i?.captchaToken}},xform:Y})}else throw new sr(`You must provide either an email or phone number and a password`);let{data:r,error:i}=n;if(i||!r)return await G(this.storage,this.storageKey,t),this._returnResult({data:{user:null,session:null},error:i});let a=r.session,o=r.user;return r.session&&(await this._saveSession(r.session),await this._notifyAllSubscribers(`SIGNED_IN`,a)),this._returnResult({data:{user:o,session:a},error:null})}catch(e){if(await G(this.storage,this.storageKey,t),P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithPassword(e){try{let t;if(`email`in e){let{email:n,password:r,options:i}=e;t=await J(this.fetch,`POST`,`${this.url}/token?grant_type=password`,{headers:this.headers,body:{email:n,password:r,gotrue_meta_security:{captcha_token:i?.captchaToken}},xform:hi})}else if(`phone`in e){let{phone:n,password:r,options:i}=e;t=await J(this.fetch,`POST`,`${this.url}/token?grant_type=password`,{headers:this.headers,body:{phone:n,password:r,gotrue_meta_security:{captcha_token:i?.captchaToken}},xform:hi})}else throw new sr(`You must provide either an email or phone number and a password`);let{data:n,error:r}=t;if(r)return this._returnResult({data:{user:null,session:null},error:r});if(!n||!n.session||!n.user){let e=new R;return this._returnResult({data:{user:null,session:null},error:e})}return n.session&&(await this._saveSession(n.session),await this._notifyAllSubscribers(`SIGNED_IN`,n.session)),this._returnResult({data:Object.assign({user:n.user,session:n.session},n.weak_password?{weakPassword:n.weak_password}:null),error:r})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithOAuth(e){return await this._handleProviderSignIn(e.provider,{redirectTo:e.options?.redirectTo,scopes:e.options?.scopes,queryParams:e.options?.queryParams,skipBrowserRedirect:e.options?.skipBrowserRedirect})}async exchangeCodeForSession(e,t){return await this.initializePromise,this.lock==null?this._exchangeCodeForSession(e,t):this._acquireLock(this.lockAcquireTimeout,async()=>this._exchangeCodeForSession(e,t))}async signInWithWeb3(e){let{chain:t}=e;switch(t){case`ethereum`:return await this.signInWithEthereum(e);case`solana`:return await this.signInWithSolana(e);default:throw Error(`@supabase/auth-js: Unsupported chain "${t}"`)}}async signInWithEthereum(e){let t,n;if(`message`in e)t=e.message,n=e.signature;else{let{chain:r,wallet:i,statement:a,options:o}=e,s;if(B())if(typeof i==`object`)s=i;else{let e=window;if(`ethereum`in e&&typeof e.ethereum==`object`&&`request`in e.ethereum&&typeof e.ethereum.request==`function`)s=e.ethereum;else throw Error(`@supabase/auth-js: No compatible Ethereum wallet interface on the window object (window.ethereum) detected. Make sure the user already has a wallet installed and connected for this app. Prefer passing the wallet interface object directly to signInWithWeb3({ chain: 'ethereum', wallet: resolvedUserWallet }) instead.`)}else{if(typeof i!=`object`||!o?.url)throw Error(`@supabase/auth-js: Both wallet and url must be specified in non-browser environments.`);s=i}let c=new URL(o?.url??window.location.href),l=await s.request({method:`eth_requestAccounts`}).then(e=>e).catch(()=>{throw Error(`@supabase/auth-js: Wallet method eth_requestAccounts is missing or invalid`)});if(!l||l.length===0)throw Error(`@supabase/auth-js: No accounts available. Please ensure the wallet is connected.`);let u=Ai(l[0]),d=o?.signInWithEthereum?.chainId;d||=ji(await s.request({method:`eth_chainId`})),t=Ni({domain:c.host,address:u,statement:a,uri:c.href,version:`1`,chainId:d,nonce:o?.signInWithEthereum?.nonce,issuedAt:o?.signInWithEthereum?.issuedAt??new Date,expirationTime:o?.signInWithEthereum?.expirationTime,notBefore:o?.signInWithEthereum?.notBefore,requestId:o?.signInWithEthereum?.requestId,resources:o?.signInWithEthereum?.resources}),n=await s.request({method:`personal_sign`,params:[Mi(t),u]})}try{let{data:r,error:i}=await J(this.fetch,`POST`,`${this.url}/token?grant_type=web3`,{headers:this.headers,body:Object.assign({chain:`ethereum`,message:t,signature:n},e.options?.captchaToken?{gotrue_meta_security:{captcha_token:e.options?.captchaToken}}:null),xform:Y});if(i)throw i;if(!r||!r.session||!r.user){let e=new R;return this._returnResult({data:{user:null,session:null},error:e})}return r.session&&(await this._saveSession(r.session),await this._notifyAllSubscribers(`SIGNED_IN`,r.session)),this._returnResult({data:Object.assign({},r),error:i})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithSolana(e){let t,n;if(`message`in e)t=e.message,n=e.signature;else{let{chain:r,wallet:i,statement:a,options:o}=e,s;if(B())if(typeof i==`object`)s=i;else{let e=window;if(`solana`in e&&typeof e.solana==`object`&&(`signIn`in e.solana&&typeof e.solana.signIn==`function`||`signMessage`in e.solana&&typeof e.solana.signMessage==`function`))s=e.solana;else throw Error(`@supabase/auth-js: No compatible Solana wallet interface on the window object (window.solana) detected. Make sure the user already has a wallet installed and connected for this app. Prefer passing the wallet interface object directly to signInWithWeb3({ chain: 'solana', wallet: resolvedUserWallet }) instead.`)}else{if(typeof i!=`object`||!o?.url)throw Error(`@supabase/auth-js: Both wallet and url must be specified in non-browser environments.`);s=i}let c=new URL(o?.url??window.location.href);if(`signIn`in s&&s.signIn){let e=await s.signIn(Object.assign(Object.assign(Object.assign({issuedAt:new Date().toISOString()},o?.signInWithSolana),{version:`1`,domain:c.host,uri:c.href}),a?{statement:a}:null)),r;if(Array.isArray(e)&&e[0]&&typeof e[0]==`object`)r=e[0];else if(e&&typeof e==`object`&&`signedMessage`in e&&`signature`in e)r=e;else throw Error(`@supabase/auth-js: Wallet method signIn() returned unrecognized value`);if(`signedMessage`in r&&`signature`in r&&(typeof r.signedMessage==`string`||r.signedMessage instanceof Uint8Array)&&r.signature instanceof Uint8Array)t=typeof r.signedMessage==`string`?r.signedMessage:new TextDecoder().decode(r.signedMessage),n=r.signature;else throw Error(`@supabase/auth-js: Wallet method signIn() API returned object without signedMessage and signature fields`)}else{if(!(`signMessage`in s)||typeof s.signMessage!=`function`||!(`publicKey`in s)||typeof s!=`object`||!s.publicKey||!(`toBase58`in s.publicKey)||typeof s.publicKey.toBase58!=`function`)throw Error(`@supabase/auth-js: Wallet does not have a compatible signMessage() and publicKey.toBase58() API`);t=[`${c.host} wants you to sign in with your Solana account:`,s.publicKey.toBase58(),...a?[``,a,``]:[``],`Version: 1`,`URI: ${c.href}`,`Issued At: ${o?.signInWithSolana?.issuedAt??new Date().toISOString()}`,...o?.signInWithSolana?.notBefore?[`Not Before: ${o.signInWithSolana.notBefore}`]:[],...o?.signInWithSolana?.expirationTime?[`Expiration Time: ${o.signInWithSolana.expirationTime}`]:[],...o?.signInWithSolana?.chainId?[`Chain ID: ${o.signInWithSolana.chainId}`]:[],...o?.signInWithSolana?.nonce?[`Nonce: ${o.signInWithSolana.nonce}`]:[],...o?.signInWithSolana?.requestId?[`Request ID: ${o.signInWithSolana.requestId}`]:[],...o?.signInWithSolana?.resources?.length?[`Resources`,...o.signInWithSolana.resources.map(e=>`- ${e}`)]:[]].join(`
 `);let e=await s.signMessage(new TextEncoder().encode(t),`utf8`);if(!e||!(e instanceof Uint8Array))throw Error(`@supabase/auth-js: Wallet signMessage() API returned an recognized value`);n=e}}try{let{data:r,error:i}=await J(this.fetch,`POST`,`${this.url}/token?grant_type=web3`,{headers:this.headers,body:Object.assign({chain:`solana`,message:t,signature:z(n)},e.options?.captchaToken?{gotrue_meta_security:{captcha_token:e.options?.captchaToken}}:null),xform:Y});if(i)throw i;if(!r||!r.session||!r.user){let e=new R;return this._returnResult({data:{user:null,session:null},error:e})}return r.session&&(await this._saveSession(r.session),await this._notifyAllSubscribers(`SIGNED_IN`,r.session)),this._returnResult({data:Object.assign({},r),error:i})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async _exchangeCodeForSession(e,t){let n=t?.flowId!=null,r=n?Kr(t?.flowId):B()?Kr(Pr(window.location.href)[N]):null;n&&!r&&this._debug(`#_exchangeCodeForSession()`,`provided flowId is not a valid flow id`,t?.flowId);let{verifier:i,flowId:a}=n&&!r?{verifier:null,flowId:null}:await Qr(this.storage,this.storageKey,r),[o,s]=(i??``).split(`/`);try{if(!o&&this.flowType===`pkce`)throw new dr;let{data:t,error:n}=await J(this.fetch,`POST`,`${this.url}/token?grant_type=pkce`,{headers:this.headers,body:{auth_code:e,code_verifier:o},xform:Y});if(await G(this.storage,this.storageKey,a),n)throw n;if(!t||!t.session||!t.user){let e=new R;return this._returnResult({data:{user:null,session:null,redirectType:null},error:e})}return t.session&&(await this._saveSession(t.session),await this._notifyAllSubscribers(s===`recovery`?`PASSWORD_RECOVERY`:`SIGNED_IN`,t.session)),this._returnResult({data:Object.assign(Object.assign({},t),{redirectType:s??null}),error:n})}catch(e){if(await G(this.storage,this.storageKey,a),P(e))return this._returnResult({data:{user:null,session:null,redirectType:null},error:e});throw e}}async signInWithIdToken(e){try{let{options:t,provider:n,token:r,access_token:i,nonce:a}=e,{data:o,error:s}=await J(this.fetch,`POST`,`${this.url}/token?grant_type=id_token`,{headers:this.headers,body:{provider:n,id_token:r,access_token:i,nonce:a,gotrue_meta_security:{captcha_token:t?.captchaToken}},xform:Y});if(s)return this._returnResult({data:{user:null,session:null},error:s});if(!o||!o.session||!o.user){let e=new R;return this._returnResult({data:{user:null,session:null},error:e})}return o.session&&(await this._saveSession(o.session),await this._notifyAllSubscribers(`SIGNED_IN`,o.session)),this._returnResult({data:o,error:s})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithOtp(e){let t=null;try{if(`email`in e){let{email:n,options:r}=e,i=null,a=null;this.flowType===`pkce`&&([i,a,t]=await this._getCodeChallengeAndMethod());let{error:o}=await J(this.fetch,`POST`,`${this.url}/otp`,{headers:this.headers,body:{email:n,data:r?.data??{},create_user:r?.shouldCreateUser??!0,gotrue_meta_security:{captcha_token:r?.captchaToken},code_challenge:i,code_challenge_method:a},redirectTo:this._maybeAppendFlowIdToRedirect(r?.emailRedirectTo,t)});return this._returnResult({data:{user:null,session:null},error:o})}if(`phone`in e){let{phone:t,options:n}=e,{data:r,error:i}=await J(this.fetch,`POST`,`${this.url}/otp`,{headers:this.headers,body:{phone:t,data:n?.data??{},create_user:n?.shouldCreateUser??!0,gotrue_meta_security:{captcha_token:n?.captchaToken},channel:n?.channel??`sms`}});return this._returnResult({data:{user:null,session:null,messageId:r?.message_id},error:i})}throw new sr(`You must provide either an email or phone number.`)}catch(e){if(await G(this.storage,this.storageKey,t),P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async verifyOtp(e){try{let t,n;`options`in e&&(t=e.options?.redirectTo,n=e.options?.captchaToken);let{data:r,error:i}=await J(this.fetch,`POST`,`${this.url}/verify`,{headers:this.headers,body:Object.assign(Object.assign({},e),{gotrue_meta_security:{captcha_token:n}}),redirectTo:t,xform:Y});if(i)throw i;if(!r)throw Error(`An error occurred on token verification.`);let a=r.session,o=r.user;return a?.access_token&&(await this._saveSession(a),await this._notifyAllSubscribers(e.type==`recovery`?`PASSWORD_RECOVERY`:`SIGNED_IN`,a)),this._returnResult({data:{user:o,session:a},error:null})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async signInWithSSO(e){let t=null;try{let n=null,r=null;this.flowType===`pkce`&&([n,r,t]=await this._getCodeChallengeAndMethod());let i=await J(this.fetch,`POST`,`${this.url}/sso`,{body:Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({},`providerId`in e?{provider_id:e.providerId}:null),`domain`in e?{domain:e.domain}:null),{redirect_to:this._maybeAppendFlowIdToRedirect(e.options?.redirectTo,t)}),e?.options?.captchaToken?{gotrue_meta_security:{captcha_token:e.options.captchaToken}}:null),{skip_http_redirect:!0,code_challenge:n,code_challenge_method:r}),headers:this.headers,xform:gi});return i.data?.url&&B()&&!e.options?.skipBrowserRedirect&&window.location.assign(i.data.url),this._returnResult(i)}catch(e){if(await G(this.storage,this.storageKey,t),P(e))return this._returnResult({data:null,error:e});throw e}}async reauthenticate(){return await this.initializePromise,this.lock==null?await this._reauthenticate():await this._acquireLock(this.lockAcquireTimeout,async()=>await this._reauthenticate())}async _reauthenticate(){try{return await this._useSession(async e=>{let{data:{session:t},error:n}=e;if(n)throw n;if(!t)throw new L;let{error:r}=await J(this.fetch,`GET`,`${this.url}/reauthenticate`,{headers:this.headers,jwt:t.access_token});return this._returnResult({data:{user:null,session:null},error:r})})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async resend(e){let t=null;try{let n=`${this.url}/resend`;if(`email`in e){let{email:r,type:i,options:a}=e,o=null,s=null;this.flowType===`pkce`&&([o,s,t]=await this._getCodeChallengeAndMethod());let{error:c}=await J(this.fetch,`POST`,n,{headers:this.headers,body:{email:r,type:i,gotrue_meta_security:{captcha_token:a?.captchaToken},code_challenge:o,code_challenge_method:s},redirectTo:this._maybeAppendFlowIdToRedirect(a?.emailRedirectTo,t)});return c&&await G(this.storage,this.storageKey,t),this._returnResult({data:{user:null,session:null},error:c})}else if(`phone`in e){let{phone:t,type:r,options:i}=e,{data:a,error:o}=await J(this.fetch,`POST`,n,{headers:this.headers,body:{phone:t,type:r,gotrue_meta_security:{captcha_token:i?.captchaToken}}});return this._returnResult({data:{user:null,session:null,messageId:a?.message_id},error:o})}throw new sr(`You must provide either an email or phone number and a type`)}catch(e){if(await G(this.storage,this.storageKey,t),P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async getSession(){return await this.initializePromise,this.lock==null?await this._useSession(async e=>e):await this._acquireLock(this.lockAcquireTimeout,async()=>this._useSession(async e=>e))}async _acquireLock(e,t){this._debug(`#_acquireLock`,`begin`,e);try{if(this.lockAcquired){let e=this.pendingInLock.length?this.pendingInLock[this.pendingInLock.length-1]:Promise.resolve(),n=(async()=>(await e,await t()))();return this.pendingInLock.push((async()=>{try{await n}catch{}})()),n}return await this.lock(`lock:${this.storageKey}`,e,async()=>{this._debug(`#_acquireLock`,`lock acquired for storage key`,this.storageKey);try{this.lockAcquired=!0;let e=t();for(this.pendingInLock.push((async()=>{try{await e}catch{}})()),await e;this.pendingInLock.length;){let e=[...this.pendingInLock];await Promise.all(e),this.pendingInLock.splice(0,e.length)}return await e}finally{this._debug(`#_acquireLock`,`lock released for storage key`,this.storageKey),this.lockAcquired=!1}})}finally{this._debug(`#_acquireLock`,`end`)}}async _useSession(e){this._debug(`#_useSession`,`begin`);try{return await e(await this.__loadSession())}finally{this._debug(`#_useSession`,`end`)}}async __loadSession(){this._debug(`#__loadSession()`,`begin`),this.lock!=null&&!this.lockAcquired&&this._debug(`#__loadSession()`,`used outside of an acquired lock!`,Error().stack);try{let e=null,t=await U(this.storage,this.storageKey);if(this._debug(`#getSession()`,`session from storage`,t),t!==null&&(this._isValidSession(t)?e=t:(this._debug(`#getSession()`,`session from storage is not valid`),await this._removeSession())),!e)return{data:{session:null},error:null};let n=e.expires_at?e.expires_at*1e3-Date.now()<Qn:!1;if(this._debug(`#__loadSession()`,`session has${n?``:` not`} expired`,`expires_at`,e.expires_at),!n)return{data:{session:await this._hydrateSessionUser(e)},error:null};let{data:r,error:i}=await this._callRefreshToken(e.refresh_token);if(i){let e=await U(this.storage,this.storageKey);return e&&this._isValidSession(e)&&e.expires_at&&e.expires_at*1e3>Date.now()?this._returnResult({data:{session:await this._hydrateSessionUser(e)},error:null}):this._returnResult({data:{session:null},error:i})}return this._returnResult({data:{session:r},error:null})}finally{this._debug(`#__loadSession()`,`end`)}}async _hydrateSessionUser(e){if(this.userStorage){let t=await U(this.userStorage,this.storageKey+`-user`);e.user=t?.user?t.user:ci()}if(this.storage.isServer&&e.user&&!e.user.__isUserNotAvailableProxy){let t={value:this.suppressGetSessionWarning};e.user=li(e.user,t),t.value&&(this.suppressGetSessionWarning=!0)}return e}async getUser(e){if(e)return await this._getUser(e);await this.initializePromise;let t;return t=this.lock==null?await this._getUser():await this._acquireLock(this.lockAcquireTimeout,async()=>await this._getUser()),t.data.user&&(this.suppressGetSessionWarning=!0),t}async _getUser(e){try{return e?await J(this.fetch,`GET`,`${this.url}/user`,{headers:this.headers,jwt:e,xform:X}):await this._useSession(async e=>{let{data:t,error:n}=e;if(n)throw n;return!t.session?.access_token&&!this.hasCustomAuthorizationHeader?{data:{user:null},error:new L}:await J(this.fetch,`GET`,`${this.url}/user`,{headers:this.headers,jwt:t.session?.access_token??void 0,xform:X})})}catch(e){if(P(e))return or(e)&&await this._removeSession(),this._returnResult({data:{user:null},error:e});throw e}}async updateUser(e,t={}){return await this.initializePromise,this.lock==null?await this._updateUser(e,t):await this._acquireLock(this.lockAcquireTimeout,async()=>await this._updateUser(e,t))}async _updateUser(e,t={}){let n=null;try{return await this._useSession(async r=>{let{data:i,error:a}=r;if(a)throw a;if(!i.session)throw new L;let o=i.session,s=null,c=null;this.flowType===`pkce`&&e.email!=null&&([s,c,n]=await this._getCodeChallengeAndMethod());let{data:l,error:u}=await J(this.fetch,`PUT`,`${this.url}/user`,{headers:this.headers,redirectTo:this._maybeAppendFlowIdToRedirect(t?.emailRedirectTo,n),body:Object.assign(Object.assign({},e),{code_challenge:s,code_challenge_method:c}),jwt:o.access_token,xform:X});if(u)throw u;return o.user=l.user,await this._saveSession(o),await this._notifyAllSubscribers(`USER_UPDATED`,o),this._returnResult({data:{user:o.user},error:null})})}catch(e){if(await G(this.storage,this.storageKey,n),P(e))return this._returnResult({data:{user:null},error:e});throw e}}async setSession(e){return await this.initializePromise,this.lock==null?await this._setSession(e):await this._acquireLock(this.lockAcquireTimeout,async()=>await this._setSession(e))}async _setSession(e){try{if(!e.access_token||!e.refresh_token)throw new L;let t=Date.now()/1e3,n=t,r=!0,i=null,{payload:a}=Rr(e.access_token);if(a.exp&&(n=a.exp,r=n<=t),r){let{data:t,error:n}=await this._callRefreshToken(e.refresh_token);if(n)return this._returnResult({data:{user:null,session:null},error:n});if(!t)return{data:{user:null,session:null},error:null};i=t}else{let{data:r,error:a}=await this._getUser(e.access_token);if(a)return this._returnResult({data:{user:null,session:null},error:a});i={access_token:e.access_token,refresh_token:e.refresh_token,user:r.user,token_type:`bearer`,expires_in:n-t,expires_at:n},await this._saveSession(i),await this._notifyAllSubscribers(`SIGNED_IN`,i)}return this._returnResult({data:{user:i.user,session:i},error:null})}catch(e){if(P(e))return this._returnResult({data:{session:null,user:null},error:e});throw e}}async refreshSession(e){return await this.initializePromise,this.lock==null?await this._refreshSession(e):await this._acquireLock(this.lockAcquireTimeout,async()=>await this._refreshSession(e))}async _refreshSession(e){try{return await this._useSession(async t=>{if(!e){let{data:n,error:r}=t;if(r)throw r;e=n.session??void 0}if(!e?.refresh_token)throw new L;let{data:n,error:r}=await this._callRefreshToken(e.refresh_token);return r?this._returnResult({data:{user:null,session:null},error:r}):n?this._returnResult({data:{user:n.user,session:n},error:null}):this._returnResult({data:{user:null,session:null},error:null})})}catch(e){if(P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}}async _getSessionFromURL(e,t){try{if(!B())throw new cr(`No browser detected.`);if(e.error||e.error_description||e.error_code)throw new cr(e.error_description||`Error in URL with unspecified error_description`,{error:e.error||`unspecified_error`,code:e.error_code||`unspecified_code`});switch(t){case`implicit`:if(this.flowType===`pkce`)throw new ur(`Not a valid PKCE flow url.`);break;case`pkce`:if(this.flowType===`implicit`)throw new cr(`Not a valid implicit grant flow url.`);break;default:}if(t===`pkce`){if(this._debug(`#_initialize()`,`begin`,`is PKCE flow`,!0),!e.code)throw new ur(`No code detected.`);let{data:t,error:n}=await this._exchangeCodeForSession(e.code,{flowId:e[N]});if(n)throw n;let r=new URL(window.location.href);return r.searchParams.delete(`code`),r.searchParams.delete(N),window.history.replaceState(window.history.state,``,r.toString()),{data:{session:t.session,redirectType:t.redirectType??null},error:null}}let{provider_token:n,provider_refresh_token:r,access_token:i,refresh_token:a,expires_in:o,expires_at:s,token_type:c}=e;if(!i||!o||!a||!c)throw new cr(`No session defined in URL`);let l=Math.round(Date.now()/1e3),u=parseInt(o),d=l+u;s&&(d=parseInt(s));let f=d-l;f*1e3<=M&&console.warn(`@supabase/gotrue-js: Session as retrieved from URL expires in ${f}s, should have been closer to ${u}s`);let p=d-u;l-p>=120?console.warn(`@supabase/gotrue-js: Session as retrieved from URL was issued over 120s ago, URL could be stale`,p,d,l):l-p<0&&console.warn(`@supabase/gotrue-js: Session as retrieved from URL was issued in the future? Check the device clock for skew`,p,d,l);let{data:m,error:h}=await this._getUser(i);if(h)throw h;let g={provider_token:n,provider_refresh_token:r,access_token:i,expires_in:u,expires_at:d,refresh_token:a,token_type:c,user:m.user};return window.location.hash=``,this._debug(`#_getSessionFromURL()`,`clearing window.location.hash`),this._returnResult({data:{session:g,redirectType:e.type},error:null})}catch(e){if(P(e))return this._returnResult({data:{session:null,redirectType:null},error:e});throw e}}_isImplicitGrantCallback(e){return typeof this.detectSessionInUrl==`function`?this.detectSessionInUrl(new URL(window.location.href),e):!!(e.access_token||e.error||e.error_description||e.error_code)}async _isPKCECallback(e){if(!e.code)return!1;let t=Kr(e[N]);return t&&await U(this.storage,Jr(this.storageKey,t))?!0:!!await U(this.storage,`${this.storageKey}-code-verifier`)}async signOut(e={scope:`global`}){return await this.initializePromise,this.lock==null?await this._signOut(e):await this._acquireLock(this.lockAcquireTimeout,async()=>await this._signOut(e))}async _signOut({scope:e=`global`}={}){return await this._useSession(async t=>{let n=async()=>{await this._removeSession()},{data:r,error:i}=t;if(i&&!or(i))return e===`local`&&mr(i)&&await n(),this._returnResult({error:i});let a=r.session?.access_token,o=null,s=e=>{if(o)throw o.thrown;return e};if(e===`local`)try{await n()}catch(e){o={thrown:e}}if(a){let{error:t}=await this.admin.signOut(a,e);if(t&&!(ar(t)&&(t.status===404||t.status===401||t.status===403)||or(t)))return s(this._returnResult({error:t}))}return e===`global`&&await n(),s(this._returnResult({error:null}))})}onAuthStateChange(e){let t=Mr(),n={id:t,callback:e,unsubscribe:()=>{this._debug(`#unsubscribe()`,`state change callback with id removed`,t),this.stateChangeEmitters.delete(t)}};return this._debug(`#onAuthStateChange()`,`registered callback with id`,t),this.stateChangeEmitters.set(t,n),(async()=>{await this.initializePromise,this.lock==null?await this._emitInitialSession(t):await this._acquireLock(this.lockAcquireTimeout,async()=>{this._emitInitialSession(t)})})(),{data:{subscription:n}}}async _emitInitialSession(e){return await this._useSession(async t=>{try{let{data:{session:n},error:r}=t;if(r)throw r;await this.stateChangeEmitters.get(e)?.callback(`INITIAL_SESSION`,n),this._debug(`INITIAL_SESSION`,`callback id`,e,`session`,n)}catch(t){if(await this.stateChangeEmitters.get(e)?.callback(`INITIAL_SESSION`,null),this._debug(`INITIAL_SESSION`,`callback id`,e,`error`,t),gr(t))return;or(t)||mr(t)||ar(t)&&(t.code===`refresh_token_not_found`||t.code===`refresh_token_already_used`||t.code===`session_expired`)?console.warn(t):console.error(t)}})}async resetPasswordForEmail(e,t={}){let n=null,r=null,i=null;this.flowType===`pkce`&&([n,r,i]=await this._getCodeChallengeAndMethod(!0));try{return await J(this.fetch,`POST`,`${this.url}/recover`,{body:{email:e,code_challenge:n,code_challenge_method:r,gotrue_meta_security:{captcha_token:t.captchaToken}},headers:this.headers,redirectTo:this._maybeAppendFlowIdToRedirect(t.redirectTo,i)})}catch(e){if(await G(this.storage,this.storageKey,i),P(e))return this._returnResult({data:null,error:e});throw e}}async getUserIdentities(){try{let{data:e,error:t}=await this.getUser();if(t)throw t;return this._returnResult({data:{identities:e.user.identities??[]},error:null})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async linkIdentity(e){return`token`in e?this.linkIdentityIdToken(e):this.linkIdentityOAuth(e)}async linkIdentityOAuth(e){let t=null;try{let{data:n,error:r}=await this._useSession(async n=>{let{data:r,error:i}=n;if(i)throw i;let{url:a,flowId:o}=await this._getUrlForProvider(`${this.url}/user/identities/authorize`,e.provider,{redirectTo:e.options?.redirectTo,scopes:e.options?.scopes,queryParams:e.options?.queryParams,skipBrowserRedirect:!0});return t=o,await J(this.fetch,`GET`,a,{headers:this.headers,jwt:r.session?.access_token??void 0})});if(r)throw r;return B()&&!e.options?.skipBrowserRedirect&&window.location.assign(n?.url),this._returnResult({data:{provider:e.provider,url:n?.url,flowId:t},error:null})}catch(n){if(P(n))return this._returnResult({data:{provider:e.provider,url:null,flowId:t},error:n});throw n}}async linkIdentityIdToken(e){return await this._useSession(async t=>{try{let{error:n,data:{session:r}}=t;if(n)throw n;let{options:i,provider:a,token:o,access_token:s,nonce:c}=e,{data:l,error:u}=await J(this.fetch,`POST`,`${this.url}/token?grant_type=id_token`,{headers:this.headers,jwt:r?.access_token??void 0,body:{provider:a,id_token:o,access_token:s,nonce:c,link_identity:!0,gotrue_meta_security:{captcha_token:i?.captchaToken}},xform:Y});return u?this._returnResult({data:{user:null,session:null},error:u}):!l||!l.session||!l.user?this._returnResult({data:{user:null,session:null},error:new R}):(l.session&&(await this._saveSession(l.session),await this._notifyAllSubscribers(`USER_UPDATED`,l.session)),this._returnResult({data:l,error:u}))}catch(e){if(await G(this.storage,this.storageKey,null),P(e))return this._returnResult({data:{user:null,session:null},error:e});throw e}})}async unlinkIdentity(e){try{return await this._useSession(async t=>{let{data:n,error:r}=t;if(r)throw r;return await J(this.fetch,`DELETE`,`${this.url}/user/identities/${e.identity_id}`,{headers:this.headers,jwt:n.session?.access_token??void 0})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _refreshAccessToken(e){let t=`#_refreshAccessToken()`;this._debug(t,`begin`);try{let n=Date.now();return await Br(async n=>(n>0&&await zr(200*2**(n-1)),this._debug(t,`refreshing attempt`,n),await J(this.fetch,`POST`,`${this.url}/token?grant_type=refresh_token`,{body:{refresh_token:e},headers:this.headers,xform:Y})),(e,t)=>{let r=200*2**e;return t&&mr(t)&&Date.now()+r-n<M})}catch(e){if(this._debug(t,`error`,e),P(e))return this._returnResult({data:{session:null,user:null},error:e});throw e}finally{this._debug(t,`end`)}}_isValidSession(e){return typeof e==`object`&&!!e&&`access_token`in e&&`refresh_token`in e&&`expires_at`in e}async _handleProviderSignIn(e,t){let{url:n,flowId:r}=await this._getUrlForProvider(`${this.url}/authorize`,e,{redirectTo:t.redirectTo,scopes:t.scopes,queryParams:t.queryParams});return this._debug(`#_handleProviderSignIn()`,`provider`,e,`options`,t,`url`,n),B()&&!t.skipBrowserRedirect&&window.location.assign(n),{data:{provider:e,url:n,flowId:r},error:null}}async _recoverAndRefresh(){let e=`#_recoverAndRefresh()`;this._debug(e,`begin`);try{let t=await U(this.storage,this.storageKey);if(t&&this.userStorage){let e=await U(this.userStorage,this.storageKey+`-user`);!this.storage.isServer&&Object.is(this.storage,this.userStorage)&&!e&&(e={user:t.user},await H(this.userStorage,this.storageKey+`-user`,e)),t.user=e?.user??ci()}else if(t&&!t.user&&!t.user){let e=await U(this.storage,this.storageKey+`-user`);e&&e?.user?(t.user=e.user,await W(this.storage,this.storageKey+`-user`),await H(this.storage,this.storageKey,t)):t.user=ci()}if(this._debug(e,`session from storage`,t),!this._isValidSession(t)){this._debug(e,`session is not valid`),t!==null&&await this._removeSession();return}let n=(t.expires_at??1/0)*1e3-Date.now()<Qn;if(this._debug(e,`session has${n?``:` not`} expired with margin of ${Qn}s`),n){if(this.autoRefreshToken&&t.refresh_token){let{error:n}=await this._callRefreshToken(t.refresh_token);n&&(gr(n)?this._debug(e,`refresh discarded by commit guard`,n):this._debug(e,`refresh failed`,n))}}else if(t.user&&t.user.__isUserNotAvailableProxy===!0)try{let{data:n,error:r}=await this._getUser(t.access_token);!r&&n?.user?(t.user=n.user,await this._saveSession(t),await this._notifyAllSubscribers(`SIGNED_IN`,t)):this._debug(e,`could not get user data, skipping SIGNED_IN notification`)}catch(t){console.error(`Error getting user data:`,t),this._debug(e,`error getting user data, skipping SIGNED_IN notification`,t)}else await this._notifyAllSubscribers(`SIGNED_IN`,t)}catch(t){this._debug(e,`error`,t),mr(t)?console.warn(t):console.error(t);return}finally{this._debug(e,`end`)}}async _callRefreshToken(e){var t,n;if(!e)throw new L;if(this.refreshingDeferred)return this.refreshingDeferred.promise;if(this.lastRefreshFailure&&this.lastRefreshFailure.refreshToken===e&&Date.now()<this.lastRefreshFailure.expiresAt)return this._debug(`#_callRefreshToken()`,`returning cached failure (cooldown active)`),this.lastRefreshFailure.result;let r=`#_callRefreshToken()`;this._debug(r,`begin`);try{this.refreshingDeferred=new Lr,this.refreshingDeferred.promise.then(void 0,()=>{});let t=await U(this.storage,this.storageKey),{data:n,error:i}=await this._refreshAccessToken(e);if(i)throw i;if(!n.session)throw new L;let a=await U(this.storage,this.storageKey);if(t!==null&&(a===null||a.refresh_token!==t.refresh_token)){this._debug(r,`commit guard: storage changed since refresh started, discarding rotated tokens`,{startedWith:`present`,nowHolds:a?`replaced`:`cleared`});let e={data:null,error:new hr};return this.refreshingDeferred.resolve(e),e}let o=this._sessionRemovalEpoch;if(await this._saveSession(n.session),this._sessionRemovalEpoch!==o){this._debug(r,`commit guard (post-save): _removeSession ran during _saveSession, undoing write`),await W(this.storage,this.storageKey),this.userStorage&&await W(this.userStorage,this.storageKey+`-user`);let e={data:null,error:new hr};return this.refreshingDeferred.resolve(e),e}await this._notifyAllSubscribers(`TOKEN_REFRESHED`,n.session);let s={data:n.session,error:null};return this.lastRefreshFailure=null,this.refreshingDeferred.resolve(s),s}catch(i){if(this._debug(r,`error`,i),P(i)){let n={data:null,error:i};if(!mr(i)){let e=await U(this.storage,this.storageKey);e?.expires_at&&e.expires_at*1e3>Date.now()?this._debug(r,`proactive refresh failed, access token still valid — preserving session`):await this._removeSession()}return this.lastRefreshFailure={refreshToken:e,result:n,expiresAt:Date.now()+6e4},(t=this.refreshingDeferred)==null||t.resolve(n),n}throw(n=this.refreshingDeferred)==null||n.reject(i),i}finally{this.refreshingDeferred=null,this._debug(r,`end`)}}async _notifyAllSubscribers(e,t,n=!0){if(this._pendingInitNotifications!==null&&n){this._pendingInitNotifications.push({event:e,session:t,broadcast:n});return}let r=`#_notifyAllSubscribers(${e})`;this._debug(r,`begin`,t,`broadcast = ${n}`);try{this.broadcastChannel&&n&&this.broadcastChannel.postMessage({event:e,session:t});let r=[],i=Array.from(this.stateChangeEmitters.values()).map(async n=>{try{await n.callback(e,t)}catch(e){r.push(e)}});if(await Promise.all(i),r.length>0){for(let e=0;e<r.length;e+=1)console.error(r[e]);throw r[0]}}finally{this._debug(r,`end`)}}async _saveSession(e){this._debug(`#_saveSession()`,e),this.suppressGetSessionWarning=!0;let t=Object.assign({},e),n=t.user&&t.user.__isUserNotAvailableProxy===!0;if(this.userStorage){!n&&t.user&&await H(this.userStorage,this.storageKey+`-user`,{user:t.user});let e=Object.assign({},t);delete e.user;let r=ui(e);await H(this.storage,this.storageKey,r)}else{let e=ui(t);await H(this.storage,this.storageKey,e)}}async _removeSession(){this._sessionRemovalEpoch+=1,this._debug(`#_removeSession()`),this.lastRefreshFailure=null,this.suppressGetSessionWarning=!1,await W(this.storage,this.storageKey),await $r(this.storage,this.storageKey),await W(this.storage,this.storageKey+`-user`),this.userStorage&&await W(this.userStorage,this.storageKey+`-user`),await this._notifyAllSubscribers(`SIGNED_OUT`,null)}_removeVisibilityChangedCallback(){this._debug(`#_removeVisibilityChangedCallback()`);let e=this.visibilityChangedCallback;this.visibilityChangedCallback=null;try{e&&B()&&window!=null&&window.removeEventListener&&window.removeEventListener(`visibilitychange`,e)}catch(e){console.error(`removing visibilitychange callback failed`,e)}}async _startAutoRefresh(){await this._stopAutoRefresh(),this._debug(`#_startAutoRefresh()`);let e=setInterval(()=>this._autoRefreshTokenTick(),M);this.autoRefreshTicker=e,e&&typeof e==`object`&&typeof e.unref==`function`?e.unref():typeof Deno<`u`&&typeof Deno.unrefTimer==`function`&&Deno.unrefTimer(e);let t=setTimeout(async()=>{await this.initializePromise,await this._autoRefreshTokenTick()},0);this.autoRefreshTickTimeout=t,t&&typeof t==`object`&&typeof t.unref==`function`?t.unref():typeof Deno<`u`&&typeof Deno.unrefTimer==`function`&&Deno.unrefTimer(t)}async _stopAutoRefresh(){this._debug(`#_stopAutoRefresh()`);let e=this.autoRefreshTicker;this.autoRefreshTicker=null,e&&clearInterval(e);let t=this.autoRefreshTickTimeout;this.autoRefreshTickTimeout=null,t&&clearTimeout(t)}async startAutoRefresh(){this._removeVisibilityChangedCallback(),await this._startAutoRefresh()}async stopAutoRefresh(){this._removeVisibilityChangedCallback(),await this._stopAutoRefresh()}async dispose(){var e;this._removeVisibilityChangedCallback(),await this._stopAutoRefresh(),(e=this.broadcastChannel)==null||e.close(),this.broadcastChannel=null,this.stateChangeEmitters.clear()}async _autoRefreshTokenTick(){if(this._debug(`#_autoRefreshTokenTick()`,`begin`),this.lock!=null){try{await this._acquireLock(0,async()=>{try{let e=Date.now();try{return await this._useSession(async t=>{let{data:{session:n}}=t;if(!n||!n.refresh_token||!n.expires_at){this._debug(`#_autoRefreshTokenTick()`,`no session`);return}let r=Math.floor((n.expires_at*1e3-e)/M);this._debug(`#_autoRefreshTokenTick()`,`access token expires in ${r} ticks, a tick lasts ${M}ms, refresh threshold is 3 ticks`),r<=3&&await this._callRefreshToken(n.refresh_token)})}catch(e){console.error(`Auto refresh tick failed with error. This is likely a transient error.`,e)}}finally{this._debug(`#_autoRefreshTokenTick()`,`end`)}})}catch(e){if(e instanceof Ci)this._debug(`auto refresh token tick lock not available`);else throw e}return}if(this.refreshingDeferred!==null){this._debug(`#_autoRefreshTokenTick()`,`refresh already in flight, skipping`);return}try{let e=Date.now();try{await this._useSession(async t=>{let{data:{session:n}}=t;if(!n||!n.refresh_token||!n.expires_at){this._debug(`#_autoRefreshTokenTick()`,`no session`);return}let r=Math.floor((n.expires_at*1e3-e)/M);this._debug(`#_autoRefreshTokenTick()`,`access token expires in ${r} ticks, a tick lasts ${M}ms, refresh threshold is 3 ticks`),r<=3&&await this._callRefreshToken(n.refresh_token)})}catch(e){console.error(`Auto refresh tick failed with error. This is likely a transient error.`,e)}}finally{this._debug(`#_autoRefreshTokenTick()`,`end`)}}async _handleVisibilityChange(){if(this._debug(`#_handleVisibilityChange()`),!B()||!(window!=null&&window.addEventListener))return this.autoRefreshToken&&this.startAutoRefresh(),!1;try{this.visibilityChangedCallback=async()=>{try{await this._onVisibilityChanged(!1)}catch(e){this._debug(`#visibilityChangedCallback`,`error`,e)}},window==null||window.addEventListener(`visibilitychange`,this.visibilityChangedCallback),await this._onVisibilityChanged(!0)}catch(e){console.error(`_handleVisibilityChange`,e)}}async _onVisibilityChanged(e){let t=`#_onVisibilityChanged(${e})`;if(this._debug(t,`visibilityState`,document.visibilityState),document.visibilityState===`visible`){if(this.autoRefreshToken&&this._startAutoRefresh(),!e)if(await this.initializePromise,this.lock!=null)await this._acquireLock(this.lockAcquireTimeout,async()=>{if(document.visibilityState!==`visible`){this._debug(t,`acquired the lock to recover the session, but the browser visibilityState is no longer visible, aborting`);return}await this._recoverAndRefresh()});else{if(document.visibilityState!==`visible`){this._debug(t,`visibilityState is no longer visible, skipping recovery`);return}await this._recoverAndRefresh()}}else document.visibilityState===`hidden`&&this.autoRefreshToken&&this._stopAutoRefresh()}async _getUrlForProvider(e,t,n){let r=n?.redirectTo,i=null,a=null,o=null;this.flowType===`pkce`&&([i,a,o]=await this._getCodeChallengeAndMethod(),r=this._maybeAppendFlowIdToRedirect(r,o));let s=[`provider=${encodeURIComponent(t)}`];if(r&&s.push(`redirect_to=${encodeURIComponent(r)}`),n?.scopes&&s.push(`scopes=${encodeURIComponent(n.scopes)}`),i!=null&&a!=null){let e=new URLSearchParams({code_challenge:`${encodeURIComponent(i)}`,code_challenge_method:`${encodeURIComponent(a)}`});s.push(e.toString())}if(n?.queryParams){let e=new URLSearchParams(n.queryParams);s.push(e.toString())}return n?.skipBrowserRedirect&&s.push(`skip_http_redirect=${n.skipBrowserRedirect}`),{url:`${e}?${s.join(`&`)}`,flowId:o}}_maybeAppendFlowIdToRedirect(e,t){return!e||!t||!this.experimental.appendPkceFlowIdToRedirects?e??void 0:ei(e,t)}async _getCodeChallengeAndMethod(e=!1){return ti(this.storage,this.storageKey,e,e=>this._debug(`#_getCodeChallengeAndMethod()`,`evicted oldest pending PKCE verifier slot`,e))}async _unenroll(e){try{return await this._useSession(async t=>{let{data:n,error:r}=t;return r?this._returnResult({data:null,error:r}):await J(this.fetch,`DELETE`,`${this.url}/factors/${e.factorId}`,{headers:this.headers,jwt:n?.session?.access_token})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _enroll(e){try{return await this._useSession(async t=>{let{data:n,error:r}=t;if(r)return this._returnResult({data:null,error:r});let i=Object.assign({friendly_name:e.friendlyName,factor_type:e.factorType},e.factorType===`phone`?{phone:e.phone}:e.factorType===`totp`?{issuer:e.issuer}:{}),{data:a,error:o}=await J(this.fetch,`POST`,`${this.url}/factors`,{body:i,headers:this.headers,jwt:n?.session?.access_token});return o?this._returnResult({data:null,error:o}):(e.factorType===`totp`&&a.type===`totp`&&a?.totp?.qr_code&&(a.totp.qr_code=`data:image/svg+xml;utf-8,${a.totp.qr_code}`),this._returnResult({data:a,error:null}))})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _verify(e){let t=async()=>{try{return await this._useSession(async t=>{let{data:n,error:r}=t;if(r)return this._returnResult({data:null,error:r});let i=Object.assign({challenge_id:e.challengeId},`webauthn`in e?{webauthn:Object.assign(Object.assign({},e.webauthn),{credential_response:e.webauthn.type===`create`?Bi(e.webauthn.credential_response):Vi(e.webauthn.credential_response)})}:{code:e.code}),{data:a,error:o}=await J(this.fetch,`POST`,`${this.url}/factors/${e.factorId}/verify`,{body:i,headers:this.headers,jwt:n?.session?.access_token});return o?this._returnResult({data:null,error:o}):(await this._saveSession(Object.assign({expires_at:Math.round(Date.now()/1e3)+a.expires_in},a)),await this._notifyAllSubscribers(`MFA_CHALLENGE_VERIFIED`,a),this._returnResult({data:a,error:o}))})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}};return this.lock==null?t():this._acquireLock(this.lockAcquireTimeout,t)}async _challenge(e){let t=async()=>{try{return await this._useSession(async t=>{let{data:n,error:r}=t;if(r)return this._returnResult({data:null,error:r});let i=await J(this.fetch,`POST`,`${this.url}/factors/${e.factorId}/challenge`,{body:e,headers:this.headers,jwt:n?.session?.access_token});if(i.error)return i;let{data:a}=i;if(a.type!==`webauthn`)return{data:a,error:null};switch(a.webauthn.type){case`create`:return{data:Object.assign(Object.assign({},a),{webauthn:Object.assign(Object.assign({},a.webauthn),{credential_options:Object.assign(Object.assign({},a.webauthn.credential_options),{publicKey:Ri(a.webauthn.credential_options.publicKey)})})}),error:null};case`request`:return{data:Object.assign(Object.assign({},a),{webauthn:Object.assign(Object.assign({},a.webauthn),{credential_options:Object.assign(Object.assign({},a.webauthn.credential_options),{publicKey:zi(a.webauthn.credential_options.publicKey)})})}),error:null}}})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}};return this.lock==null?t():this._acquireLock(this.lockAcquireTimeout,t)}async _challengeAndVerify(e){let{data:t,error:n}=await this._challenge({factorId:e.factorId});return n?this._returnResult({data:null,error:n}):await this._verify({factorId:e.factorId,challengeId:t.id,code:e.code})}async _listFactors(){let{data:{user:e},error:t}=await this.getUser();if(t)return{data:null,error:t};let n={all:[],phone:[],totp:[],webauthn:[],recovery_code:[]};for(let t of e?.factors??[])n.all.push(t),t.status===`verified`&&t.factor_type in n&&Array.isArray(n[t.factor_type])&&n[t.factor_type].push(t);return{data:n,error:null}}async _getAuthenticatorAssuranceLevel(e){if(e)try{let{payload:t}=Rr(e),n=null;t.aal&&(n=t.aal);let r=n,{data:{user:i},error:a}=await this.getUser(e);if(a)return this._returnResult({data:null,error:a});((i?.factors)?.filter(e=>e.status===`verified`)??[]).length>0&&(r=`aal2`);let o=t.amr||[];return{data:{currentLevel:n,nextLevel:r,currentAuthenticationMethods:o},error:null}}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}let{data:{session:t},error:n}=await this.getSession();if(n)return this._returnResult({data:null,error:n});if(!t)return{data:{currentLevel:null,nextLevel:null,currentAuthenticationMethods:[]},error:null};let{payload:r}=Rr(t.access_token),i=null;r.aal&&(i=r.aal);let a=i;(t.user.factors?.filter(e=>e.status===`verified`)??[]).length>0&&(a=`aal2`);let o=r.amr||[];return{data:{currentLevel:i,nextLevel:a,currentAuthenticationMethods:o},error:null}}async _getRecoveryCodesStatus(){si(this.experimental);try{return await this._useSession(async e=>{let{data:t,error:n}=e;if(n)return this._returnResult({data:null,error:n});let{data:r,error:i}=await J(this.fetch,`GET`,`${this.url}/factors/recovery-codes`,{headers:this.headers,jwt:t?.session?.access_token});return i?this._returnResult({data:null,error:i}):this._returnResult({data:r,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _generateRecoveryCodes(e){si(this.experimental);try{return await this._useSession(async t=>{let{data:n,error:r}=t;if(r)return this._returnResult({data:null,error:r});let{data:i,error:a}=await J(this.fetch,`POST`,`${this.url}/factors/recovery-codes`,{body:e?.friendlyName?{friendly_name:e.friendlyName}:void 0,headers:this.headers,jwt:n?.session?.access_token});return a?this._returnResult({data:null,error:a}):this._returnResult({data:i,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _verifyRecoveryCode(e){si(this.experimental);let t=async()=>{try{return await this._useSession(async t=>{let{data:n,error:r}=t;if(r)return this._returnResult({data:null,error:r});let{data:i,error:a}=await J(this.fetch,`POST`,`${this.url}/factors/recovery-codes/verify`,{body:{code:e.code},headers:this.headers,jwt:n?.session?.access_token});if(a)return this._returnResult({data:null,error:a});let o=Object.assign({expires_at:jr(i.expires_in)},i);return await this._saveSession(o),await this._notifyAllSubscribers(`MFA_CHALLENGE_VERIFIED`,o),this._returnResult({data:i,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}};return this.lock==null?t():this._acquireLock(this.lockAcquireTimeout,t)}async _regenerateRecoveryCodes(){si(this.experimental);try{return await this._useSession(async e=>{let{data:t,error:n}=e;if(n)return this._returnResult({data:null,error:n});let{data:r,error:i}=await J(this.fetch,`POST`,`${this.url}/factors/recovery-codes/regenerate`,{headers:this.headers,jwt:t?.session?.access_token});return i?this._returnResult({data:null,error:i}):this._returnResult({data:r,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _unenrollRecoveryCodes(){si(this.experimental);try{return await this._useSession(async e=>{let{data:t,error:n}=e;if(n)return this._returnResult({data:null,error:n});let{data:r,error:i}=await J(this.fetch,`DELETE`,`${this.url}/factors/recovery-codes`,{headers:this.headers,jwt:t?.session?.access_token});return i?this._returnResult({data:null,error:i}):this._returnResult({data:r,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _getAuthorizationDetails(e){try{return await this._useSession(async t=>{let{data:{session:n},error:r}=t;return r?this._returnResult({data:null,error:r}):n?await J(this.fetch,`GET`,`${this.url}/oauth/authorizations/${e}`,{headers:this.headers,jwt:n.access_token,xform:e=>({data:e,error:null})}):this._returnResult({data:null,error:new L})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _approveAuthorization(e,t){try{return await this._useSession(async n=>{let{data:{session:r},error:i}=n;if(i)return this._returnResult({data:null,error:i});if(!r)return this._returnResult({data:null,error:new L});let a=await J(this.fetch,`POST`,`${this.url}/oauth/authorizations/${e}/consent`,{headers:this.headers,jwt:r.access_token,body:{action:`approve`},xform:e=>({data:e,error:null})});return a.data&&a.data.redirect_url&&B()&&!t?.skipBrowserRedirect&&window.location.assign(a.data.redirect_url),a})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _denyAuthorization(e,t){try{return await this._useSession(async n=>{let{data:{session:r},error:i}=n;if(i)return this._returnResult({data:null,error:i});if(!r)return this._returnResult({data:null,error:new L});let a=await J(this.fetch,`POST`,`${this.url}/oauth/authorizations/${e}/consent`,{headers:this.headers,jwt:r.access_token,body:{action:`deny`},xform:e=>({data:e,error:null})});return a.data&&a.data.redirect_url&&B()&&!t?.skipBrowserRedirect&&window.location.assign(a.data.redirect_url),a})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _listOAuthGrants(){try{return await this._useSession(async e=>{let{data:{session:t},error:n}=e;return n?this._returnResult({data:null,error:n}):t?await J(this.fetch,`GET`,`${this.url}/user/oauth/grants`,{headers:this.headers,jwt:t.access_token,xform:e=>({data:e,error:null})}):this._returnResult({data:null,error:new L})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _revokeOAuthGrant(e){try{return await this._useSession(async t=>{let{data:{session:n},error:r}=t;return r?this._returnResult({data:null,error:r}):n?(await J(this.fetch,`DELETE`,`${this.url}/user/oauth/grants`,{headers:this.headers,jwt:n.access_token,query:{client_id:e.clientId},noResolveJson:!0}),{data:{},error:null}):this._returnResult({data:null,error:new L})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async fetchJwk(e,t={keys:[]}){let n=t.keys.find(t=>t.kid===e);if(n)return n;let r=Date.now();if(n=this.jwks.keys.find(t=>t.kid===e),n&&this.jwks_cached_at+6e5>r)return n;let{data:i,error:a}=await J(this.fetch,`GET`,`${this.url}/.well-known/jwks.json`,{headers:this.headers});if(a)throw a;return!i.keys||i.keys.length===0||(this.jwks=i,this.jwks_cached_at=r,n=i.keys.find(t=>t.kid===e),!n)?null:n}async getClaims(e,t={}){try{let n=e;if(!n){let{data:e,error:t}=await this.getSession();if(t||!e.session)return this._returnResult({data:null,error:t});n=e.session.access_token}let{header:r,payload:i,signature:a,raw:{header:o,payload:s}}=Rr(n);if(!t?.allowExpired)try{ii(i.exp)}catch(e){throw new yr(e instanceof Error?e.message:`JWT validation failed`)}let c=!r.alg||r.alg.startsWith(`HS`)||!r.kid||!(`crypto`in globalThis&&`subtle`in globalThis.crypto)?null:await this.fetchJwk(r.kid,t?.keys?{keys:t.keys}:t?.jwks);if(!c){let{error:e}=await this.getUser(n);if(e)throw e;return{data:{claims:i,header:r,signature:a},error:null}}let l=ai(r.alg),u=await crypto.subtle.importKey(`jwk`,c,l,!0,[`verify`]);if(!await crypto.subtle.verify(l,u,a,Ar(`${o}.${s}`)))throw new yr(`Invalid JWT signature`);return{data:{claims:i,header:r,signature:a},error:null}}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async signInWithPasskey(e){try{if(!Ui())return this._returnResult({data:null,error:new F(`Browser does not support WebAuthn`,null)});let{data:t,error:n}=await this._startPasskeyAuthentication({options:{captchaToken:e?.options?.captchaToken}});if(n||!t)return this._returnResult({data:null,error:n});let{data:r,error:i}=await Gi({publicKey:zi(t.options),signal:e?.options?.signal??Li.createNewAbortSignal(),mediation:e?.options?.mediation});if(i||!r)return this._returnResult({data:null,error:i??new F(`WebAuthn ceremony failed`,null)});let a=Vi(r);return this._verifyPasskeyAuthentication({challengeId:t.challenge_id,credential:a})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async registerPasskey(e){try{if(!Ui())return this._returnResult({data:null,error:new F(`Browser does not support WebAuthn`,null)});let{data:t,error:n}=await this._startPasskeyRegistration();if(n||!t)return this._returnResult({data:null,error:n});let{data:r,error:i}=await Wi({publicKey:Ri(t.options),signal:e?.options?.signal??Li.createNewAbortSignal()});if(i||!r)return this._returnResult({data:null,error:i??new F(`WebAuthn ceremony failed`,null)});let a=Bi(r);return this._verifyPasskeyRegistration({challengeId:t.challenge_id,credential:a})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _startPasskeyRegistration(){try{return await this._useSession(async e=>{let{data:{session:t},error:n}=e;if(n)return this._returnResult({data:null,error:n});if(!t)return this._returnResult({data:null,error:new L});let{data:r,error:i}=await J(this.fetch,`POST`,`${this.url}/passkeys/registration/options`,{headers:this.headers,jwt:t.access_token,body:{}});return i?this._returnResult({data:null,error:i}):this._returnResult({data:r,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _verifyPasskeyRegistration(e){try{return await this._useSession(async t=>{let{data:{session:n},error:r}=t;if(r)return this._returnResult({data:null,error:r});if(!n)return this._returnResult({data:null,error:new L});let{data:i,error:a}=await J(this.fetch,`POST`,`${this.url}/passkeys/registration/verify`,{headers:this.headers,jwt:n.access_token,body:{challenge_id:e.challengeId,credential:e.credential}});return a?this._returnResult({data:null,error:a}):this._returnResult({data:i,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _startPasskeyAuthentication(e){try{let{data:t,error:n}=await J(this.fetch,`POST`,`${this.url}/passkeys/authentication/options`,{headers:this.headers,body:{gotrue_meta_security:{captcha_token:e?.options?.captchaToken}}});return n?this._returnResult({data:null,error:n}):this._returnResult({data:t,error:null})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _verifyPasskeyAuthentication(e){try{let{data:t,error:n}=await J(this.fetch,`POST`,`${this.url}/passkeys/authentication/verify`,{headers:this.headers,body:{challenge_id:e.challengeId,credential:e.credential},xform:Y});return n?this._returnResult({data:null,error:n}):(t.session&&(await this._saveSession(t.session),await this._notifyAllSubscribers(`SIGNED_IN`,t.session)),this._returnResult({data:t,error:null}))}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _listPasskeys(){try{return await this._useSession(async e=>{let{data:{session:t},error:n}=e;if(n)return this._returnResult({data:null,error:n});if(!t)return this._returnResult({data:null,error:new L});let{data:r,error:i}=await J(this.fetch,`GET`,`${this.url}/passkeys`,{headers:this.headers,jwt:t.access_token,xform:e=>({data:e,error:null})});return i?this._returnResult({data:null,error:i}):this._returnResult({data:r,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _updatePasskey(e){try{return await this._useSession(async t=>{let{data:{session:n},error:r}=t;if(r)return this._returnResult({data:null,error:r});if(!n)return this._returnResult({data:null,error:new L});let{data:i,error:a}=await J(this.fetch,`PATCH`,`${this.url}/passkeys/${e.passkeyId}`,{headers:this.headers,jwt:n.access_token,body:{friendly_name:e.friendlyName}});return a?this._returnResult({data:null,error:a}):this._returnResult({data:i,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}async _deletePasskey(e){try{return await this._useSession(async t=>{let{data:{session:n},error:r}=t;if(r)return this._returnResult({data:null,error:r});if(!n)return this._returnResult({data:null,error:new L});let{error:i}=await J(this.fetch,`DELETE`,`${this.url}/passkeys/${e.passkeyId}`,{headers:this.headers,jwt:n.access_token,noResolveJson:!0});return i?this._returnResult({data:null,error:i}):this._returnResult({data:null,error:null})})}catch(e){if(P(e))return this._returnResult({data:null,error:e});throw e}}};ea.nextInstanceID={};var ta=ea,na=xi,ra=ta,ia=class extends ra{constructor(e){super(e)}},aa=class{constructor(e,t,n){this.supabaseUrl=e,this.supabaseKey=t;let r=Xn(e);if(!t)throw Error(`supabaseKey is required.`);Bn(t),Jn(n),this.realtimeUrl=new URL(`realtime/v1`,r),this.realtimeUrl.protocol=this.realtimeUrl.protocol.replace(`http`,`ws`),this.authUrl=new URL(`auth/v1`,r),this.storageUrl=new URL(`storage/v1`,r),this.functionsUrl=new URL(`functions/v1`,r);let i=`sb-${r.hostname.split(`.`)[0]}-auth-token`,a={db:En,realtime:On,auth:{...Dn,storageKey:i},global:Tn,tracePropagation:kn},o=Yn(n??{},a);this.settings=o,this.storageKey=o.auth.storageKey??``,this.headers=o.global.headers??{},o.accessToken?(this.accessToken=o.accessToken,this.auth=new Proxy({},{get:(e,t)=>{throw Error(`@supabase/supabase-js: Supabase Client is configured with the accessToken option, accessing supabase.auth.${String(t)} is not possible`)}})):this.auth=this._initSupabaseAuthClient(o.auth??{},this.headers,o.global.fetch),this.fetch=Vn(t,e,this._getSessionToken.bind(this),o.global.fetch,o.tracePropagation),this.functionsFetch=Vn(t,e,this._getSessionToken.bind(this),o.global.fetch,o.tracePropagation,{omitApiKeyAsBearer:!0}),this.realtime=this._initRealtimeClient({headers:this.headers,accessToken:this._getAccessToken.bind(this),fetch:this.fetch,...o.realtime}),this.accessToken&&Promise.resolve(this.accessToken()).then(e=>this.realtime.setAuth(e)).catch(e=>console.warn(`Failed to set initial Realtime auth token:`,e)),this.rest=new pe(new URL(`rest/v1`,r).href,{headers:this.headers,schema:o.db.schema,fetch:In(o.global.fetch),wrapFetch:n=>Vn(t,e,this._getSessionToken.bind(this),n,o.tracePropagation),timeout:o.db.timeout,urlLengthLimit:o.db.urlLengthLimit,retry:o.db.retry}),this.storage=new yn(this.storageUrl.href,this.headers,this.fetch,n?.storage),o.accessToken||this._listenForAuthEvents()}get functions(){return new l(this.functionsUrl.href,{headers:this.headers,customFetch:this.functionsFetch})}from(e,t){return this.rest.from(e,t)}schema(e){return this.rest.schema(e)}getOpenApiSpec(){return this.rest.getOpenApiSpec()}rpc(e,t={},n={head:!1,get:!1,count:void 0}){return this.rest.rpc(e,t,n)}channel(e,t={config:{}}){return this.realtime.channel(e,t)}getChannels(){return this.realtime.getChannels()}removeChannel(e){return this.realtime.removeChannel(e)}removeAllChannels(){return this.realtime.removeAllChannels()}async _getSessionToken(){if(this.accessToken)return await this.accessToken();let{data:e}=await this.auth.getSession();return e.session?.access_token??null}async _getAccessToken(){return await this._getSessionToken()??this.supabaseKey}_initSupabaseAuthClient({autoRefreshToken:e,persistSession:t,detectSessionInUrl:n,storage:r,userStorage:i,storageKey:a,flowType:o,lock:s,debug:c,throwOnError:l,experimental:u,lockAcquireTimeout:d,skipAutoInitialize:f},p,m){let h={Authorization:`Bearer ${this.supabaseKey}`,apikey:`${this.supabaseKey}`};return new ia({url:this.authUrl.href,headers:{...h,...p},storageKey:a,autoRefreshToken:e,persistSession:t,detectSessionInUrl:n,storage:r,userStorage:i,flowType:o,lock:s,debug:c,throwOnError:l,experimental:u,fetch:m,lockAcquireTimeout:d,skipAutoInitialize:f,hasCustomAuthorizationHeader:Object.keys(this.headers).some(e=>e.toLowerCase()===`authorization`)})}_initRealtimeClient(e){return new bt(this.realtimeUrl.href,{...e,params:{apikey:this.supabaseKey,...e?.params}})}_listenForAuthEvents(){return this.auth.onAuthStateChange((e,t)=>{this._handleTokenChanged(e,`CLIENT`,t?.access_token)})}_handleTokenChanged(e,t,n){(e===`TOKEN_REFRESHED`||e===`SIGNED_IN`||e===`INITIAL_SESSION`)&&this.changedAccessToken!==n?(this.changedAccessToken=n,this.realtime.setAuth(n)):e===`SIGNED_OUT`&&(this.realtime.setAuth(),t==`STORAGE`&&this.auth.signOut(),this.changedAccessToken=void 0)}};let oa=(e,t,n)=>new aa(e,t,n);function sa(){if(typeof window<`u`||globalThis.Deno!==void 0)return!1;let e=globalThis.process;if(!e)return!1;let t=e.version;if(t==null)return!1;let n=t.match(/^v(\d+)\./);return n?parseInt(n[1],10)<=20:!1}return sa()&&console.warn(`⚠️  Node.js 20 and below are deprecated and will no longer be supported in future versions of @supabase/supabase-js. Please upgrade to Node.js 22 or later. For more information, visit: https://github.com/orgs/supabase/discussions/45715`),e.AuthAdminApi=na,e.AuthApiError=ir,e.AuthClient=ra,e.AuthError=rr,e.AuthImplicitGrantRedirectError=cr,e.AuthInvalidCredentialsError=sr,e.AuthInvalidJwtError=yr,e.AuthInvalidTokenResponseError=R,e.AuthPKCECodeVerifierMissingError=dr,e.AuthPKCEGrantCodeExchangeError=ur,e.AuthRefreshDiscardedError=hr,e.AuthRetryableFetchError=pr,e.AuthSessionMissingError=L,e.AuthUnknownError=F,e.AuthWeakPasswordError=_r,e.CustomAuthError=I,Object.defineProperty(e,`FunctionRegion`,{enumerable:!0,get:function(){return c}}),e.FunctionsError=i,e.FunctionsFetchError=a,e.FunctionsHttpError=s,e.FunctionsRelayError=o,e.GoTrueAdminApi=xi,e.GoTrueClient=ta,e.NavigatorLockAcquireTimeoutError=wi,e.PostgrestError=u,e.REALTIME_CHANNEL_STATES=pt,Object.defineProperty(e,`REALTIME_LISTEN_TYPES`,{enumerable:!0,get:function(){return T}}),Object.defineProperty(e,`REALTIME_POSTGRES_CHANGES_LISTEN_EVENT`,{enumerable:!0,get:function(){return ft}}),Object.defineProperty(e,`REALTIME_PRESENCE_LISTEN_EVENTS`,{enumerable:!0,get:function(){return $e}}),Object.defineProperty(e,`REALTIME_SUBSCRIBE_STATES`,{enumerable:!0,get:function(){return E}}),e.RealtimeChannel=mt,e.RealtimeClient=bt,e.RealtimePostgresFilterBuilder=ut,e.RealtimePresence=et,e.SIGN_OUT_SCOPES=bi,e.StorageApiError=Lt,e.SupabaseClient=aa,e.WebSocketFactory=me,e.createClient=oa,e.isAuthApiError=ar,e.isAuthError=P,e.isAuthImplicitGrantRedirectError=lr,e.isAuthPKCECodeVerifierMissingError=fr,e.isAuthRefreshDiscardedError=gr,e.isAuthRetryableFetchError=mr,e.isAuthSessionMissingError=or,e.isAuthWeakPasswordError=vr,e.lockInternals=Z,e.navigatorLock=Ei,e.postgresChangesFilter=dt,e.processLock=Oi,e})({});
 </script><script>
+(() => {
 'use strict';
+const SELF_HOST_TEST = false;
+const DEV_BUILD = false;
 const WORLD_CONFIG = {"url":"https://oovwnjjuzdelajikfodr.supabase.co","key":"sb_publishable_hw4Ht-cNifTYGE2mawgAmQ_yzMlYpnq"};
+const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, reset() {}, refresh() {} });
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
 const EXCLAMATION_TIER = 10;
@@ -1379,7 +1456,7 @@ const TIER_RULE = {
   7: '奇点卡是游戏虚构的未来设想，不按评分定级。',
   8: '超限卡描绘的是远在奇点之后的设想，不按评分定级。',
   9: '?',
-  [EXCLAMATION_TIER]: '黑洞计算机专属。任意变体合计单抽一亿分之一，不受保底、UP 或泄露概率影响。'
+  [EXCLAMATION_TIER]: '黑洞计算机单抽一亿分之一，不受保底或泄露影响；终极计算机非保底抽取五百万分之一。两者均含所有变体。'
 };
 
 const VARIANTS = [
@@ -1890,7 +1967,7 @@ const MODEL_BY_ID = Object.fromEntries(MODELS.map((m, i) => [m.id, Object.assign
 const MODELS_BY_TIER = TIERS.map((_, t) => MODELS.filter(m => m.t === t));
 const LAB_MODELS = {};
 for (const m of MODELS) (LAB_MODELS[m.lab] = LAB_MODELS[m.lab] || []).push(m);
-const UP_LABS = ['anthropic', 'openai', 'google', 'meta', 'deepseek', 'qwen', 'xai', 'moonshot', 'bytedance', 'mistral', 'zhipu'];
+const UP_LABS = Object.keys(LABS).filter(lab => LABS[lab].no > 0 && LAB_MODELS[lab]?.length);
 
 // Series: cross-lab collections. Each completed series adds b to the global multiplier.
 const SERIES = [
@@ -1952,7 +2029,9 @@ const PACKS = [
   { id: 7, name: '吉瓦数据中心', hw: '自建电厂', cost: 7e17, r: [[5,0.3],[6,0.685],[7,0.015]], pt: 7, pn: 1500 },
   { id: 8, name: '戴森球算力环', hw: '恒星供能', cost: 5e18, r: [[5,0.1],[6,0.82],[7,0.078],[8,0.002]], pt: 7, pn: 150 },
   { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600,
-    special: { t: EXCLAMATION_TIER, chance: 1e-8 } }
+    special: { t: EXCLAMATION_TIER, chance: 1e-8 } },
+  { id: 13, name: '终极计算机', hw: '终局算力', cost: 5e21, r: [[7,0.8],[8,0.1998998],[9,1e-4],[EXCLAMATION_TIER,2e-7]],
+    pt: 9, pn: 50000, noLeak: true, fixedPity: true }
 ];
 
 const UPGRADES = [
@@ -1999,7 +2078,7 @@ const NEWS = [
   { type: 'luck', w: 12, title: '榜单大洗牌', desc: '变体概率 ×5', dur: 30, mul: 5 },
   { type: 'cash', w: 10, title: '融资到账', desc: '立即获得 3 分钟产出' },
   { type: 'gpu', w: 2, title: '显卡黄牛落网', desc: '获得 1 枚 GPU 芯片' },
-  { type: 'uplab', w: 12, title: 'UP 加急', desc: '本期 UP：{lab} 的模型产出 ×20', dur: 45, mul: 20 },
+  { type: 'uplab', w: 12, title: 'UP 加急', desc: '当前 UP：{lab} 的模型产出 ×20', dur: 45, mul: 20 },
   { type: 'bench', w: 8, title: '评测集疑似泄题', desc: '评测战力 ×3', dur: 60, mul: 3 },
   { type: 'train', w: 8, title: '开源社区共建', desc: '微调费用 −60%', dur: 40, mul: 0.4 },
   { type: 'leak', w: 5, title: '爆料大 V 发帖', desc: '权重泄露概率 ×5', dur: 30, mul: 5 },
@@ -2067,7 +2146,7 @@ const ACH = [
   { id: 'tps1b', n: '十亿吞吐', d: '每秒产出达到 10 亿 Token', r: 5, ok: () => lastYield >= 1e9 },
   { id: 'tps1t', n: '万亿吞吐', d: '每秒产出达到 1 万亿 Token', r: 8, ok: () => lastYield >= 1e12 },
   { id: 'tps1q', n: '千万亿吞吐', d: '每秒产出达到 1 千万亿 Token', r: 10, ok: () => lastYield >= 1e15 },
-  { id: 'pack12', n: '事件视界', d: '在黑洞计算机里抽一次卡', r: 5, ok: () => S.stats.topPack >= PACKS.length - 1 },
+  { id: 'pack12', n: '事件视界', d: '在黑洞计算机或更高档卡池里抽一次卡', r: 5, ok: () => S.stats.topPack >= PACKS.findIndex(p => p.id === 12) },
   { id: 'reb1', n: '版本号 +1', d: '完成第一次版本迭代', r: 2, ok: () => S.rebirths >= 1 },
   { id: 'reb10', n: '十个大版本', d: '完成 10 次版本迭代', r: 6, ok: () => S.rebirths >= 10 },
   { id: 'reb25', n: '二十五个大版本', d: '完成 25 次版本迭代', r: 10, ok: () => S.rebirths >= 25 },
@@ -2334,13 +2413,16 @@ function lsDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
 
 
 /* =================== STATE =================== */
-const SAVE_KEY = 'frontier-pull-save-v1';
+const SAVE_KEY = typeof SELF_HOST_TEST !== 'undefined' && SELF_HOST_TEST ? 'frontier-pull-self-host-test-v1' :
+  typeof DEV_BUILD !== 'undefined' && DEV_BUILD ? 'frontier-pull-dev-v1' : 'frontier-pull-save-v1';
 // Decide the starter from the evaluated rarity, not the historical grouping in the list.
 const STARTER = MODELS_BY_TIER[0].find(m => m.id === 'eliza') || MODELS_BY_TIER[0][0];
 function randomLabName() { return '实验室-' + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0'); }
 const CINE_TIERS = [...TIERS.map(t => t.id), 'LEAK'];
-const INFO_GROUPS = { newCard: '新模型入库', rareCard: '稀有卡与变体', achievement: '成就达成', news: '热点领取通知', rotation: 'UP 轮换', autoBench: '自动评测通过', log: '抽卡页高光记录' };
+const INFO_GROUPS = { newCard: '新模型入库', rareCard: '稀有卡与变体', achievement: '成就达成', news: '热点领取通知', autoBench: '自动评测通过', log: '抽卡页高光记录' };
 const LEGACY_PULL_MUTES = ['newCard', 'rareCard', 'autoBench'];
+const DEFAULT_UP_LAB = 'anthropic';
+const UP_SWITCH_COOLDOWN = 10 * 60_000;
 function mutedInfo() { return S.set.mutedInfo ?? (S.set.toast ? [] : LEGACY_PULL_MUTES); }
 function isInfoMuted(key) { return !!key && mutedInfo().includes(key); }
 function defaultCinePrefs() { return { custom: false, tiers: [...TIERS.slice(6).map(t => t.id), 'LEAK'] }; }
@@ -2351,12 +2433,12 @@ function defaultState() {
     cards: { [STARTER.id]: [1, 0, 0, 0] }, train: {}, leaks: 0,
     up: { multi: 0, speed: 0, clone: 0, price: 0 },
     tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, eventDuration: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0 },
-    pack: 1, auto: false, autoReb: false, autoBench: false,
+    pack: 1, upLab: DEFAULT_UP_LAB, upSwitchAt: 0, auto: false, autoReb: false, autoBench: false,
     pity: {}, rebirths: 0, stage: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
     name: randomLabName(), sig: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
-    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, theme: 'auto', cine: undefined, mutedInfo: undefined }
+    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cine: undefined, mutedInfo: undefined }
   };
 }
 function mergeState(base, saved) {
@@ -2373,6 +2455,7 @@ function sanitizeState(st) {
   if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
   st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
+  st.set.hideCompleteDex = st.set.hideCompleteDex === true;
   const cine = st.set.cine;
   st.set.cine = Array.isArray(cine?.tiers) ? {custom: cine.custom === true, tiers: CINE_TIERS.filter(id => cine.tiers.includes(id))} : undefined;
   st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
@@ -2384,6 +2467,8 @@ function sanitizeState(st) {
   st.cards = clean;
   for (const k of ['tokens', 'lifetime', 'gpu', 'leaks', 'rebirths', 'stage']) st[k] = Math.max(0, Number(st[k]) || 0);
   if (!PACKS.some(p => p.id === st.pack)) st.pack = 1;
+  if (!UP_LABS.includes(st.upLab)) st.upLab = DEFAULT_UP_LAB;
+  st.upSwitchAt = Number.isFinite(st.upSwitchAt) ? Math.max(0, Math.min(st.upSwitchAt, Date.now() + UP_SWITCH_COOLDOWN)) : 0;
   if (!Array.isArray(st.log)) st.log = [];
   if (!Array.isArray(st.rare)) st.rare = [];
   if (typeof st.saveEpoch !== 'string') st.saveEpoch = '';
@@ -2415,6 +2500,58 @@ function invalidate() {
 }
 
 
+const WORLD_EVENT_EFFECTS = Object.freeze({
+  speed:{label:'自动抽卡速度',min:1,max:10,step:.01,example:2},
+  count:{label:'每批抽卡数量',min:1,max:10,step:1,example:2},
+  price:{label:'单抽价格',min:.1,max:5,step:.01,example:.8},
+  tokens:{label:'在线 Token 产出',min:1,max:10,step:.01,example:2},
+  power:{label:'评测战力',min:1,max:10,step:.01,example:2},
+  gpu:{label:'在线 GPU 奖励',min:1,max:10,step:.01,example:2}
+});
+const worldEventClock = performance.now.bind(performance);
+const WORLD_EVENT_POLL_MS = 8000, WORLD_EVENT_LEASE_MS = 25000;
+let worldEvent = null, displayedWorldEventId = null;
+
+function validWorldEventEffect(key, value) {
+  if (!Object.hasOwn(WORLD_EVENT_EFFECTS,key)) return false;
+  const spec = WORLD_EVENT_EFFECTS[key];
+  return Number.isFinite(value) && value >= spec.min && value <= spec.max && value !== 1 &&
+    (spec.step === 1 ? Number.isInteger(value) : Number(value.toFixed(2)) === value);
+}
+function activeWorldEvent(at = null) {
+  return worldEvent && (at ?? worldEventClock()) < worldEvent.until ? worldEvent : null;
+}
+function eventMultiplier(key, event = activeWorldEvent()) { return event?.effects[key] ?? 1; }
+
+function eventTokenCredit(base, dt, at = worldEventClock()) {
+  if (!worldEvent?.effects.tokens) return base*dt;
+  const online = Math.max(0, Math.min(at,worldEvent.until)-Math.max(at-dt*1000,worldEvent.since))/1000;
+  return base*(dt+online*(worldEvent.effects.tokens-1));
+}
+function refreshWorldEvent() {
+  const id = activeWorldEvent()?.id ?? null;
+  if (id === displayedWorldEventId) return;
+  displayedWorldEventId = id;
+  // Don't spend queued accelerated batches under a different price or count.
+  resetAutoPull();
+  markDirty('pull','models','research','bench','world','hud');
+}
+function applyWorldEventReply(payload, sentAt, at = worldEventClock()) {
+  const e = payload?.event;
+  if (e === null) worldEvent = null;
+  else {
+    if (!e || typeof e.id !== 'string' || typeof e.title !== 'string' || !e.effects || typeof e.effects !== 'object' || Array.isArray(e.effects) ||
+        !Number.isFinite(e.remaining_ms) || e.remaining_ms < 0 || e.remaining_ms > 604800000) return false;
+    const pairs = Object.entries(e.effects);
+    if (!pairs.length || !pairs.every(([key,value]) => validWorldEventEffect(key,value))) return false;
+    const expires = sentAt + e.remaining_ms;
+    const since = worldEvent?.id === e.id && at <= worldEvent.until ? worldEvent.since : at;
+    worldEvent = {id:e.id,title:e.title,effects:Object.fromEntries(pairs),expires,since,until:Math.min(expires,sentAt+WORLD_EVENT_LEASE_MS)};
+  }
+  refreshWorldEvent();
+  return true;
+}
+
 /* =================== ECONOMY =================== */
 function addTokens(x) { if (x > 0 && isFinite(x)) { S.tokens += x; S.lifetime += x; } }
 function buffMul(type, lab) {
@@ -2430,13 +2567,12 @@ function addBuff(b) {
   if (b.type === 'lab') invalidateProduction();
   markDirty('hud');
 }
-let pullCountOverride = null;
-function multi() { return pullCountOverride ?? (1 + S.up.multi); }
+function multi(event = activeWorldEvent()) { return pullTest.count() ?? (1 + S.up.multi)*eventMultiplier('count',event); }
 function cloneN() { return 1 + S.up.clone; }
 function interval() { return Math.max(0.05, Math.pow(0.95, S.up.speed)) / buffMul('rush'); }
-function packCost(p) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale'); }
-function pullCost(p) { return packCost(p) * multi(); }
-function pityN(p) { return Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity))); }
+function packCost(p,event = activeWorldEvent()) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale') * eventMultiplier('price',event); }
+function pullCost(p,event = activeWorldEvent()) { return packCost(p,event) * multi(event); }
+function pityN(p) { return p.fixedPity ? p.pn : Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity))); }
 function leakChance() { return Math.min(0.02, 1e-4 * Math.pow(2, S.tech.leak) * buffMul('leak')); }
 function varLuck() { return (1 + 0.25 * S.tech.luck) * buffMul('luck'); }
 function variantProbs() {
@@ -2462,9 +2598,12 @@ function rollTier(p, table = drawTables.get(p)) {
 }
 function curPack() { return PACKS.find(p => p.id === S.pack) || PACKS[0]; }
 function upChance() { return 0.5 + 0.08 * S.tech.upfocus; }
-function upInfo(now = Date.now()) {
-  const period = 2 * 3600e3, k = Math.floor(now / period);
-  return { lab: UP_LABS[k % UP_LABS.length], ends: (k + 1) * period };
+function upSwitchRemaining(now = Date.now()) { return Math.max(0, S.upSwitchAt - now); }
+function chooseUpLab(lab, now = Date.now()) {
+  if (S.upLab === lab || !UP_LABS.includes(lab) || upSwitchRemaining(now)) return false;
+  S.upLab = lab;
+  S.upSwitchAt = now + UP_SWITCH_COOLDOWN;
+  return true;
 }
 const upPools = MODELS_BY_TIER.map(pool => Object.fromEntries(UP_LABS.map(lab => [lab, pool.filter(m => m.lab === lab)])));
 function modelChance(m, up, focus) {
@@ -2472,7 +2611,7 @@ function modelChance(m, up, focus) {
   if (!featured || featured === size) return 1 / size;
   return (1 - focus) / size + (m.lab === up ? focus / featured : 0);
 }
-function pickModel(t, up = upInfo().lab, focus = upChance()) {
+function pickModel(t, up = S.upLab, focus = upChance()) {
   const pool = MODELS_BY_TIER[t];
   const upPool = upPools[t][up];
   if (upPool.length && upPool.length < pool.length && Math.random() < focus) return pick(upPool);
@@ -2577,7 +2716,7 @@ function computeYield() {
   const { sum, best } = production();
   return (sum + S.leaks * best) * globalMul();
 }
-function modelOut(m) { const c = S.cards[m.id]; return total(c) ? rawUnits(c) * perCard(m) * globalMul() : 0; }
+function modelOut(m) { const c = S.cards[m.id]; return total(c) ? rawUnits(c) * perCard(m) * globalMul() * eventMultiplier('tokens') : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
 function rebirthCost() { return 1e10 * 12 ** Math.min(14, S.rebirths) * 5 ** Math.max(0, S.rebirths - 14); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
@@ -2587,7 +2726,7 @@ function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 // A slot is used only while settling this synchronous batch. Never retain the previous result list.
 const drawSlots = new Array((MODELS.length + 1) * 4);
 let bulkOdds;
-function oddsForRotation(lab, focus) {
+function oddsForUpLab(lab, focus) {
   if (!bulkOdds || bulkOdds.lab !== lab || bulkOdds.focus !== focus) {
     const odds = new Float64Array(MODELS.length + 1);
     for (const m of MODELS) odds[m.idx] = modelChance(m, lab, focus);
@@ -2595,19 +2734,17 @@ function oddsForRotation(lab, focus) {
   }
   return bulkOdds.odds;
 }
-function settlePull(p, compact = false) {
-  const n = multi(), cost = pullCost(p);
+function settlePull(p, compact = false, event = activeWorldEvent()) {
+  const n = multi(event), cost = packCost(p,event)*n;
   if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
   const clone = cloneN(), table = drawTables.get(p);
-  const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
+  const leak = p.noLeak ? 0 : leakChance(), variants = variantProbs(), pity = pityN(p);
   const special = p.special, specialChance = special?.chance ?? 0;
   const specialCutoff = 1 - specialChance, normalChance = 1 - leak - specialChance;
-  const res = [], stats = S.stats, cards = S.cards, focus = upChance();
-  const now = Date.now(), rotation = upInfo(now);
-  // At the rotation boundary retain the regular per-roll clock check.
-  const odds = compact && rotation.ends - now > 1000 ? oddsForRotation(rotation.lab, focus) : null;
+  const res = [], stats = S.stats, cards = S.cards, up = S.upLab, focus = upChance();
+  const odds = compact ? oddsForUpLab(up, focus) : null;
   const hits = compact ? [] : null;
   let structural = false;
   for (let i = 0; i < n; i++) {
@@ -2632,7 +2769,6 @@ function settlePull(p, compact = false) {
       if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p, table);
       S.pity[p.id] = t >= p.pt ? 0 : pc;
     }
-    const up = odds ? rotation.lab : upInfo().lab;
     const m = pickModel(t, up, focus), v = rollVariant(variants);
     const prob = (specialHit ? specialChance : table.rates[t]) * variants[v];
     const hitProb = specialHit ? prob : normalChance * (viaPity ? 1 : table.rates[t]) * (odds ? odds[m.idx] : modelChance(m, up, focus)) * variants[v];
@@ -2719,7 +2855,7 @@ function benchTrainMul(m) { return m.t >= 9 ? 1.3 ** trainLv(m.id) : trainMul(m.
 function cardPower(m, v, count, spec) {
   return TIERS[m.t].base * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
 }
-function bestTeam(spec) {
+function bestTeam(spec, powerFactor = 1) {
   const cand = [];
   for (const m of MODELS) {
     const c = S.cards[m.id]; if (!total(c)) continue;
@@ -2732,13 +2868,14 @@ function bestTeam(spec) {
     cand.splice(i, 0, best);
     if (cand.length > 5) cand.pop();
   }
+  if (powerFactor !== 1) for (const model of cand) model.pw *= powerFactor;
   return cand;
 }
 let benchCooldown = 0, lastBench = null;
 function runBench(auto) {
   if (Date.now() < benchCooldown && !auto) return;
   const info = benchInfo(S.stage);
-  const team = bestTeam(info.s);
+  const team = bestTeam(info.s,eventMultiplier('power'));
   const power = team.reduce((a, x) => a + x.pw, 0);
   if (!team.length) { toast('无法评测', '先去抽几张卡吧'); return; }
   const score = power * (0.85 + Math.random() * 0.3);
@@ -2772,14 +2909,16 @@ function spawnNews() {
 function newsText(s, lab) { return s.replace(/\{lab\}/g, LABS[lab].name); }
 function newsCash() { return Math.max(1000, lastYield * 180); }
 function newsPity(p) {
+  if (p.fixedPity) return S.pity[p.id] || 0;
   const goal = pityN(p);
   return Math.min(goal - 1, (S.pity[p.id] || 0) + Math.ceil(goal * 0.25));
 }
 function newsEffect({ def, lab }) {
-  const effect = newsText(def.desc, def.type === 'uplab' ? upInfo().lab : lab);
+  const effect = newsText(def.desc, def.type === 'uplab' ? S.upLab : lab);
   if (def.type === 'cash') return `${effect}（约 ${fmt(newsCash())} Token）`;
   if (def.type === 'pity') {
     const p = curPack();
+    if (p.fixedPity) return `${p.name}的固定保底不受此热点影响`;
     return `${effect}：${p.name} ${S.pity[p.id] || 0} → ${newsPity(p)} / ${pityN(p)}`;
   }
   return effect;
@@ -2792,7 +2931,7 @@ function claimNews() {
   if (def.type === 'cash') addTokens(newsCash());
   else if (def.type === 'gpu') S.gpu += 1;
   else if (def.type === 'pity') { const p = curPack(); S.pity[p.id] = newsPity(p); }
-  else if (def.type === 'uplab') { const up = upInfo().lab; addBuff({ type: 'lab', mul: def.mul, dur: def.dur, event: true, lab: up, label: LABS[up].name + ' ×' + def.mul }); }
+  else if (def.type === 'uplab') { const up = S.upLab; addBuff({ type: 'lab', mul: def.mul, dur: def.dur, event: true, lab: up, label: LABS[up].name + ' ×' + def.mul }); }
   else addBuff({ type: def.type, mul: def.mul, dur: def.dur, event: true, lab: def.type === 'lab' ? lab : null, label: def.type === 'lab' ? LABS[lab].name + ' ×' + def.mul : title });
   S.stats.news++;
   news = null; scheduleNews(); renderNews();
@@ -2838,10 +2977,10 @@ function checkAch() {
 }
 
 /* Only the simulation tick earns batches. Continuations spend existing credit. */
-let pullSpeed = 1, autoAcc = 0, pullFrame = null, pullShort = false;
+let autoAcc = 0, pullFrame = null, pullShort = false;
 let pullTimer = null;
 let meterSeconds = 0, meterBase = 0, meterBatches = 0, meterCards = 0, pullSample = null;
-let autoClockStart = performance.now();
+const autoNow = performance.now.bind(performance);
 
 function resetAutoPull() {
   if (pullFrame !== null) cancelAnimationFrame(pullFrame);
@@ -2849,57 +2988,50 @@ function resetAutoPull() {
   pullTimer = null;
   pullFrame = null; autoAcc = 0; pullShort = false; pullSample = null;
   meterSeconds = meterBase = meterBatches = meterCards = 0;
-  autoClockStart = performance.now();
 }
-function setPullSpeed(x) {
-  if (!Number.isFinite(x) || x < 0.1 || x > 100) throw new RangeError('倍率范围：0.1 到 100');
-  pullSpeed = x; resetAutoPull(); renderPullBox();
-  return x;
-}
-function setPullCount(count = null) {
-  if (count !== null && (!Number.isInteger(count) || count < 1 || count > 1000)) {
-    throw new RangeError('每次抽卡数量须为 1 到 1000 的整数；setPullCount() 恢复升级数量');
-  }
-  pullCountOverride = count;
-  resetAutoPull();
-  markDirty('pull');
-  if (currentView === 'pull') renderActive(true);
-  return multi();
-}
+function autoPullSpeed(event = activeWorldEvent()) { return pullTest.speed()*eventMultiplier('speed',event); }
 function drainAutoPull() {
   if (!S.auto || document.hidden) return;
-  const deadline = performance.now() + 4;
+  refreshWorldEvent();
+  pullTest.refresh();
+  const event = activeWorldEvent();
+  const accelerated = autoPullSpeed(event) > 1 || eventMultiplier('count',event) > 1;
+  const deadline = autoNow() + 4;
   const before = S.stats.pulls;
   while (autoAcc >= 1) {
-    if (!doPull(true, null, pullSpeed > 1)) { autoAcc = 0; pullShort = true; break; }
+    if (event !== activeWorldEvent()) { refreshWorldEvent(); return; }
+    if (!doPull(true, null, accelerated,event)) { autoAcc = 0; pullShort = true; break; }
     autoAcc--; meterBatches++; pullShort = false;
-    if (performance.now() >= deadline) break;
+    if (autoNow() >= deadline) break;
   }
   meterCards += S.stats.pulls - before;
   if (autoAcc >= 1 && pullFrame === null && pullTimer === null) {
     // Slow paints must not gate every 4 ms of bulk work. Yield between slices.
-    if (pullSpeed > 1 && multi() >= 64) {
+    if (accelerated && multi(event) >= 64) {
       pullTimer = setTimeout(() => { pullTimer = null; drainAutoPull(); }, 1);
     } else pullFrame = requestAnimationFrame(() => { pullFrame = null; drainAutoPull(); });
   }
 }
 function advanceAutoPull(dt) {
-  if (!S.auto) return;
+  refreshWorldEvent();
+  pullTest.refresh();
+  const event = activeWorldEvent(), speed = eventMultiplier('speed',event);
+  if (event) dt = Math.min(dt,Math.max(0,(autoNow()-event.since)/1000));
+  if (!S.auto || !(dt > 0)) return;
   const iv = interval();
   if (document.hidden) {
-    // Keep the original bounded, normal-speed background behaviour.
-    autoAcc += dt / iv;
+    // Global effects still apply; the private test never runs in a hidden tab.
+    autoAcc += dt * speed / iv;
     let n = 0;
     while (autoAcc >= 1 && n < 40) {
-      if (!doPull(true)) { autoAcc = 0; break; }
+      if (event !== activeWorldEvent()) { refreshWorldEvent(); return; }
+      if (!doPull(true,null,eventMultiplier('count',event) > 1 || speed > 1,event)) { autoAcc = 0; break; }
       autoAcc--; n++;
     }
     if (n === 40) autoAcc = 0;
     return;
   }
-  const now = performance.now();
-  dt = Math.max(0, (now - autoClockStart) / 1000);
-  autoClockStart = now;
+  const pullSpeed = autoPullSpeed(event);
   const base = dt / iv, rate = pullSpeed / iv;
   // Keep fractional credit at low speeds, but do not replay a long stall in a burst.
   const maxPending = pullSpeed === 1 ? 40 : Math.max(2, Math.ceil(rate));
@@ -2914,10 +3046,11 @@ function advanceAutoPull(dt) {
 
 /* =================== SAVE =================== */
 function saveLocal() {
-  if (typeof moderation !== 'undefined' && moderation.level === 2) return '';
+  if ((typeof moderation !== 'undefined' && moderation.level === 2) ||
+      (typeof accountPaused === 'function' && accountPaused() && !account.uid)) return '';
   S.lastSave = Date.now();
   const json = JSON.stringify(S);
-  lsSet(SAVE_KEY, json);
+  lsSet(typeof activeSaveKey === 'function' ? activeSaveKey() : SAVE_KEY, json);
   return json;
 }
 function loadLocal() {
@@ -2934,7 +3067,7 @@ function savePacketDebit(debit, settled = null) {
   const before = S[key], value = reserving ? before-debit.cost : settled ? before : before+debit.cost;
   if (!Number.isFinite(value) || value<0 || (reserving && value>=before)) return false;
   const next = {...S,[key]:value,packetDebit:reserving ? debit : null,lastSave:Date.now()};
-  if (!lsSet(SAVE_KEY,JSON.stringify(next))) return false;
+  if (!lsSet(typeof activeSaveKey === 'function' ? activeSaveKey() : SAVE_KEY,JSON.stringify(next))) return false;
   S = next;
   markDirty('hud','pull','research');
   return true;
@@ -3218,8 +3351,8 @@ let lastResults = [];
 let lastResultMeta = null;
 let nextFastNotice = 0;
 function isBroadcastHit(p) { return Number.isFinite(p) && p > 0 && p <= 1e-5; }
-function doPull(auto, originEl, paced = false) {
-  const p = curPack(), draw = settlePull(p, auto && paced && multi() >= 64);
+function doPull(auto, originEl, paced = false, event = activeWorldEvent()) {
+  const p = curPack(), draw = settlePull(p, auto && paced && multi(event) >= 64,event);
   if (!draw) {
     if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(pullCost(p))} Token`);
     return false;
@@ -3360,11 +3493,12 @@ let hud;
 function renderHUD() {
   hud ??= Object.fromEntries(['hudTokens','hudRate','hudGpu','hudMul','hudBuffs','dotFeats','dotResearch'].map(id => [id, document.getElementById(id)]));
   textIfChanged(hud.hudTokens, fmt(S.tokens));
-  textIfChanged(hud.hudRate, '+' + fmt(lastYield) + '/s');
+  textIfChanged(hud.hudRate, '+' + fmt(lastYield*eventMultiplier('tokens')) + '/s');
   textIfChanged(hud.hudGpu, fmt(S.gpu));
   textIfChanged(hud.hudMul, '×' + fmtMul(globalMul()));
   const now = Date.now();
   renderBuffBadges(hud.hudBuffs, now);
+  renderWorldEvent();
   hud.dotFeats.classList.toggle('hidden', !dailyAvail());
   const canTech = TECH.some(t => (t.max === null || S.tech[t.key] < t.max) && S.gpu >= t.cost(S.tech[t.key]));
   hud.dotResearch.classList.toggle('hidden', !canTech && S.tokens < rebirthCost());
@@ -3390,11 +3524,25 @@ function showMulBreakdown() {
 }
 
 /* =================== RENDER: PULL =================== */
+function renderUpCooldown(now = Date.now()) {
+  const remaining = upSwitchRemaining(now), select = $('#upLab');
+  if (select.disabled !== (remaining > 0)) select.disabled = remaining > 0;
+  textIfChanged($('#upCooldown'), remaining ? '切换冷却 · ' + clock(Math.ceil(remaining / 1000) * 1000).slice(2) : '可切换');
+}
+function renderUpBanner() {
+  const select = $('#upLab'), mark = $('#upMark');
+  if (!select.options.length) select.innerHTML = UP_LABS.map(id => `<option value="${id}">${esc(LABS[id].name)}</option>`).join('');
+  if (select.value !== S.upLab) select.value = S.upLab;
+  if (mark.dataset.lab !== S.upLab) {
+    const { sym, no, hue } = LABS[S.upLab];
+    mark.innerHTML = elementMark(40, sym, no, hue);
+    mark.dataset.lab = S.upLab;
+  }
+  textIfChanged($('#upChance'), `${Math.round(upChance() * 100)}%`);
+  renderUpCooldown();
+}
 function renderPull() {
-  const up = upInfo();
-  $('#upBanner').innerHTML = `<span class="el">${elementMark(40, LABS[up.lab].sym, LABS[up.lab].no, LABS[up.lab].hue)}</span>
-    <div><strong>本期 UP：${esc(LABS[up.lab].name)}</strong><div class="muted" style="font-size:12.5px">抽中某个稀有度时，有 ${Math.round(upChance() * 100)}% 概率优先给出该实验室的模型。全服同步轮换。</div></div>
-    <span class="timer" id="upTimer">${clock(up.ends - Date.now())}</span>`;
+  renderUpBanner();
   $('#packs').innerHTML = PACKS.map((p, pi) => {
     const top = p.special ? [p.special.t, p.special.chance] : p.r[p.r.length - 1];
     const cost = pullCost(p);
@@ -3411,21 +3559,22 @@ function renderPull() {
   const maxP = Math.max(...p.r.map(x => x[1]));
   const rates = p.r.slice().reverse();
   if (p.special) rates.unshift([p.special.t, p.special.chance]);
-  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${fmtProb(pr)}</span></div>`).join('');
+  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.noLeak && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
   const vp = variantProbs();
   const pc = S.pity[p.id] || 0, pn = pityN(p);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。${p.noLeak ? '无权重泄露。' : `权重泄露 ${fmtProb(leakChance())}。`}${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.fixedPity ? '表中为非保底概率。保底上限固定 50,000 抽，计数在抽到任一 ? 档或 ! 时重置；研究与热点不改变保底。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
 }
 function renderAutoInfo() {
+  const pullSpeed = autoPullSpeed();
   let text = '';
   if (S.auto) {
     const sample = pullSample ? '实测 ' + pullSample.speed.toFixed(1) + '× · ' + pullSample.cards.toFixed(1) + ' 张/秒' : '测速中';
-    text = '目标 ' + pullSpeed + '× · ' + sample + (pullShort ? ' · Token 不足' : '');
+    text = '目标 ' + trim0(pullSpeed.toFixed(2)) + '× · ' + sample + (pullShort ? ' · Token 不足' : '');
   }
   textIfChanged($('#autoInfo'), text);
 }
@@ -3439,7 +3588,7 @@ function renderPullBox() {
   renderAutoInfo();
   $('#metaMulti').textContent = multi() + ' 张';
   $('#metaClone').textContent = '×' + fmt(cloneN());
-  const ms = interval() * 1000 / pullSpeed;
+  const ms = interval() * 1000 / autoPullSpeed();
   $('#metaSpeed').textContent = ms < 100 ? ms.toFixed(1) + 'ms' : (ms / 1000).toFixed(3) + 's';
   $('#metaPulls').textContent = fmt(S.stats.pulls);
 }
@@ -3447,7 +3596,7 @@ let resultNodes = new Map();
 const pullPanels = new Map();
 let pullObserver;
 function deferBulkPanel(el, render) {
-  if (!lastResultMeta?.auto || lastResultMeta.count < 64 || pullSpeed <= 1 || typeof IntersectionObserver !== 'function') return false;
+  if (!lastResultMeta?.auto || lastResultMeta.count < 64 || pullTest.speed() <= 1 || typeof IntersectionObserver !== 'function') return false;
   if (!pullPanels.has(el)) {
     pullPanels.set(el, {visible:false, pending:false, render});
     pullObserver ??= new IntersectionObserver(entries => {
@@ -3654,6 +3803,7 @@ function openDetail(id) {
 // Keep the grid mounted (focus/scroll survive a draw). Decorative artwork
 // is only attached near the viewport; labels and buttons always exist.
 let dexGrid;
+const DEX_COMPLETE = (1 << VARIANTS.length) - 1;
 function mountDex() {
   const root = $('#view-dex');
   const labs = $$('.lab-block', $('#dexLabGroups')).map(el => ({ el, rows: $$('.dex-row', el).map(row => ({
@@ -3677,11 +3827,13 @@ function mountDex() {
 function filterDexTier() {
   if (!dexGrid) return;
   const tier = $('#dexTier').value;
+  const hideComplete = S.set.hideCompleteDex;
+  dexGrid.hideComplete = hideComplete;
   let matches = 0;
   for (const {el, rows} of dexGrid.labs) {
     let any = false;
     for (const row of rows) {
-      const show = !tier || row.tier === tier;
+      const show = (!tier || row.tier === tier) && (!hideComplete || row.mask !== DEX_COMPLETE);
       if (row.el.hidden === show) row.el.hidden = !show;
       if (show) { matches++; any = true; }
     }
@@ -3689,11 +3841,15 @@ function filterDexTier() {
   }
   dexGrid.minis.hidden = dexGrid.smallLabs.every(lab => lab.el.hidden);
   $('#dexEmpty').hidden = matches > 0;
+  textIfChanged($('#dexEmpty'), hideComplete ? '没有符合条件的未集齐模型。' : '没有这个稀有度的模型。');
   textIfChanged($('#dexMatchCount'), `显示 ${matches} / ${dexGrid.rows.length} 款`);
 }
 function syncDex() {
   const di = dexInfo(), si = seriesInfo(), ls = labStats();
-  if (dexGrid.snapshot === di) return;
+  if (dexGrid.snapshot === di) {
+    if (dexGrid.hideComplete !== S.set.hideCompleteDex) filterDexTier();
+    return;
+  }
   dexGrid.snapshot = di;
   textIfChanged($('#dexCount'), `${di.n}/${MODELS.length * 4}`);
   textIfChanged($('#dexBonus'), '×' + fmtMul(di.mul));
@@ -3701,7 +3857,7 @@ function syncDex() {
   textIfChanged($('#dexSeries .side'), `已完成 ${si.done}/${SERIES.length}，凑齐一组即生效`);
   for (const r of dexGrid.rows) {
     const c = S.cards[r.id]; let mask = 0;
-    if (c) for (let v = 0; v < 4; v++) if (c[v] > 0) mask |= 1 << v;
+    if (c) for (let v = 0; v < VARIANTS.length; v++) if (c[v] > 0) mask |= 1 << v;
     if (r.mask === mask) continue;
     r.mask = mask; r.icon.classList.toggle('off', !mask);
     r.cells.forEach((el, i) => el.classList.toggle('on', !!(mask & (1 << i))));
@@ -3719,6 +3875,7 @@ function syncDex() {
       if (el.classList.contains('off') === has) { el.classList.toggle('off', !has); el.setAttribute('aria-label', m.n + (has ? '' : '（未拥有）')); }
     }
   });
+  if (S.set.hideCompleteDex || dexGrid.hideComplete !== S.set.hideCompleteDex) filterDexTier();
 }
 function renderDex() {
   if (dexGrid) { syncDex(); return; }
@@ -3741,7 +3898,7 @@ function renderDex() {
   $('#dexLabGroups').innerHTML = big.map(block).join('') + `<div class="lab-minis">${small.map(block).join('')}</div>`;
   $('#dexTier').append(...TIERS.map(t => new Option(`${t.id} · ${t.name}`, t.id)));
   dexGrid = mountDex();
-  filterDexTier();
+  syncDex();
 }
 
 function tierRange(t) {
@@ -3771,7 +3928,7 @@ function renderSeries() {
 /* =================== RENDER: BENCH =================== */
 function renderBench() {
   const info = benchInfo(S.stage);
-  const team = bestTeam(info.s);
+  const team = bestTeam(info.s,eventMultiplier('power'));
   const power = team.reduce((a, x) => a + x.pw, 0);
   const chance = power <= 0 ? 0 : Math.max(0, Math.min(1, (1.15 - info.req / power) / 0.3));
   const scaleMax = info.req * 1.6;
@@ -3842,7 +3999,8 @@ const PREFS = [
   ['sfx', '抽卡音效', '每次手动抽卡和升级时播放'],
   ['rareSfx', '稀有音效', '稀有卡、成就和热点时播放'],
   ['fx', '视觉特效', '稀有卡过场、粒子与卡片翻转'],
-  ['autoCine', '自动抽卡过场', '自动抽卡也按选定的过场规则播放']
+  ['autoCine', '自动抽卡过场', '自动抽卡也按选定的过场规则播放'],
+  ['hideCompleteDex', '图鉴隐藏已集齐模型', '只隐藏四种变体都拥有的模型']
 ];
 function renderPrefs() {
   const cine = S.set.cine ?? defaultCinePrefs();
@@ -3852,7 +4010,8 @@ function renderPrefs() {
     `<div class="pref cine-pref"><div class="mode"><div class="n" id="cineModeLabel">抽卡过场稀有度</div><div class="seg" role="group" aria-labelledby="cineModeLabel">${[['default','原规则'],['custom','自选档位']].map(([mode,label]) => `<button data-cine-mode="${mode}" aria-pressed="${(mode === 'custom') === cine.custom}">${label}</button>`).join('')}</div></div><div id="cineTiers" class="pref-checks" role="group" aria-label="播放过场的档位" ${cine.custom ? '' : 'hidden'}>${tiers}</div></div>
     <div class="pref cine-pref"><div class="n" id="muteLabel">屏蔽次要信息</div><div class="pref-checks" role="group" aria-labelledby="muteLabel">${mutes}</div></div>` +
     `<div class="pref"><div><div class="n">主题</div><div class="d">默认跟随系统</div></div><div class="seg" id="themeSeg">${[['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme-opt="${k}" aria-pressed="${S.set.theme === k}">${n}</button>`).join('')}</div></div>`;
-  $('#saveSide').textContent = '每 5 秒自动保存到本机' + (cloud.board ? '；仅成绩和稀有抽卡记录参与全服同步' : cloud.ready ? '，并同步到云端' : '');
+  $('#saveSide').textContent = '每 5 秒自动保存到本机' + (account.uid ? '，并同步到账号' : '');
+  renderAccountPanel();
 }
 function applyTheme() {
   const t = S.set.theme;
@@ -3997,7 +4156,7 @@ async function initCloud() {
   cloudBump(true);
 }
 async function cloudTick(force) {
-  if (cloud.board) return boardTick(force);
+  if (cloud.board) { accountTick(force); return boardTick(force); }
   if (!cloud.ready || cloud.writing || cloud.readOnly || !cloud.db) return;
   const now = Date.now();
   if (force || now - cloud.lastSaveWrite > 45000) {
@@ -4028,7 +4187,7 @@ async function cloudTick(force) {
 /* =================== ONLINE PLAYERS =================== */
 function setupPresence(client) {
   let channel = null, key = null, retryAt = 0, away = false;
-  const state = { count:null, status:'connecting', connect };
+  const state = { count:null, status:'connecting', connect, disconnect:() => { key = null; leave(); } };
   function show(count, status) {
     if (state.count === count && state.status === status) return;
     state.count = count; state.status = status; markDirty('world');
@@ -4128,11 +4287,12 @@ function initLeaderboard(config) {
   setCloudStatus('connecting');
   try {
     cloud.board.client = window.supabase.createClient(config.url, config.key, {
-      auth: { detectSessionInUrl: false },
+      auth: { detectSessionInUrl: location.protocol !== 'file:' },
       global: { fetch: boardFetch(config) }
     });
   } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
   cloud.board.presence = setupPresence(cloud.board.client);
+  startAccount(cloud.board);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
   window.addEventListener('offline', boardOffline);
   window.addEventListener('online', () => {
@@ -4175,8 +4335,10 @@ async function syncBoardPart(b, key, run, missing = false) {
 function unwrap({data, error}) { if (error) throw error; return data; }
 async function boardIdentity(b) {
   let session = unwrap(await b.client.auth.getSession()).session;
+  if (!session && account.pending) { accountLock('账号会话已结束，请重新登录或返回访客模式。'); return null; }
   if (!session) session = unwrap(await b.client.auth.signInAnonymously()).session;
   if (!session?.user?.id) throw new Error('Missing player session');
+  if (!await accountIdentity(session)) return null;
   const uid = session.user.id;
   if (uid !== cloud.uid) {
     if (cloud.uid) { persistHits(b); b.pending = []; }
@@ -4185,17 +4347,23 @@ async function boardIdentity(b) {
       b.pending = saved.filter(validWorldHit).concat(b.pending).slice(-HIT_LIMIT);
     } catch {}
     cloud.uid = uid; b.scoreIssue = null; b.changed = true; cloudBump(true);
+    cloud.lastPlayerWrite = 0;
+    moderation.next = 0;
     b.boards = {};
+    markDirty('world','prefs');
     for (const key of Object.keys(b.issues)) if (key.includes(':')) delete b.issues[key];
   }
   b.presence.connect(uid);
+  b.checkAccount();
+  b.checkWorldEvent?.();
   return uid;
 }
 async function boardTick(force = false) {
   const b = cloud.board, now = Date.now();
   persistHits(b);
+  if (account.working || account.blocked) return;
   if (navigator.onLine === false) { boardOffline(); return; }
-  b.presence?.connect(cloud.uid);
+  if (!account.pending) b.presence?.connect(cloud.uid);
   if (!b.client || b.busy || now < b.next) return;
   if (moderation.level === 2 && !force && now < moderation.next) return;
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
@@ -4218,7 +4386,9 @@ async function boardTick(force = false) {
   b.busy = true;
   try {
     const uid = await boardIdentity(b);
+    if (!uid || account.working || account.blocked) { finishModerationBoot(); return; }
     await syncModeration(b, force || b.errors > 0);
+    if (account.working || account.blocked) return;
     const sessionOK = !b.issues.session;
     if (moderation.level) { delete b.issues.score; delete b.issues.hits; }
     if (moderation.level === 2) { boardSynced(b); return; }
@@ -4278,6 +4448,7 @@ async function boardTick(force = false) {
     boardSynced(b);
   } catch {
     finishModerationBoot();
+    if (account.pending) accountLock('无法连接账号服务，请联网后重新登录。');
     if (navigator.onLine === false) { boardOffline(); return; }
     // Spread retries across clients when the backend comes back under load.
     b.next = Date.now() + 2000 * 2 ** Math.min(5, b.errors++) * (1 + Math.random() / 4);
@@ -4403,6 +4574,223 @@ async function refreshRanking(b, mode, uid, readBoard, readMine) {
   });
 }
 
+const ACCOUNT_KEY = `${SAVE_KEY}:account:${WORLD_CONFIG?.url || 'offline'}`;
+const account = {available:false, uid:null, session:null, revision:0, email:'', savedAt:null,
+  pending:!!WORLD_CONFIG && !!lsGet(ACCOUNT_KEY), working:false, blocked:'', next:0, flight:null};
+const accountPaused = () => account.pending || account.working || !!account.blocked;
+const activeSaveKey = () => account.uid ? `${ACCOUNT_KEY}:${account.uid}` : SAVE_KEY;
+const accountClient = () => cloud.board?.client;
+const accountCall = async (p_action, args = {}) => unwrap(await accountClient().rpc('frontier_account',{p_action,...args}));
+const accountStale = error => ['FRONTIER_ACCOUNT_REPLACED','FRONTIER_ACCOUNT_RELOGIN','FRONTIER_ACCOUNT_SESSION'].includes(error?.message);
+const accountClock = performance.now.bind(performance);
+function accountMark() { markDirty('prefs'); renderAccountPanel(); }
+
+function accountLock(message) {
+  account.blocked = message; account.pending = false;
+  pullTest.reset();
+  resetAutoPull(); cloud.board?.presence?.disconnect();
+  showAccountLock(message);
+  accountMark();
+}
+function accountFault(error) {
+  if (accountStale(error)) accountLock(error.message === 'FRONTIER_ACCOUNT_REPLACED' ? '此账号已在另一台设备登录，当前设备已停止游玩和同步。' : '账号会话已失效，请重新登录。');
+  else if (error?.message === 'FRONTIER_ACCOUNT_CONFLICT') accountLock('另一标签页已更新云存档。请重新登录后继续。');
+}
+
+function startAccount(b) {
+  b.checkAccount = async () => {
+    if (account.available || accountClock() < (b.accountProbe || 0)) return;
+    b.accountProbe = accountClock() + 60000;
+    try { account.available = (await accountCall('available'))?.available === true; accountMark(); }
+    catch { /* Older databases remain in guest mode. */ }
+  };
+}
+function readRegistration() {
+  try { return JSON.parse(lsGet(`${ACCOUNT_KEY}:registration`) || 'null'); } catch { return null; }
+}
+function installAccountSession(user, data, uploadedGuest = false) {
+  const st = data.save ? parseSave(JSON.stringify(data.save)) : defaultState();
+  const cached = user.id === lsGet(ACCOUNT_KEY) && lsGet(`${ACCOUNT_KEY}:${user.id}:checkpoint`);
+  if (!uploadedGuest && cached) try {
+    const copy = JSON.parse(cached);
+    if (copy.session === data.session_id && copy.revision === data.revision) {
+      const draft = parseSave(lsGet(`${ACCOUNT_KEY}:${user.id}`));
+      if (draft.lastSave >= st.lastSave) Object.assign(st,draft);
+    }
+  } catch { /* Cloud save remains authoritative if the local cache cannot be read. */ }
+  if (uploadedGuest) {
+    const raw = lsGet(SAVE_KEY);
+    if (raw && lsSet(`${ACCOUNT_KEY}:guest-backup:${user.id}`,raw)) lsDel(SAVE_KEY);
+  }
+  if (readRegistration()?.uid === user.id) lsDel(`${ACCOUNT_KEY}:registration`);
+  Object.assign(account,{uid:user.id, session:data.session_id, revision:data.revision, email:user.email || '',
+    pending:false, blocked:'', retry:null, savedAt:data.saved_at, next:0, verified:accountClock(), available:true});
+  lsSet(ACCOUNT_KEY,user.id);
+  moderation.offlineFrom = 0;
+  installSave(st);
+  // Account saves use the server timestamp, not the exporting device's wall clock.
+  const serverAge = Math.min(data.age_ms ?? 0, Math.max(0,Date.now()-st.lastSave));
+  if (Number.isFinite(serverAge) && !uploadedGuest) applyOffline(Date.now()-serverAge);
+  accountCacheCheckpoint(); saveLocal(); accountMark();
+}
+function accountCacheCheckpoint() {
+  if (account.uid) lsSet(`${activeSaveKey()}:checkpoint`,JSON.stringify({session:account.session,revision:account.revision}));
+}
+
+async function accountIdentity(session) {
+  const user = session?.user;
+  if (!user?.id) return false;
+  if (account.working || account.blocked) return false;
+  if (!account.uid && !account.pending && readRegistration()?.uid === user.id) return true;
+  if (user.is_anonymous === true || !user.email_confirmed_at) {
+    if (account.pending || account.uid) accountLock('账号会话已结束，请重新登录或返回访客模式。');
+    return !account.blocked;
+  }
+  if (account.uid === user.id) return true;
+  account.pending = true;
+  try {
+    const data = await accountCall('resume');
+    installAccountSession(user,data);
+    return true;
+  } catch (error) {
+    accountFault(error);
+    if (!account.blocked) accountLock('无法读取云存档，请检查连接后重新登录。');
+    return false;
+  }
+}
+
+async function syncAccount(force = false) {
+  if (!account.uid || account.pending || account.blocked || moderation.level === 2) return false;
+  if (account.flight) {
+    const ok = await account.flight;
+    if (!force || !ok) return ok;
+    if (account.flight) return syncAccount(force);
+  }
+  if (navigator.onLine === false || (!force && (account.working || accountClock() < account.next))) return false;
+  const uid = account.uid, sid = account.session, revision = account.revision;
+  const snapshot = account.retry?.revision === revision ? account.retry : {revision,save:{...JSON.parse(JSON.stringify(S)),lastSave:Date.now()}};
+  account.retry = snapshot;
+  const task = (async () => {
+    try {
+      const data = await accountCall('save',{p_revision:revision,p_save:snapshot.save});
+      if (account.uid !== uid || account.session !== sid) return false;
+      account.retry = null; account.revision = data.revision; account.savedAt = data.saved_at;
+      account.verified = accountClock(); accountCacheCheckpoint(); accountMark();
+      return true;
+    } catch (error) { accountFault(error); return false; }
+    finally { account.next = accountClock() + 10000; }
+  })();
+  account.flight = task;
+  try { return await task; } finally { if (account.flight === task) account.flight = null; }
+}
+async function beforeAccountAck() {
+  if (!account.uid) return !accountPaused();
+  if (!await syncAccount(true)) return false;
+  // A lost save reply may have needed an idempotent retry of the earlier snapshot.
+  return syncAccount(true);
+}
+function accountTick(force) {
+  if (!account.uid || account.blocked || account.working) return;
+  if (accountClock()-account.verified > 45000) { accountLock('暂时无法确认账号仍在本机登录。进度已保留在本设备，请联网后继续。'); return; }
+  if (moderation.level === 2) { account.verified = accountClock(); return; }
+  syncAccount(force);
+}
+
+async function waitForBoard(b) {
+  while (b.busy || b.inboxBusy || account.flight) await new Promise(resolve => setTimeout(resolve,60));
+}
+async function registerAccount(email) {
+  if (!account.available || !accountClient() || !cloud.uid || accountPaused()) throw Error('账号服务未就绪，请先连接全服。');
+  if (S.packetDebit) throw Error('请先等红包结算完成。');
+  const id = cloud.uid, b = cloud.board;
+  saveLocal();
+  account.working = true;
+  try {
+    await waitForBoard(b);
+    const current = unwrap(await b.client.auth.getUser()).user;
+    if (current?.id !== id) throw Error('没有可升级的访客身份。');
+    if (current.email_confirmed_at && current.email?.toLowerCase() === email) throw Error('邮箱已验证，请直接完成注册。');
+    if (current.is_anonymous === false) throw Error('没有可升级的访客身份。');
+    const prior = readRegistration();
+    if (!lsSet(`${ACCOUNT_KEY}:registration`,JSON.stringify({uid:id,email}))) throw Error('本机无法保存注册状态。');
+    const emailRedirectTo = location.protocol === 'https:' || location.protocol === 'http:' ? location.origin+location.pathname : undefined;
+    const {error} = await b.client.auth.updateUser({email}, emailRedirectTo ? {emailRedirectTo} : {});
+    if (error) {
+      if (error.status >= 400 && error.status < 500) {
+        if (prior) lsSet(`${ACCOUNT_KEY}:registration`,JSON.stringify(prior)); else lsDel(`${ACCOUNT_KEY}:registration`);
+      }
+      throw error;
+    }
+  } finally { account.working = false; accountMark(); }
+}
+async function finishAccountRegistration(email,password,code) {
+  const b = cloud.board, registration = readRegistration();
+  if (!b?.client || !registration || registration.email !== email || accountPaused()) throw Error('没有待完成的邮箱注册。');
+  if (S.packetDebit) throw Error('请先等红包结算完成。');
+  saveLocal();
+  account.working = true;
+  try {
+    await waitForBoard(b);
+    const auth = b.client.auth;
+    let {user} = unwrap(await auth.getUser());
+    if (user?.id !== registration.uid) throw Error('请返回发起注册的设备和浏览器。');
+    if (code && (!user.email_confirmed_at || user.email?.toLowerCase() !== email)) {
+      ({user} = unwrap(await auth.verifyOtp({email,token:code,type:'email_change'})));
+    }
+    if (user?.id !== registration.uid || !user.email_confirmed_at || user.email?.toLowerCase() !== email) throw Error('请先验证注册邮箱。');
+    unwrap(await auth.updateUser({password}));
+    const verified = unwrap(await auth.refreshSession()).session?.user;
+    if (verified?.id !== registration.uid || verified.is_anonymous === true) throw Error('邮箱已验证，账号会话未就绪，请重新登录。');
+    const result = await accountCall('claim',{p_save:loadLocal() || S});
+    installAccountSession(verified,result,result.imported_guest === true);
+    b.next = 0; moderation.next = 0;
+  } finally { account.working = false; accountMark(); }
+  boardTick(true);
+}
+async function loginAccount(email,password) {
+  const b = cloud.board;
+  if (!b?.client || (!account.available && !account.blocked)) throw Error('账号服务未就绪，请先连接全服。');
+  if (S.packetDebit && !account.blocked) throw Error('请先等红包结算完成。');
+  if (!account.uid && !account.blocked) saveLocal();
+  account.working = true;
+  let signedIn = false;
+  try {
+    await waitForBoard(b);
+    const {data,error} = await b.client.auth.signInWithPassword({email,password});
+    if (error) throw error;
+    signedIn = true;
+    const user = data.user, registration = readRegistration();
+    const guest = registration?.uid === user.id ? loadLocal() : null;
+    const result = await accountCall('claim',guest ? {p_save:guest} : {});
+    installAccountSession(user,result,result.imported_guest === true);
+    $('#accountLock').close();
+    b.next = 0; b.nextTotals = 0; moderation.next = 0;
+  } catch (error) {
+    if (signedIn) accountLock('已验证身份，但云存档未就绪。请重新登录。');
+    throw error;
+  } finally { account.working = false; accountMark(); }
+  boardTick(true);
+}
+
+async function leaveAccount() {
+  const b = cloud.board;
+  if (!b?.client || account.working) return;
+  if (account.uid && !account.blocked && !await syncAccount(true)) throw Error('未完成云同步，暂不退出。');
+  account.working = true;
+  try {
+    await waitForBoard(b);
+    const {error} = await b.client.auth.signOut({scope:'local'});
+    if (error) throw error;
+    lsDel(ACCOUNT_KEY);
+    Object.assign(account,{pending:false,uid:null,session:null,revision:0,email:'',savedAt:null,blocked:'',retry:null});
+    // Do not restore an account's cache as the guest save.
+    installSave(loadLocal() || defaultState());
+    b.next = 0; b.nextTotals = 0; moderation.next = 0;
+    $('#accountLock').close();
+  } finally { account.working = false; accountMark(); }
+  boardTick(true);
+}
+
 const MODERATION_KEY = 'frontier:play-lock:' + (WORLD_CONFIG?.url || 'offline');
 const moderation = { booting: !!WORLD_CONFIG, level: WORLD_CONFIG && lsGet(MODERATION_KEY) === '2' ? 2 : 0,
   next: 0, adminId: null, until: null, reason: null, offlineFrom: 0, ready: false };
@@ -4445,6 +4833,7 @@ function applyModerationStatus(data) {
   }
   if (before !== level && cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
   renderModerationLock(); renderModerationNotice(); renderBulkCardAccess(); renderCommunityNotice(); renderProfileAdminAccess();
+  pullTest.refresh();
   if (adminDialog.open && !canOpenAdminPanel()) adminDialog.close();
   markDirty('world');
 }
@@ -4469,7 +4858,7 @@ function storeBulkCardOrder(order) {
   const cards = bulkCardInventory(Number(order.amount), order.variant === null);
   if (!cards) return false;
   const next = {...S, cards, itemReceipts:[...S.itemReceipts,order.id].slice(-200), lastSave:Date.now()};
-  if (!lsSet(SAVE_KEY, JSON.stringify(next))) return false;
+  if (!lsSet(activeSaveKey(), JSON.stringify(next))) return false;
   S = next;
   invalidate(); markDirty(...VIEWS, 'hud'); cloudBump(true);
   return true;
@@ -4510,15 +4899,17 @@ function storePrivateGift(order) {
     if (!Number.isSafeInteger(counts[order.variant])) return false;
     next.cards = {...S.cards,[order.model]:counts};
   } else return false;
-  if (!lsSet(SAVE_KEY,JSON.stringify(next))) return false;
+  if (!lsSet(activeSaveKey(),JSON.stringify(next))) return false;
   S = next; invalidate(); markDirty(...VIEWS, 'hud'); cloudBump(true);
   return true;
 }
 
 function startInbox(b) {
+  b.checkWorldEvent = () => syncWorldEvent(b);
   function check(force = false) {
-    if (!cloud.uid || !navigator.onLine) return;
+    if (!cloud.uid || !navigator.onLine || accountPaused()) return;
     pulseOnlineGPU(b);
+    syncWorldEvent(b,force);
     if (document.hidden) return;
     syncModeration(b, force).catch(() => {});
     syncCommunityInbox(b, force).catch(() => {});
@@ -4548,6 +4939,7 @@ function syncModeration(b, force) {
 async function readModerationStatus(b) {
   const revision = moderationRevision;
   const reply = await b.client.rpc('frontier_session');
+  if (accountStale(reply.error)) { accountFault(reply.error); return; }
   if (moderationRevision !== revision) return;
   if (missingWorldRPC(reply.error)) { moderation.next = Date.now() + 120000; finishModerationBoot(); return; }
   const data = unwrap(reply);
@@ -4562,6 +4954,7 @@ async function readModerationStatus(b) {
         break;
       }
       if (isNew) toast('批量加卡已入库', `每款模型的${order.variant === 0 ? '标准卡' : '每种变体'}各增加 ${fmt(order.amount)} 张。`);
+      if (!await beforeAccountAck()) return;
       unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
       continue;
     }
@@ -4569,11 +4962,12 @@ async function readModerationStatus(b) {
       const isNew = !S.itemReceipts.includes(order.id);
       if (!storePrivateGift(order)) continue;
       if (isNew) toast('收到管理员赠礼', privateGiftLabel(order.kind.slice(5),order.amount,order.model,order.variant));
+      if (!await beforeAccountAck()) return;
       unwrap(await b.client.rpc('frontier_session',{p_action:'ack',p_order:order.id}));
       continue;
     }
     if (!applyItemOrder(order)) continue;
-    if (!lsSet(SAVE_KEY, JSON.stringify(S))) break;
+    if (!lsSet(activeSaveKey(), JSON.stringify(S)) || !await beforeAccountAck()) break;
     unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
     toast('道具数量已更新', '管理员已同步此实验室的道具调整。');
   }
@@ -4594,19 +4988,19 @@ function pauseOnlineGPU(b) {
 }
 
 async function pulseOnlineGPU(b) {
-  if (!b.client || !cloud.uid || !navigator.onLine || !moderation.ready || moderation.level === 2) return;
+  if (!b.client || !cloud.uid || !navigator.onLine || !moderation.ready || moderation.level === 2 || accountPaused()) return;
   if (b.onlineGPU?.uid !== cloud.uid) b.onlineGPU = {uid:cloud.uid,tab:newEventId(),next:0,revision:0,resume:true};
   const pulse = b.onlineGPU;
   if (pulse.busy || Date.now() < pulse.next) return;
   const revision = pulse.revision;
-  const current = () => pulse.uid === cloud.uid && revision === pulse.revision && moderation.level !== 2;
+  const current = () => pulse.uid === cloud.uid && revision === pulse.revision && moderation.level !== 2 && !accountPaused();
   pulse.next = Date.now()+9000; pulse.busy = true;
   try {
     const data = unwrap(await b.client.rpc('frontier_online_gpu',{p_tab:pulse.tab,p_resume:pulse.resume}));
     if (!current()) return;
     pulse.resume = false; pulse.data = data;
     markDirty('world');
-    if (data.gift && storeCommunityGift(data.gift,false)) {
+    if (data.gift && storeCommunityGift(data.gift,false) && await beforeAccountAck() && current()) {
       // A lost acknowledgement retries the same persisted receipt, not a new credit.
       await b.client.rpc('frontier_online_gpu',{p_ack:data.gift.id});
     }
@@ -4623,10 +5017,73 @@ function renderOnlineGPU() {
   const data = pulse?.uid === cloud.uid ? pulse?.data : null;
   line.hidden = !data;
   if (!data) return;
-  const rate = (data.rate_tenths / 10).toLocaleString('zh-CN',{maximumFractionDigits:1});
+  const rateTenths = data.base_rate_tenths == null ? data.rate_tenths : data.base_rate_tenths*eventMultiplier('gpu');
+  const rate = (rateTenths / 10).toLocaleString('zh-CN',{maximumFractionDigits:3});
   const time = navigator.onLine && !pulse.resume ? `${data.seconds}／60 秒` : '已暂停';
   textIfChanged(line,`在线奖励：${rate} GPU／分钟 · ${time}`);
 }
+
+let eventRetry = 0, eventPoll = null, eventMutation = null, eventRevision = 0, eventOwner = null, eventConnection = 'idle';
+
+function checkWorldEventContext() {
+  const owner = cloud.uid && navigator.onLine && !accountPaused() && moderation.level !== 2
+    ? [cloud.uid,account.uid,account.session].join(':') : null;
+  if (eventOwner !== owner) {
+    eventOwner = owner;
+    eventRevision++;
+    eventRetry = 0;
+    eventPoll = eventMutation = worldEvent = null;
+    eventConnection = 'idle';
+    refreshWorldEvent();
+  }
+  return owner;
+}
+
+function readWorldEventReply(data, sentAt) {
+  if (!applyWorldEventReply(data,sentAt)) throw Error('FRONTIER_EVENT_RESPONSE');
+  eventConnection = 'ready';
+}
+
+async function syncWorldEvent(b, force = false) {
+  const clock = worldEventClock();
+  if (!b?.client || !checkWorldEventContext() || eventMutation || eventPoll ||
+      (!force && clock < eventRetry)) return;
+  eventRetry = clock + WORLD_EVENT_POLL_MS;
+  const version = eventPoll = ++eventRevision;
+  const current = () => checkWorldEventContext() && version === eventRevision;
+  try {
+    const data = unwrap(await b.client.rpc('frontier_world_event'));
+    if (current()) readWorldEventReply(data,clock);
+  } catch (error) {
+    if (!current()) return;
+    eventConnection = missingWorldRPC(error) ? 'missing' : 'error';
+    if (eventConnection === 'missing') eventRetry = worldEventClock()+120000;
+    accountFault(error);
+  } finally { if (eventPoll === version) eventPoll = null; }
+}
+
+async function changeWorldEvent(action,args) {
+  if (!canOpenAdminPanel() || !checkWorldEventContext() || eventMutation) throw Error('FRONTIER_EVENT_UNAVAILABLE');
+  eventPoll = null;
+  const version = eventMutation = ++eventRevision;
+  const current = () => checkWorldEventContext() && version === eventRevision;
+  try {
+    const sentAt = worldEventClock();
+    const data = unwrap(await cloud.board.client.rpc('frontier_world_event',{p_action:action,...args}));
+    if (!current()) throw Error('FRONTIER_EVENT_UNAVAILABLE');
+    readWorldEventReply(data,sentAt);
+  } catch (error) {
+    if (current()) {
+      if (missingWorldRPC(error)) eventConnection = 'missing';
+      accountFault(error);
+    }
+    throw error;
+  } finally {
+    if (eventMutation === version) { eventMutation = null; eventRetry = 0; }
+  }
+}
+
+window.addEventListener('offline',checkWorldEventContext);
 
 const PROFILE_STATS = [ ['tps','每秒产出',' Token/s'], ['dex','图鉴',' 格'], ['stage','评测通关',' 关'],
   ['pulls','累计抽卡',' 抽'], ['power','评测战力',''], ['achievements','已解锁成就',' 项'], ['lifetime','累计 Token',''] ];
@@ -4910,6 +5367,7 @@ function openAdminPanel(target = null) {
     <label class="admin-check"><input type="checkbox" name="flagged">仅疑似异常</label><button class="btn small" type="submit">查询</button>
     </form>
     <div class="world-tools"><button class="btn ghost small" id="openWorldNoticeComposer" type="button">发布全服通知</button><button class="btn ghost small" id="openInventory" type="button">全服卡牌库存</button></div>
+    ${target ? '' : worldEventAdminHTML()}
     <details class="admin-notice" id="adminNotice">
       <summary>发送私密通知或赠礼</summary>
       <form class="admin-tools" id="adminNoticeForm">
@@ -4946,6 +5404,7 @@ function openAdminPanel(target = null) {
     $('#adminNoticeRecipient').textContent = `收件人：${target.name}`;
     $('#adminTitleForm').elements.player.value = target.id;
   }
+  if (!target) { bindWorldEventAdmin(); pullTest.mount(adminBody); }
   adminDialog.showModal(); adminBody.scrollTop = 0;
   loadAdminList();
   if (target) loadAdminDetail();
@@ -5218,7 +5677,7 @@ function storeCommunityGift(gift, announce = true) {
   const key = gift.kind === 'gpu' ? 'gpu' : gift.kind === 'tokens' ? 'tokens' : '', amount = Number(gift.amount);
   if (!key || !(gift.refund === true ? Number.isFinite(amount) : Number.isInteger(amount)) || amount <= 0 || !Number.isFinite(S[key] + amount)) return false;
   const next = {...S, [key]:S[key]+amount, itemReceipts:[...S.itemReceipts,receipt].slice(-200), lastSave:Date.now()};
-  if (!lsSet(SAVE_KEY,JSON.stringify(next))) return false;
+  if (!lsSet(activeSaveKey(),JSON.stringify(next))) return false;
   S = next; markDirty('hud','pull','research');
   if (announce) { cloudBump(true); toast(gift.refund ? '红包款项已退回' : '奖励已到账', giftLabel(gift.kind,amount)); }
   return true;
@@ -5226,8 +5685,9 @@ function storeCommunityGift(gift, announce = true) {
 function applyCommunityGifts(items, uid = cloud.uid) {
   communityDrain = communityDrain.catch(() => {}).then(async () => {
     for (const gift of items || []) {
-      if (cloud.uid !== uid || moderation.level === 2) return;
+      if (cloud.uid !== uid || moderation.level === 2 || accountPaused()) return;
       if (!storeCommunityGift(gift)) throw Error('无法保存奖励，联网后会再尝试发放。');
+      if (!await beforeAccountAck() || cloud.uid !== uid) return;
       unwrap(await communityClient().rpc('frontier_community_claim',{p_ack:gift.id}));
     }
   });
@@ -5877,6 +6337,223 @@ chatList.onclick = e => {
   }
 };
 
+const accountDialog = $('#accountDialog'), accountLockDialog = $('#accountLock'), accountForm = $('#accountForm');
+const accountSubmit = $('#accountSubmit'), accountResend = $('#accountResend'), accountStatus = $('#accountFormStatus');
+const accountEmail = accountForm.elements.email, accountPassword = accountForm.elements.password, accountCode = accountForm.elements.code;
+let accountMode = 'login', accountFormBusy = false;
+function currentRegistration() {
+  const draft = readRegistration();
+  return draft?.uid === cloud.uid ? draft : null;
+}
+
+function renderAccountPanel() {
+  $('#accountPref').hidden = !WORLD_CONFIG;
+  if (!WORLD_CONFIG) return;
+  const guest = !account.uid, registration = currentRegistration();
+  $('#accountSummary').textContent = account.blocked || (account.pending ? '正在读取云存档…' : guest ?
+    (registration ? '邮箱注册待完成' : account.available ? '访客 · 进度保存在本机' : '云存档服务未就绪') :
+    `${account.email} · ${account.savedAt ? `上次同步 ${new Date(account.savedAt).toLocaleTimeString('zh-CN')}` : '等待首次同步'}`);
+  $('#accountRegister').textContent = registration ? '继续注册' : '注册并同步';
+  $('#accountRegister').hidden = $('#accountLogin').hidden = !guest;
+  $('#accountRegister').disabled = !account.available || !cloud.uid || accountPaused();
+  $('#accountLogin').disabled = !account.available && !account.blocked;
+  $('#accountLogout').hidden = guest;
+  $('#accountLogout').disabled = account.working;
+}
+
+function showAccountLock(message) {
+  $('#accountLockDetail').textContent = message;
+  if (!accountLockDialog.open) { $('#accountLockStatus').textContent = ''; accountLockDialog.showModal(); }
+}
+accountLockDialog.addEventListener('cancel',e => e.preventDefault());
+function openAccountForm(mode, email = '') {
+  accountMode = mode;
+  const login = mode === 'login', verify = mode === 'verify';
+  accountForm.reset(); accountEmail.value = email;
+  accountEmail.readOnly = verify;
+  accountCode.disabled = $('#accountCodeField').hidden = !verify;
+  accountPassword.disabled = $('#accountPasswordField').hidden = mode === 'register';
+  accountPassword.autocomplete = login ? 'current-password' : 'new-password';
+  accountPassword.minLength = verify ? 8 : 0;
+  $('#accountDialogTitle').textContent = login ? '登录云存档' : verify ? '完成邮箱注册' : '注册并同步存档';
+  accountSubmit.textContent = login ? '登录' : verify ? '完成注册' : '发送验证邮件';
+  accountResend.hidden = !verify;
+  accountStatus.textContent = '';
+  if (!accountDialog.open) accountDialog.showModal();
+  (verify ? accountCode : accountEmail).focus();
+}
+$('#accountRegister').onclick = () => {
+  const registration = currentRegistration();
+  openAccountForm(registration ? 'verify' : 'register',registration?.email);
+};
+$('#accountLogin').onclick = $('#accountLockLogin').onclick = () => openAccountForm('login',account.email);
+accountDialog.addEventListener('close', () => { accountPassword.value = accountCode.value = ''; });
+const accountErrorText = e => ({
+  invalid_credentials:'邮箱或密码不正确。', email_not_confirmed:'请先验证邮箱。',
+  email_exists:'此邮箱已注册，请直接登录。', user_already_exists:'此邮箱已注册，请直接登录。',
+  otp_expired:'验证码无效或已过期，请重发邮件。', weak_password:'密码不符合服务端要求，请更换密码。',
+  over_email_send_rate_limit:'发送过于频繁，请稍后重试。',
+}[e?.code] || (e?.name === 'Error' ? e.message : '操作未完成，请检查连接后重试。'));
+
+async function runAccountForm(action) {
+  if (accountFormBusy || account.working) return;
+  accountFormBusy = accountSubmit.disabled = accountResend.disabled = true;
+  accountStatus.textContent = '正在连接…';
+  try { await action(); }
+  catch (error) { accountStatus.textContent = accountErrorText(error); }
+  finally { accountFormBusy = accountSubmit.disabled = accountResend.disabled = false; }
+}
+accountForm.onsubmit = e => {
+  e.preventDefault();
+  const email = accountEmail.value.trim().toLowerCase(), password = accountPassword.value;
+  runAccountForm(async () => {
+    if (accountMode === 'register') {
+      await registerAccount(email);
+      openAccountForm('verify',email);
+      accountStatus.textContent = '已发送验证邮件。';
+      return;
+    }
+    if (accountMode === 'verify') await finishAccountRegistration(email,password,accountCode.value.trim());
+    else await loginAccount(email,password);
+    accountDialog.close();
+  });
+};
+accountResend.onclick = () => runAccountForm(async () => {
+  await registerAccount(accountEmail.value);
+  accountStatus.textContent = '已重新发送验证邮件。';
+});
+for (const [button, target] of [['#accountLogout','#accountSummary'],['#accountGuest','#accountLockStatus']]) {
+  $(button).onclick = async () => {
+    $(button).disabled = true;
+    try { await leaveAccount(); }
+    catch (error) { $(target).textContent = accountErrorText(error); }
+    finally { $(button).disabled = false; }
+  };
+}
+renderAccountPanel();
+
+const eventBadge = $('#worldEventBadge'), eventDetails = $('#worldEventDetails');
+const eventEffectsLabel = effects => Object.entries(WORLD_EVENT_EFFECTS).filter(([key]) => Object.hasOwn(effects,key))
+  .map(([key,spec]) => [spec.label,'×'+effects[key]]);
+
+function worldEventAdminHTML() {
+  return `<details class="admin-notice" id="adminWorldEvent">
+    <summary>全服活动</summary>
+    <div class="event-current">
+      <p class="note" data-event-current></p>
+      <ul class="event-effect-list" data-event-effects hidden></ul>
+      <button class="btn ghost small" type="button" data-event-stop hidden>提前结束</button>
+    </div>
+    <form class="admin-tools event-form">
+      <label>活动名称<input class="input" name="title" maxlength="40" required></label>
+      <label>持续时间（分钟）<input class="input" name="minutes" type="number" min="1" max="10080" step="1" value="30" required></label>
+      <fieldset class="event-options"><legend>活动效果</legend>
+        ${Object.entries(WORLD_EVENT_EFFECTS).map(([key,spec]) => `<div class="event-option">
+          <label class="event-toggle"><input type="checkbox" data-effect="${key}">${spec.label}</label>
+          <input class="input num" aria-label="${spec.label}倍率" name="${key}" type="number" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${spec.example}" required disabled>
+          <span aria-hidden="true">×</span></div>`).join('')}
+      </fieldset>
+      <button class="btn small" type="submit">发布全服活动</button>
+    </form>
+    <p class="note notice-status" data-event-status role="status"></p>
+  </details>`;
+}
+
+function paintEventEffectList(list,event) {
+  if (list.dataset.event === (event?.id ?? '')) return;
+  list.dataset.event = event?.id ?? '';
+  list.innerHTML = event ? eventEffectsLabel(event.effects).map(([label,factor]) =>
+    `<li><span>${esc(label)}</span><b class="num">${esc(factor)}</b></li>`).join('') : '';
+}
+
+const eventCountdown = event => fmtDur(Math.ceil((event.expires-worldEventClock())/1000));
+
+function renderWorldEventAdmin(panel,event) {
+  const offline = !navigator.onLine;
+  const form = panel.querySelector('form'), stop = panel.querySelector('[data-event-stop]');
+  const ready = !offline && eventConnection === 'ready';
+  const state = event ? `进行中：${event.title} · 剩余 ${eventCountdown(event)}` :
+    offline ? '未联网' : eventConnection === 'missing' ? '当前服务器尚未启用全服活动。' :
+    eventConnection === 'error' ? '暂时无法读取活动，正在重试。' : ready ? '当前没有全服活动' : '正在读取活动…';
+  textIfChanged(panel.querySelector('[data-event-current]'),state);
+  const list = panel.querySelector('[data-event-effects]');
+  list.hidden = stop.hidden = !event;
+  paintEventEffectList(list,event);
+  stop.disabled = !ready || !!eventMutation;
+  const disabled = !ready || !!eventMutation || !!event;
+  form.elements.title.disabled = form.elements.minutes.disabled = form.querySelector('[type=submit]').disabled = disabled;
+  for (const toggle of form.querySelectorAll('[data-effect]')) {
+    toggle.disabled = disabled;
+    form.elements[toggle.dataset.effect].disabled = disabled || !toggle.checked;
+  }
+}
+
+function renderWorldEvent() {
+  const event = activeWorldEvent(), admin = adminDialog.open && $('#adminWorldEvent');
+  if (admin?.open) renderWorldEventAdmin(admin,event);
+  eventBadge.hidden = !event;
+  if (event) {
+    const time = eventCountdown(event);
+    textIfChanged($('#worldEventBadgeTitle'),event.title);
+    textIfChanged($('#worldEventBadgeTime'),time);
+    if (eventDetails.open) {
+      textIfChanged($('#worldEventDetailsTitle'),event.title);
+      textIfChanged($('#worldEventDetailsTime'),'全服活动 · 剩余 '+time);
+      paintEventEffectList($('#worldEventDetailsEffects'),event);
+    }
+  } else if (eventDetails.open) eventDetails.close();
+}
+eventBadge.onclick = () => {
+  if (!activeWorldEvent() || eventDetails.open) return;
+  eventDetails.showModal(); renderWorldEvent();
+};
+
+function bindWorldEventAdmin() {
+  const panel = $('#adminWorldEvent'), form = panel.querySelector('form');
+  const status = panel.querySelector('[data-event-status]');
+  let draft = null;
+  const paint = () => renderWorldEventAdmin(panel,activeWorldEvent());
+  panel.ontoggle = () => { if (panel.open) { paint(); syncWorldEvent(cloud.board,true); } };
+  form.oninput = () => { status.textContent = ''; paint(); };
+  async function submit(action,args) {
+    const pending = changeWorldEvent(action,args);
+    status.textContent = '正在提交…'; paint();
+    try {
+      await pending;
+      status.textContent = action === 'start' ? '已发布全服活动。' : '已结束全服活动。';
+      return true;
+    } catch (error) {
+      status.textContent = missingWorldRPC(error) ? '请先安装全服活动的数据库更新。' :
+        error?.message === 'FRONTIER_EVENT_ACTIVE' ? '已有活动在进行，请先结束该活动。' :
+        '未确认提交成功。请检查网络与权限，再重试。';
+      return false;
+    } finally { paint(); }
+  }
+  form.onsubmit = async e => {
+    e.preventDefault();
+    if (eventMutation || activeWorldEvent() || !form.reportValidity()) return;
+    const title = form.elements.title.value.trim(), minutes = form.elements.minutes.valueAsNumber;
+    if (!title || /[\x00-\x1f\x7f]/.test(title)) { status.textContent = '请输入有效的活动名称。'; return; }
+    const effects = {};
+    for (const toggle of form.querySelectorAll('[data-effect]:checked')) {
+      const key = toggle.dataset.effect, factor = form.elements[key].valueAsNumber;
+      if (!validWorldEventEffect(key,factor)) { status.textContent = `请为「${WORLD_EVENT_EFFECTS[key].label}」设定有效的非 1× 倍率。`; return; }
+      effects[key] = factor;
+    }
+    if (!Object.keys(effects).length) { status.textContent = '请选择至少一项活动效果。'; return; }
+    if (!window.confirm(`立即向全服发布「${title}」？\n持续 ${minutes} 分钟\n${eventEffectsLabel(effects).map(([label,factor]) => label+' '+factor).join('、')}`)) return;
+    const args = {p_title:title,p_minutes:minutes,p_effects:effects}, key = JSON.stringify(args);
+    if (draft?.key !== key) draft = {key,id:newEventId()};
+    if (await submit('start',{p_id:draft.id,...args})) { draft = null; form.reset(); paint(); }
+  };
+  panel.querySelector('[data-event-stop]').onclick = async () => {
+    const event = activeWorldEvent();
+    if (!event || eventMutation || !window.confirm(`现在结束「${event.title}」？`)) return;
+    await submit('stop',{p_id:event.id});
+  };
+  paint();
+}
+
 /* =================== ROUTER =================== */
 const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'chat', 'feats', 'prefs'];
 const RENDER = { pull: renderPull, models: renderModels, dex: renderDex, bench: renderBench, research: renderResearch, world: renderWorld, chat: renderChatView, feats: renderFeats, prefs: renderPrefs };
@@ -5921,6 +6598,12 @@ document.addEventListener('pointercancel', () => { pointerDown = false; }, true)
 function on(sel, ev, fn) { const el = $(sel); if (el) el.addEventListener(ev, fn); }
 on('#rail', 'click', e => { const b = e.target.closest('.nav-btn[data-view]'); if (!b) return; const v = b.dataset.view; if (location.hash !== '#' + v) location.hash = '#' + v; else showView(v); });
 on('#packs', 'click', e => { const b = e.target.closest('[data-pack]'); if (!b) return; const id = Number(b.dataset.pack); if (S.pack !== id) resetAutoPull(); S.pack = id; playTick(); markDirty('pull'); renderActive(true); });
+on('#upLab', 'change', e => {
+  if (!chooseUpLab(e.currentTarget.value)) { renderUpBanner(); return; }
+  renderUpBanner();
+  if (news?.def.type === 'uplab') renderNews();
+  saveLocal();
+});
 on('#pullBtn', 'click', e => { initAudio(); doPull(false, e.currentTarget); renderActive(true); });
 on('#autoSw', 'click', () => { initAudio(); S.auto = !S.auto; resetAutoPull(); renderPullBox(); });
 for (const sel of ['#results', '#vault', '#benchHero', '#dexLabs', '#dexSeries']) on(sel, 'click', e => { const b = e.target.closest('[data-model]'); if (b) openDetail(b.dataset.model); });
@@ -5968,7 +6651,11 @@ on('#prefList', 'click', e => {
     saveLocal(); return;
   }
   const b = e.target.closest('[data-pref]');
-  if (b) { const k = b.dataset.pref; S.set[k] = !S.set[k]; b.setAttribute('aria-checked', S.set[k]); return; }
+  if (b) {
+    const k = b.dataset.pref; S.set[k] = !S.set[k]; b.setAttribute('aria-checked', S.set[k]);
+    if (k === 'hideCompleteDex') markDirty('dex');
+    saveLocal(); return;
+  }
   const t = e.target.closest('[data-theme-opt]');
   if (t) { S.set.theme = t.dataset.themeOpt; applyTheme(); renderPrefs(); }
 });
@@ -6007,21 +6694,20 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') { setNewsTip(false); if ($('#cine').classList.contains('open')) closeCine(); else if ($('#modalBack').classList.contains('open')) closeModal(); return; }
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName);
   if (typing) return;
-  if ((e.key === ' ' || e.code === 'Space') && currentView === 'pull' && !$('#modalBack').classList.contains('open') && document.activeElement === document.body) {
+  if ((e.key === ' ' || e.code === 'Space') && currentView === 'pull' && !accountPaused() && !$('#modalBack').classList.contains('open') && document.activeElement === document.body) {
     e.preventDefault(); initAudio(); if (cineOpen) closeCine(); else doPull(false, $('#pullBtn')); renderActive(true);
   }
 });
 
 
 /* =================== LOOP =================== */
-let lastT = Date.now(), lastAch = 0, lastLocalSave = Date.now(), lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0, upKey = 0;
+const simulationClock = performance.now.bind(performance);
+let lastT = Date.now(), lastSimulationTime = simulationClock(), lastAch = 0, lastLocalSave = lastSimulationTime, lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0;
 function updateTimers() {
-  const up = upInfo();
-  if (up.ends !== upKey) { if (upKey) { markDirty('pull'); toast('UP 轮换', '本期 UP：' + LABS[up.lab].name, 'rotation'); } upKey = up.ends; }
-  const t = $('#upTimer'); if (t) t.textContent = clock(up.ends - Date.now());
+  if (currentView === 'pull') renderUpCooldown();
   if (currentView === 'bench' && benchCooldown && Date.now() >= benchCooldown) { benchCooldown = 0; markDirty('bench'); }
 }
-function advanceSimulation(now, dt) {
+function advanceSimulation(now, dt, elapsed) {
   if (typeof moderation !== 'undefined' && moderation.level === 2) return;
   if (dt > 60) {
     resetAutoPull();
@@ -6033,7 +6719,7 @@ function advanceSimulation(now, dt) {
     buffs = buffs.filter(b => b.until > now); invalidateProduction(); markDirty('pull', 'models');
   }
   lastYield = computeYield();
-  addTokens(lastYield * dt);
+  addTokens(eventTokenCredit(lastYield,dt,elapsed));
   advanceAutoPull(dt);
   if (S.autoReb && S.tech.autoReb && S.tokens >= rebirthCost()) doRebirth(true);
   if (S.autoBench && S.tech.autoBench && now >= nextAutoBench) { nextAutoBench = now + 8000; runBench(true); }
@@ -6042,15 +6728,17 @@ function advanceSimulation(now, dt) {
   if (now - lastAch > 1000) { lastAch = now; checkAch(); if (!document.hidden) { renderNews(); updateTimers(); } }
 }
 function tick() {
-  const now = Date.now(), dt = (now - lastT) / 1000; lastT = now;
-  if (dt <= 0) return;
-  if (moderation.booting || moderation.level === 2) {
-    if (now - lastCloudTick > 1000) { lastCloudTick = now; cloudTick(false); }
+  const now = Date.now(), elapsed = simulationClock(), dt = (elapsed - lastSimulationTime) / 1000;
+  lastT = now; lastSimulationTime = elapsed;
+  if (!Number.isFinite(dt) || dt <= 0) return;
+  checkWorldEventContext();
+  if (moderation.booting || moderation.level === 2 || accountPaused()) {
+    if (elapsed - lastCloudTick > 1000) { lastCloudTick = elapsed; cloudTick(false); }
     return;
   }
-  advanceSimulation(now, dt);
-  if (now - lastLocalSave > 5000) { lastLocalSave = now; saveLocal(); }
-  if (now - lastCloudTick > 1000) { lastCloudTick = now; cloudTick(false); }
+  advanceSimulation(now, dt, elapsed);
+  if (elapsed - lastLocalSave > 5000) { lastLocalSave = elapsed; saveLocal(); }
+  if (elapsed - lastCloudTick > 1000) { lastCloudTick = elapsed; cloudTick(false); }
   if (document.hidden) return;
   renderHUD();
   if (now - lastAfford > 250) { lastAfford = now; refreshAfford(); if (currentView === 'pull' && S.auto) renderAutoInfo(); }
@@ -6064,7 +6752,8 @@ window.addEventListener('pagehide', () => saveLocal());
 let offlineReport = null;
 function installSave(st) {
   S = st; buffs = []; lastResults = []; lastResultMeta = null;
-  resetAutoPull(); lastT = Date.now(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
+  pullTest.reset();
+  resetAutoPull(); lastT = Date.now(); lastSimulationTime = simulationClock(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
   news = null; nextNewsAt = lastT + 40000; offlineReport = null; vaultLab = 'all';
   invalidate(); lastYield = computeYield(); applyTheme(); renderNews();
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
@@ -6072,7 +6761,7 @@ function installSave(st) {
 }
 function init() {
   $('.shell').inert = moderation.booting;
-  const local = loadLocal();
+  const local = account.pending ? null : loadLocal();
   if (local) {
     S = local;
     if (moderation.booting) moderation.offlineFrom = S.lastSave;
@@ -6084,7 +6773,6 @@ function init() {
   lastYield = computeYield();
   $('#introMark').innerHTML = logoSVG();
   $('#railMark').innerHTML = logoSVG();
-  upKey = upInfo().ends;
   showView(location.hash.slice(1));
   renderHUD();
   const go = () => {
@@ -6107,6 +6795,7 @@ function init() {
 }
 init();
 
+})();
 </script>
 </body>
 </html>
