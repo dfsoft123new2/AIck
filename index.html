@@ -2717,16 +2717,21 @@ function pityN(p) { return Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity
 function pityProgress(p, goal = pityN(p)) { return Math.min(goal, S.pity[p.id] || 0); }
 function leakChance() { return Math.min(0.02, 1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak')); }
 function varLuck() { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck'); }
+const VARIANT_CAPS = Object.freeze({thinking:0.5, fullPower:0.3});
 function variantProbs() {
   const L = varLuck();
-  // Once the rare variants fill the roll, preserve their 100:10:1 ratio.
-  if (L >= 1 / 0.111) return [0, 100 / 111, 10 / 111, 1 / 111];
-  const h = 0.001 * L, mx = 0.01 * L, th = 0.1 * L;
+  const h = Math.min(1, 0.001 * L);
+  const mx = Math.min(VARIANT_CAPS.fullPower, 0.01 * L), th = Math.min(VARIANT_CAPS.thinking, 0.1 * L);
+  // Reserve the holographic odds first; shrink the other variants only when the roll is full.
+  if (th + mx > 1 - h) {
+    const scale = (1 - h) / (th + mx);
+    return [0, th * scale, mx * scale, h];
+  }
   return [Math.max(0, 1 - h - mx - th), th, mx, h];
 }
 function rollVariant(p = variantProbs()) {
   const r = Math.random();
-  if (r < p[3]) return 3; if (r < p[3] + p[2]) return 2; if (r < p[3] + p[2] + p[1]) return 1; return 0;
+  if (r < p[3]) return 3; if (r < p[3] + p[2]) return 2; return r < 1 - p[0] ? 1 : 0;
 }
 const drawTables = new Map(PACKS.map(p => {
   let sum = 0;
@@ -3660,7 +3665,7 @@ let openBuff = null, buffSerial = 0;
 function buffEffect(b) {
   const mul = '×' + fmtMul(b.mul);
   switch (b.type) {
-    case 'luck': return `思考、满血和全息变体概率 ${mul}（合计超出 100% 时按比例分配）`;
+    case 'luck': return `变体概率加成 ${mul}（思考最高 ${fmtProb(VARIANT_CAPS.thinking)}，满血最高 ${fmtProb(VARIANT_CAPS.fullPower)}）`;
     case 'lab': return `${LABS[b.lab].name} 的模型产出 ${mul}`;
     case 'frenzy': return `全部模型产出 ${mul}`;
     case 'sale': return `卡池抽取费用 ${mul}`;
