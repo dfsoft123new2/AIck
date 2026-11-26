@@ -1457,7 +1457,7 @@ const TIER_RULE = {
   7: '奇点卡是游戏虚构的未来设想，不按评分定级。',
   8: '超限卡描绘的是远在奇点之后的设想，不按评分定级。',
   9: '?',
-  [EXCLAMATION_TIER]: '黑洞计算机单抽一亿分之一，不受保底或泄露影响；终极计算机非保底抽取五百万分之一。两者均含所有变体。'
+  [EXCLAMATION_TIER]: '黑洞计算机单抽一亿分之一，不受保底或泄露影响；终极计算机未触发泄露和保底时为五百万分之一。两者均含所有变体。'
 };
 
 const VARIANTS = [
@@ -2032,7 +2032,7 @@ const PACKS = [
   { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600,
     special: { t: EXCLAMATION_TIER, chance: 1e-8 } },
   { id: 13, name: '终极计算机', hw: '终局算力', cost: 5e29, r: [[7,0.8],[8,0.1998998],[9,1e-4],[EXCLAMATION_TIER,2e-7]],
-    pt: 9, pn: 50000, noLeak: true, fixedPity: true }
+    pt: 9, pn: 50000, fixedPity: true }
 ];
 
 const UPGRADES = [
@@ -2741,7 +2741,7 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
   const clone = cloneN(), table = drawTables.get(p);
-  const leak = p.noLeak ? 0 : leakChance(), variants = variantProbs(), pity = pityN(p);
+  const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
   const special = p.special, specialChance = special?.chance ?? 0;
   const specialCutoff = 1 - specialChance, normalChance = 1 - leak - specialChance;
   const res = [], stats = S.stats, cards = S.cards, up = S.upLab, focus = upChance();
@@ -3582,12 +3582,12 @@ function renderPull() {
   const maxP = Math.max(...p.r.map(x => x[1]));
   const rates = p.r.slice().reverse();
   if (p.special) rates.unshift([p.special.t, p.special.chance]);
-  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.noLeak && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
+  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.fixedPity && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
   const vp = variantProbs();
   const pc = S.pity[p.id] || 0, pn = pityN(p);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。${p.noLeak ? '无权重泄露。' : `权重泄露 ${fmtProb(leakChance())}。`}${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.fixedPity ? '表中为非保底概率。保底上限固定 50,000 抽，计数在抽到任一 ? 档或 ! 时重置；研究与热点不改变保底。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.fixedPity ? '表中概率以未触发泄露和保底为前提。固定 50,000 抽保底，泄露不计入；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
