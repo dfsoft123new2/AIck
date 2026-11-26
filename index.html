@@ -1433,7 +1433,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 const SELF_HOST_TEST = false;
 const DEV_BUILD = false;
 const LOCAL_SAVE_SOURCE_URL = "https://oovwnjjuzdelajikfodr.supabase.co";
-const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE"};
+const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://publicly-coffee-threatened-identification.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token"};
 const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, reset() {}, refresh() {} });
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
@@ -4287,7 +4287,7 @@ function persistHits(b) {
   try { sessionStorage.setItem(`${b.store}:${cloud.uid}`, JSON.stringify(b.pending)); b.changed = false; } catch {}
 }
 function boardFetch(config) {
-  const origin = new URL(config.url).origin;
+  const origin = new URL(config.apiUrl || config.url).origin;
   return async (input, init = {}) => {
     const url = new URL(input instanceof Request ? input.url : input);
     if (url.origin === origin && url.pathname.startsWith('/rest/v1/')) {
@@ -4309,8 +4309,8 @@ function initLeaderboard(config) {
     nextHits: 0, nextTotals: 0, feedAt: 0, issues: {} };
   setCloudStatus('connecting');
   try {
-    cloud.board.client = window.supabase.createClient(config.url, config.key, {
-      auth: { detectSessionInUrl: location.protocol !== 'file:' },
+    cloud.board.client = window.supabase.createClient(config.apiUrl || config.url, config.key, {
+      auth: { ...(config.authStorageKey ? {storageKey:config.authStorageKey} : {}), detectSessionInUrl: location.protocol !== 'file:' },
       global: { fetch: boardFetch(config) }
     });
   } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
