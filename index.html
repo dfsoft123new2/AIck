@@ -1123,6 +1123,42 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .cine :is(.sc-lock-left,.sc-lock-right) { transform: translateX(var(--lock-shift)) rotate(var(--lock-turn)); }
 }
 
+.cine[data-scene=weight-leak] {
+  --cine-stage: min(980px,185vw,133dvh);
+  --cine-entry: leak-print;
+  --cine-entry-time: .44s;
+  background: radial-gradient(ellipse at 50% 44%, #163d36, #0b1516 55%, #060b0c 83%);
+}
+.cine[data-scene=weight-leak] .title { color: #e9fff5; }
+.cine[data-scene=weight-leak] .sub { color: #c2dcd4; }
+.sc-leak-source { --leak-side: -1; }
+.sc-leak-copy { --leak-side: 1; color: var(--cine-foil); }
+.sc-leak-source, .sc-leak-copy { opacity: 0; animation: leak-register var(--cine-cue) linear both; }
+.sc-leak-scan { opacity: 0; animation: leak-read .54s .09s ease-in-out both; }
+.sc-leak-lock { opacity: 0; animation: leak-lock .44s var(--cine-cue) var(--cine-ease) both; }
+@keyframes leak-register {
+  0% { transform: translateX(calc(var(--leak-side) * 129px)) scale(.88); opacity: .14; }
+  25%, 57% { transform: translateX(calc(var(--leak-side) * 129px)); opacity: .95; }
+  85% { transform: translateX(calc(var(--leak-side) * 25px)) scaleY(1.15); opacity: .92; }
+  100% { transform: translateX(0) scale(.96,1.22); opacity: 0; }
+}
+@keyframes leak-read {
+  0% { transform: translateY(-63px) scaleX(.8); opacity: 0; }
+  18% { opacity: .9; }
+  80% { opacity: .68; }
+  100% { transform: translateY(68px); opacity: 0; }
+}
+@keyframes leak-print {
+  0% { clip-path: inset(44% 0); transform: scale(.91); opacity: .18; }
+  100% { clip-path: inset(-14%); transform: none; opacity: 1; }
+}
+@keyframes leak-lock {
+  0% { transform: scale(.86); opacity: .34; }
+  32% { opacity: .82; }
+  100% { transform: scale(1.35); opacity: .2; }
+}
+.cine[data-static][data-scene=weight-leak] .sc-leak-lock { transform: scale(1.35); opacity: .2; }
+
 #adminCardSlot[hidden], .admin-card-error:empty { display:none; }
 .admin-card-error { display:block; margin-top:4px; font-size:13px; }
 .card.t-NULLPOINT { --tc:#ff9b60; --np-foil:#91f3ee; border-color:var(--tc); background:#05070a; box-shadow:0 8px 22px -11px var(--tc); }
@@ -3861,6 +3897,22 @@ const TIER_CINEMATICS = [
       <g transform="rotate(-23)"><path d="M-417 0H417" stroke="url(#cine-rail)" stroke-width="5"/></g>${cineSpokes(8,'<path d="M0-200v-27m-7 16 1-8"/>',12)}`)]
 ];
 
+const LEAK_CINEMATIC = ['weight-leak', .77, () => {
+  const matrix = Array.from({length: 7}, (_, i) => {
+    const y = i * 15 - 45;
+    return `<path d="M-37 ${y}h${25 + (i * 19 % 49)} M-43 ${y}h1" opacity="${.48 + (i % 3) * .23}"/>`;
+  }).join('');
+  const plate = `<path d="M-56-68H42l14 14V68H-42L-56 54Z" fill="var(--cine-ground)" stroke-width="2"/>
+    <path d="M-44-57H37l8 8V56H-37l-7-7Z" opacity=".44"/>
+    <g stroke-width="2.6">${matrix}</g>`;
+  const rail = '<path d="M-400-102h131l48 34h90l46 34h46M-400 96h131l42-27h101l41-31h46M-368-6h276l42 6h37"/>';
+  return `<g class="leak-bus" opacity=".32">${rail}<g transform="scale(-1 1)">${rail}</g>
+    <path d="M-132-94v-33h31m202 0h31v33m0 188v33h-31m-202 0h-31V94" stroke-width="2"/></g>`
+    + cineLayer('leak-source',plate) + cineLayer('leak-copy',plate)
+    + cineLayer('leak-scan','<path d="M-243 0H243" stroke="url(#cine-rail)" stroke-width="4"/><path d="M-148 0h296" stroke-width="1.5"/>')
+    + cineLayer('leak-lock','<path d="M-103-66v-43h40m126 0h40v43m0 132v43H63m-126 0h-40V66" stroke-width="3"/><path d="M-328 0h230m196 0h230" stroke="url(#cine-rail)" stroke-width="2"/>');
+}];
+
 function tierCineSVG(scene, draw) {
   return `<svg class="tier-scene${scene === 'horizon' ? ' bang-scene' : ''}" viewBox="0 0 860 540" aria-hidden="true" focusable="false">
     <defs><linearGradient id="cine-rail" gradientUnits="userSpaceOnUse" x1="-420" x2="420" y1="0" y2="0">
@@ -3878,12 +3930,12 @@ function showCine(r, replayFrom = null) {
   if ($('#adminCardReveal').open || c.matches('.open[data-replay]') || (!replay && (!S.set.fx || (cineOpen && !bang)))) return;
   const m = r.leak ? LEAK_MODEL : MODEL_BY_ID[r.id];
   if (!m) return;
-  const scene = !r.leak && TIER_CINEMATICS[r.t];
+  const scene = r.leak ? LEAK_CINEMATIC : TIER_CINEMATICS[r.t];
   const staticScene = !S.set.fx || matchMedia('(prefers-reduced-motion: reduce)').matches;
   clearTimeout(cineCloseTimer);
   c.style.setProperty('--cc', r.leak ? '#E6F0EA' : TIER_HEX[r.t]);
   if (scene) {
-    const [key, cue] = scene, [ground, edge, foil] = CARD_MATERIALS[r.t];
+    const [key, cue] = scene, [ground, edge, foil] = r.leak ? ['#0b2423','#8eead5','#ffc991'] : CARD_MATERIALS[r.t];
     c.dataset.scene = key;
     c.style.setProperty('--cine-ground', ground);
     c.style.setProperty('--cine-edge', edge);
@@ -3892,7 +3944,7 @@ function showCine(r, replayFrom = null) {
   } else delete c.dataset.scene;
   c.toggleAttribute('data-replay',replay);
   c.toggleAttribute('data-static', staticScene);
-  $('#cineKicker').textContent = r.leak ? '异常文件' : '';
+  $('#cineKicker').textContent = '';
   $('#cineCard').innerHTML = (scene ? tierCineSVG(scene[0], scene[2]) : '') + cardHTML(m, r.v, { count: r.n, isNew: !replay && r.isNew });
   $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
   $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出'
@@ -3909,7 +3961,6 @@ function showCine(r, replayFrom = null) {
     c.setAttribute('aria-labelledby', 'cineTitle'); c.setAttribute('aria-describedby', 'cineSub');
     $('#flash').classList.remove('go'); next.focus({preventScroll:true});
   }
-  if (!replay && r.leak && !staticScene) { const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   return true;
 }
 function closeCine() {
