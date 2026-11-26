@@ -871,23 +871,16 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
   .cine.bang *, .cine.bang *::after { animation: none !important; }
 }
-.admin-card-slot[hidden], .admin-card-slot .admin-card-face[hidden] { display: none; }
-.admin-card-slot { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 16px; padding: 14px 0; margin: 0 0 14px; border-block: 1px solid var(--line-2); }
-.admin-card-slot > :first-child:has(> [hidden]) { display: none; }
-.admin-card-slot > :nth-child(2) { grid-column: 2; }
-.admin-card-slot > :first-child:has(> [hidden]) + div { grid-column: 1 / 3; }
-.admin-card-slot h3 { font-size: 19px; margin: 0 0 4px; }
-.admin-card-slot h3 > span { margin-inline-start: 6px; font-size: 14px; font-weight: 500; }
-.admin-card-slot p { font-size: 13px; line-height: 1.5; margin: 2px 0 0; }
-.admin-card-slot p span { display: inline-block; margin-inline-end: 10px; }
-.admin-card-slot .admin-card-error:empty, .admin-card-slot .admin-card-rate:empty { display: none; }
-.admin-card-slot .admin-card-rate { font-weight: 700; }
-.admin-card-slot button, .admin-card-reveal button { min-height: 44px; }
-.admin-card-slot .admin-card-face { width: 80px; }
+#adminCardSlot[hidden], .admin-card-error:empty { display: none; }
+.admin-card-error { display: block; margin-top: 4px; font-size: 13px; }
+.admin-card-reveal button { min-height: 44px; }
+.card.t-NULLPOINT { --tc: #f1d7af; border-color: #b69868; background: #0a0b13; box-shadow: 0 8px 22px -12px #ae90c4; }
+.card.t-NULLPOINT .art { background: #0a0b13; }
+.card.t-NULLPOINT .tier { background: #ffe8be; color: #342032; }
+.card.t-NULLPOINT .body { background: #191425; }
 .admin-card-face { position: relative; aspect-ratio: 9 / 11; color: #f1d7af; }
 .admin-card-face svg { display: block; width: 100%; height: 100%; }
 .admin-card-face span { position: absolute; inset: auto 0 12%; text-align: center; font-weight: 700; font-size: 13px; }
-.admin-card-slot .admin-card-face span { display: none; }
 .admin-card-reveal { isolation: isolate; box-sizing: border-box; border: 1px solid #8b7593; border-radius: 8px; color: #fff0d6; background: #0c0913; width: min(680px, calc(100% - 24px)); max-height: calc(100dvh - 24px); padding: 26px 18px 20px; overflow: auto; text-align: center; }
 .admin-card-reveal[open] { display: flex; flex-direction: column; align-items: center; }
 .admin-card-reveal::backdrop { background: #040308e8; }
@@ -920,10 +913,6 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   100% { transform: none; opacity: 1; clip-path: inset(0); }
 }
 @keyframes admin-caption { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
-@media (max-width: 520px) {
-  .admin-card-slot { grid-template-columns: auto minmax(0, 1fr); gap: 8px 13px; }
-  .admin-card-slot button { grid-column: 1 / -1; justify-self: start; }
-}
 @media (prefers-reduced-motion: reduce) {
   .admin-card-reveal *, .admin-card-reveal *::after { animation: none !important; }
 }
@@ -1047,20 +1036,16 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
               <button data-sort="tier" aria-pressed="false">按稀有度</button>
               <button data-sort="count" aria-pressed="false">按数量</button>
             </div>
+            <div id="adminCardSlot" hidden>
+              <button class="btn small" type="button" data-admin-card-action>领取 ??!!</button>
+              <span role="status" class="admin-card-error" data-admin-card-error></span>
+            </div>
+
             <button class="btn ghost small hidden" id="openBulkCards" type="button" aria-haspopup="dialog" aria-controls="bulkCards">一键增加全部卡</button>
           </div>
         </div>
         <div class="toolbar"><div class="chipsel" id="labFilter"></div></div>
-        <section class="admin-card-slot" id="adminCardSlot" aria-labelledby="adminCardName" hidden>
-          <div data-admin-card-face></div>
-          <div>
-            <h3 id="adminCardName">??!! <span>零点奇异 · <span data-admin-card-tier></span></span></h3>
-            <p><span data-admin-card-state></span><span data-admin-card-base></span></p>
-            <p class="admin-card-rate" data-admin-card-rate></p>
-            <p role="status" class="admin-card-error" data-admin-card-error></p>
-          </div>
-          <button class="btn" type="button" data-admin-card-action>领取 ??!!</button>
-        </section>
+
 
         <div class="vault" id="vault"></div>
       </section>
@@ -2530,7 +2515,7 @@ function defaultState() {
     pity: {}, rebirths: 0, stage: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
-    name: randomLabName(), sig: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
+    name: randomLabName(), sig: null, adminCardProgress: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
     set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cine: undefined, mutedInfo: undefined }
   };
 }
@@ -2572,7 +2557,10 @@ function sanitizeState(st) {
   if (!Array.isArray(st.redeemed)) st.redeemed = [];
   if (!Array.isArray(st.stats.byTier)) st.stats.byTier = [];
   while (st.stats.byTier.length < TIERS.length) st.stats.byTier.push(0);
-  if (st.sig && !MODEL_BY_ID[st.sig]) st.sig = null;
+  const exclusive = st.adminCardProgress;
+  st.adminCardProgress = exclusive && typeof exclusive.uid === 'string' && /^[0-9a-f-]{36}$/i.test(exclusive.uid) &&
+    Number.isInteger(exclusive.level) && exclusive.level >= 0 && exclusive.level <= 900 ? {uid:exclusive.uid,level:exclusive.level} : null;
+  if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(isAdminCard(st.sig) && st.adminCardProgress)) st.sig = null;
   if (typeof st.name !== 'string' || !st.name.trim()) st.name = randomLabName();
   st.name = st.name.slice(0, 16);
   return st;
@@ -2711,7 +2699,12 @@ function pickModel(t, up = S.upLab, focus = upChance()) {
   return pick(pool);
 }
 function total(c) { return c ? c[0] + c[1] + c[2] + c[3] : 0; }
-function owned(m) { return total(S.cards[m.id]) > 0; }
+function isAdminCard(id) { return typeof ADMIN_CARD !== 'undefined' && id === ADMIN_CARD.id; }
+function modelById(id) { return isAdminCard(id) ? ADMIN_CARD : Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : null; }
+function modelBase(m) { return m.base ?? TIERS[m.t].base; }
+function modelInventory(m) { return isAdminCard(m.id) ? (hasAdminCard() ? ADMIN_CARD.copies : null) : S.cards[m.id]; }
+function owned(m) { return !!m && total(modelInventory(m)) > 0; }
+function featuredModel() { return isAdminCard(S.sig) && !adminCardProgressMatches() ? null : modelById(S.sig); }
 function bondRate() { return 0.03 + 0.01 * S.tech.bond; }
 function labStats() {
   if (caches.lab) return caches.lab;
@@ -2743,10 +2736,11 @@ function dexInfo() {
   return caches.dex = { n, mul: 1 + b };
 }
 function dexCount() { return dexInfo().n; }
-function trainLv(id) { return S.train[id] || 0; }
+function trainLv(id) { return isAdminCard(id) ? (adminCardProgressMatches() ? S.adminCardProgress.level : 0) : S.train[id] || 0; }
 function trainMul(id) { return 1 + 0.3 * trainLv(id); }
-function trainCost(m, level = trainLv(m.id)) { return TIERS[m.t].base * 1e4 * Math.pow(3, level) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
+function trainCost(m, level = trainLv(m.id)) { return modelBase(m) * 1e4 * Math.pow(3, level) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
 function trainQuote(m, limit = Infinity) {
+  if (!m) return {levels:0,cost:0,remaining:S.tokens};
   const start = trainLv(m.id);
   let levels = 0, cost = 0, remaining = S.tokens;
   if (owned(m) && Number.isFinite(remaining)) {
@@ -2809,7 +2803,7 @@ function computeYield() {
   const { sum, best } = production();
   return (sum + S.leaks * best + liveAdminCardBase()) * globalMul();
 }
-function modelOut(m) { const c = S.cards[m.id]; return total(c) ? rawUnits(c) * perCard(m) * globalMul() * eventMultiplier('tokens') : 0; }
+function modelOut(m) { const c = modelInventory(m); return total(c) ? rawUnits(c) * (isAdminCard(m.id) ? modelBase(m) * trainMul(m.id) : perCard(m)) * globalMul() * eventMultiplier('tokens') : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
 function rebirthCost() { return 1e10 * 12 ** Math.min(14, S.rebirths) * 5 ** Math.max(0, S.rebirths - 14); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
@@ -2930,9 +2924,15 @@ function doRebirth(auto) {
     [`产出倍率 ×${rebirthMul()} → ×${rebirthMul() + 1}`, `获得 ${rebirthGpu()} 枚 GPU 芯片`], '发布', go);
 }
 function trainModel(id, limit = 1, maxCost = Infinity) {
-  const quote = trainQuote(MODEL_BY_ID[id], limit);
+  const quote = trainQuote(modelById(id), limit);
   if (!quote.levels || quote.cost > maxCost) return false;
-  S.tokens = quote.remaining; S.train[id] = trainLv(id) + quote.levels;
+  const level = trainLv(id) + quote.levels;
+  S.tokens = quote.remaining;
+  if (isAdminCard(id)) {
+    if (!adminCardProgressMatches() && S.sig === id) S.sig = null;
+    S.adminCardProgress = {uid:cloud.uid, level};
+    saveLocal(); cloudBump(true);
+  } else S.train[id] = level;
   invalidateProduction();
   playTick();
   markDirty('models', 'bench', 'hud');
@@ -2946,12 +2946,14 @@ function benchInfo(stage) {
 }
 function benchTrainMul(m) { return m.t >= 9 ? 1.3 ** trainLv(m.id) : trainMul(m.id); }
 function cardPower(m, v, count, spec) {
-  return TIERS[m.t].base * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
+  return modelBase(m) * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
 }
 function bestTeam(spec, powerFactor = 1) {
   const cand = [];
-  for (const m of MODELS) {
-    const c = S.cards[m.id]; if (!total(c)) continue;
+  const length = MODELS.length + (typeof hasAdminCard === 'function' && hasAdminCard() ? 1 : 0);
+  for (let index = 0; index < length; index++) {
+    const m = index === MODELS.length ? ADMIN_CARD : MODELS[index];
+    const c = modelInventory(m); if (!total(c)) continue;
     let best = null;
     for (let v = 0; v < 4; v++) if (c[v] > 0) { const pw = cardPower(m, v, c[v], spec); if (!best || pw > best.pw) best = { m, v, pw, match: m.s === spec || m.s === 'all' }; }
     // Only five models can enter; on ties keep the earlier catalogue entry.
@@ -3219,6 +3221,7 @@ function logoSVG() {
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
 function cardArt(m) {
+  if (isAdminCard(m.id)) return adminCardArt();
   if (artCache.has(m.id)) return artCache.get(m.id);
   const L = LABS[m.lab], hue = L.hue, rnd = rngFrom(hashStr(m.id + '#' + m.lab));
   const gid = 'g_' + m.id;
@@ -3309,7 +3312,7 @@ function cardArt(m) {
   return s;
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
-function modelOrLeak(id) { return id === 'leak' ? LEAK_MODEL : MODEL_BY_ID[id]; }
+function modelOrLeak(id) { return id === 'leak' ? LEAK_MODEL : modelById(id); }
 // The catalogue is fixed: at most one in-memory image URL per model for the
 // lifetime of the page. No shared SVG document to invalidate on every new card.
 const artUrls = new Map();
@@ -3322,8 +3325,8 @@ function sharedArt(m) {
 }
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
-  const tierId = m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
-  const cls = `card t-${m.id === 'leak' ? 'AGI' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
+  const exclusive = isAdminCard(m.id), tierId = exclusive ? m.n : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
+  const cls = `card t-${exclusive ? 'NULLPOINT' : m.id === 'leak' ? 'AGI' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
   return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
@@ -3818,18 +3821,20 @@ function makeVaultRow(m, v, count) {
 }
 function renderModels() {
   renderAdminCard();
-  const grid = $('#vault'), labs = Object.keys(LABS).filter(k => labStats()[k].own);
+  const grid = $('#vault'), exclusive = hasAdminCard(), labs = Object.keys(LABS).filter(k => labStats()[k].own || (exclusive && k === ADMIN_CARD.lab));
+  if (!labs.includes(vaultLab)) vaultLab = 'all';
   const key = labs.join('|') + ':' + vaultLab;
   if (filterKey !== key) {
     filterKey = key;
     $('#labFilter').innerHTML = `<button data-lab="all" aria-pressed="${vaultLab === 'all'}">全部</button>` + labs.map(k => `<button data-lab="${k}" aria-pressed="${vaultLab === k}"><span class="sw" style="background:${LABS[k].hue}"></span>${esc(LABS[k].name)}</button>`).join('');
   }
   let list = MODELS.filter(owned).filter(m => vaultLab === 'all' || m.lab === vaultLab);
+  if (exclusive && (vaultLab === 'all' || vaultLab === ADMIN_CARD.lab)) list.push(ADMIN_CARD);
   const prod = production(), mul = globalMul();
-  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : prod.amounts[m.idx-1]) * mul;
+  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : isAdminCard(m.id) ? liveAdminCardBase() : prod.amounts[m.idx-1]) * mul;
   if (vaultSort === 'out') list.sort((a, b) => output(b) - output(a));
-  else if (vaultSort === 'tier') list.sort((a, b) => b.t - a.t || bestVar(S.cards[b.id]) - bestVar(S.cards[a.id]));
-  else list.sort((a, b) => total(S.cards[b.id]) - total(S.cards[a.id]));
+  else if (vaultSort === 'tier') list.sort((a, b) => b.t - a.t || bestVar(modelInventory(b)) - bestVar(modelInventory(a)));
+  else list.sort((a, b) => total(modelInventory(b)) - total(modelInventory(a)));
   if (S.leaks > 0 && vaultLab === 'all') list.unshift(LEAK_MODEL);
   const wanted = new Set(list.map(m => m.id));
   for (const [id,row] of vaultRows) if (!wanted.has(id)) {
@@ -3842,7 +3847,7 @@ function renderModels() {
   if (grid.firstElementChild?.classList.contains('empty')) grid.replaceChildren();
   let next = grid.firstElementChild;
   for (const m of list) {
-    const c = S.cards[m.id], leak = m === LEAK_MODEL, v = leak ? 3 : bestVar(c), count = leak ? S.leaks : total(c);
+    const c = modelInventory(m), leak = m === LEAK_MODEL, v = leak ? 3 : bestVar(c), count = leak ? S.leaks : total(c);
     let row = vaultRows.get(m.id);
     if (!row || row.v !== v) {
       const old = row; row = makeVaultRow(m, v, count); vaultRows.set(m.id, row);
@@ -3858,7 +3863,7 @@ function renderModels() {
   }
 }
 function refreshTrainButtons(detail) {
-  const m = MODEL_BY_ID[detail.dataset.trainId], has = owned(m);
+  const m = modelById(detail.dataset.trainId), has = owned(m);
   const single = $('[data-act=train]', detail), bulk = $('[data-act=train-max]', detail);
   const next = trainCost(m), quote = trainQuote(m);
   single.disabled = bulk.disabled = !quote.levels;
@@ -3867,24 +3872,24 @@ function refreshTrainButtons(detail) {
   bulk.trainOffer = quote;
 }
 function openDetail(id) {
-  const m = MODEL_BY_ID[id]; if (!m) return;
+  const m = modelById(id), exclusive = isAdminCard(id); if (!m || (exclusive && !owned(m))) return;
   const html = () => {
-    const c = S.cards[m.id] || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
+    const c = modelInventory(m) || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
     return `<div class="modal-h"><h3>${esc(m.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
     <div class="detail" data-train-id="${esc(m.id)}">
       ${cardHTML(m, has ? bestVar(c) : 0, { count: total(c), locked: !has })}
       <div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${exclusive ? `<span class="tag">${m.t} 阶 · 管理员专属</span>` : tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
         <p class="desc">${esc(m.d)}</p>
         ${m.t === EXCLAMATION_TIER ? `<p class="note">${esc(TIER_RULE[m.t])}</p>` : ''}
-        ${ratingHTML(m)}
+        ${exclusive ? '' : ratingHTML(m)}
         <dl class="kv">
           <dt>代号</dt><dd>${esc(m.c)}</dd>
           ${releaseDateRow(m)}
           ${m.st ? `<dt>状态</dt><dd class="plain">${esc(STATUS[m.st].desc)}</dd>` : ''}
           ${SERIES_OF[m.id] ? `<dt>所属系列</dt><dd class="plain">${SERIES_OF[m.id].map(se => esc(se.n)).join('、')}</dd>` : ''}
-          <dt>单卡基础产出</dt><dd>${fmt(TIERS[m.t].base)}/s</dd>
-          <dt>实验室羁绊</dt><dd>×${fmtMul(ls.mul)}（${ls.own}/${ls.total}${ls.full ? '，已集齐' : ''}）</dd>
+          <dt>单卡基础产出</dt><dd>${fmt(modelBase(m))}/s</dd>
+          ${exclusive ? '' : `<dt>实验室羁绊</dt><dd>×${fmtMul(ls.mul)}（${ls.own}/${ls.total}${ls.full ? '，已集齐' : ''}）</dd>`}
           <dt>微调等级</dt><dd>Lv.${trainLv(m.id)} · 产出 ×${fmtMul(trainMul(m.id))} · 战力 ×${fmtMul(benchTrainMul(m))}</dd>
           <dt>当前总产出</dt><dd style="color:var(--ok)">+${fmt(modelOut(m))}/s</dd>
         </dl>
@@ -3892,7 +3897,7 @@ function openDetail(id) {
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
           <button class="btn" data-act="train">微调至 Lv.${trainLv(m.id) + 1}<span class="cost"></span></button>
           <button class="btn ghost" data-act="train-max">一键微调<span class="cost"></span></button>
-          <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${S.sig === m.id ? '已是镇馆模型' : '设为镇馆模型'}</button>
+          <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${featuredModel() === m ? '已是镇馆模型' : '设为镇馆模型'}</button>
         </div>
         <p class="note" style="margin-top:8px">${m.t >= 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
       </div>
@@ -3910,7 +3915,13 @@ function openDetail(id) {
       else toast('微调报价已更新', '本次未扣除 Token');
       el.innerHTML = html(); bind(el);
     };
-    el.querySelector('[data-act=sig]').onclick = () => { S.sig = m.id; markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n); };
+    el.querySelector('[data-act=sig]').onclick = () => {
+      if (!owned(m)) return;
+      if (exclusive && !adminCardProgressMatches()) S.adminCardProgress = {uid:cloud.uid,level:0};
+      S.sig = m.id;
+      if (exclusive) saveLocal();
+      markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n);
+    };
   };
   openModal(html(), bind);
 }
@@ -4173,11 +4184,14 @@ function setCloudStatus(s) {
   markDirty('world', 'prefs');
 }
 function num(x, max) { x = Number(x); return isFinite(x) && x >= 0 ? Math.min(x, max) : 0; }
-function publicTeam(rows) {
+function publicModel(id, player) {
+  return isAdminCard(id) && !verifiedAdmin(player) ? null : modelById(id);
+}
+function publicTeam(rows, player) {
   if (!Array.isArray(rows)) return null;
   const seen = new Set();
   return rows.slice(0,5).filter(c => {
-    if (!c || typeof c.id !== 'string' || !Object.hasOwn(MODEL_BY_ID,c.id) || seen.has(c.id) ||
+    if (!c || typeof c.id !== 'string' || !publicModel(c.id,player) || seen.has(c.id) ||
         ![0,1,2,3].includes(c.v) || !Number.isFinite(c.pw) || c.pw < 0 ||
         !Number.isInteger(c.lv) || c.lv < 0 || !Number.isInteger(c.count) || c.count < 1) return false;
     seen.add(c.id); return true;
@@ -4187,21 +4201,21 @@ function sanitizePlayer(id, d) {
   if (!d || typeof d !== 'object') return null;
   const rare = Array.isArray(d.rare) ? d.rare.slice(0, 8).filter(validWorldHit) : [];
   return {
-    id, name: String(d.name || '无名实验室').slice(0, 16), sig: Object.hasOwn(MODEL_BY_ID, d.sig) ? d.sig : null,
+    id, name: String(d.name || '无名实验室').slice(0, 16), sig: publicModel(d.sig,id)?.id ?? null,
     sigV: [0, 1, 2, 3].includes(d.sigV) ? d.sigV : 0,
     tps: num(d.tps, 1e300), dex: num(d.dex, 4000), stage: num(d.stage, 1e6), pulls: num(d.pulls, 1e15), reb: num(d.reb, 1e6),
     power: d.power == null ? null : num(d.power, 1e300), achievements: d.achievements == null ? null : num(d.achievements, 1e6),
     lifetime: d.lifetime == null ? null : num(d.lifetime, 1e300),
-    team: publicTeam(d.team), rare, ts: num(d.ts, Date.now() + 6e4)
+    team: publicTeam(d.team,id), rare, ts: num(d.ts, Date.now() + 6e4)
   };
 }
 function playerDoc() {
-  const team = bestTeam(benchInfo(S.stage).s);
+  const team = bestTeam(benchInfo(S.stage).s), sig = featuredModel();
   return {
-    name: S.name.slice(0, 16), sig: S.sig || null, sigV: S.sig ? bestVar(S.cards[S.sig] || [0, 0, 0, 0]) : 0,
+    name: S.name.slice(0, 16), sig: sig?.id ?? null, sigV: sig ? bestVar(modelInventory(sig) || [0, 0, 0, 0]) : 0,
     tps: computeYield(), dex: dexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
     power: team.reduce((sum, x) => sum + x.pw, 0),
-    team: team.map(({m,v,pw}) => ({id:m.id,v,pw:num(pw,1e300),count:S.cards[m.id][v],lv:trainLv(m.id)})),
+    team: team.map(({m,v,pw}) => ({id:m.id,v,pw:num(pw,1e300),count:modelInventory(m)[v],lv:trainLv(m.id)})),
     achievements: ACH.filter(a => S.ach[a.id]).length, lifetime: S.lifetime,
     rare: S.rare.slice(0, 5), ts: Date.now()
   };
@@ -5221,8 +5235,10 @@ function profileTeamHTML(p) {
   if (!p.team.length) return '<p class="profile-note">暂无可参评的模型。</p>';
   const info = benchInfo(p.stage);
   return `<p class="profile-note">第 ${p.stage+1} 关 · ${esc(info.name)} · ${SPECS[info.s].name}评测</p><ol class="profile-team">${p.team.map(c => {
-    const m = MODEL_BY_ID[c.id], match = m.s === 'all' || m.s === info.s;
-    return `<li><span class="profile-art">${sharedArt(m)}</span><div><strong>${esc(m.n)}</strong><div>${esc(LABS[m.lab].name)} · ${TIERS[m.t].id} · ${VARIANTS[c.v].name}版</div><div>${SPECS[m.s].name}${match ? '（专长匹配 ×2）' : ''} · 微调 Lv.${c.lv} · 持有 ${fmt(c.count)} 张</div></div><span class="profile-pw"><small>战力</small>${fmt(c.pw)}</span></li>`;
+    const m = publicModel(c.id,p.id);
+    if (!m) return '';
+    const match = m.s === 'all' || m.s === info.s;
+    return `<li><span class="profile-art">${sharedArt(m)}</span><div><strong>${esc(m.n)}</strong><div>${esc(LABS[m.lab].name)} · ${isAdminCard(m.id) ? esc(m.n) : TIERS[m.t].id} · ${VARIANTS[c.v].name}版</div><div>${SPECS[m.s].name}${match ? '（专长匹配 ×2）' : ''} · 微调 Lv.${c.lv} · 持有 ${fmt(c.count)} 张</div></div><span class="profile-pw"><small>战力</small>${fmt(c.pw)}</span></li>`;
   }).join('')}</ol>`;
 }
 let profileRequest = 0, profileOrigin = null;
@@ -5308,8 +5324,8 @@ function renderWorld() {
     navigator.onLine && pending ? '连接中' : '暂不可用');
   const nameIn = $('#labName');
   if (document.activeElement !== nameIn) nameIn.value = S.name;
-  const sig = S.sig ? MODEL_BY_ID[S.sig] : null;
-  $('#mySig').innerHTML = sig ? cardHTML(sig, bestVar(S.cards[sig.id] || [0, 0, 0, 0]), { mini: true }) : `<div class="card mini locked"><div class="art">${logoSVGInline()}</div><div class="body"><div class="nm">未设置</div><div class="cd">镇馆模型</div></div></div>`;
+  const sig = featuredModel();
+  $('#mySig').innerHTML = sig ? cardHTML(sig, bestVar(modelInventory(sig) || [0, 0, 0, 0]), { mini: true }) : `<div class="card mini locked"><div class="art">${logoSVGInline()}</div><div class="body"><div class="nm">未设置</div><div class="cd">镇馆模型</div></div></div>`;
   $('#sigNote').textContent = sig ? `镇馆模型：${sig.n}。在模型库里可以随时更换。` : '在模型库里点开一张卡，可以设为镇馆模型，它会显示在排行榜上。';
   $('#ownIdentity').hidden = !cloud.board || !cloud.uid;
   renderOwnTitles();
@@ -5358,7 +5374,7 @@ function renderWorld() {
   const minePending = issues?.['mine:' + key] || (cloud.board && !board?.mineAt);
   const label = { tps:'Token/s', dex:'图鉴格', stage:'评测关', pulls:'抽卡数', power:'评测战力', achievements:'已解锁成就', lifetime:'累计 Token' }[key];
   function row(p, n, own) {
-    const sm = p.sig ? MODEL_BY_ID[p.sig] : null;
+    const sm = publicModel(p.sig,p.id);
     return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? `<small>我的排名${minePending ? ' · 待更新' : ''}</small>` : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : cloud.status === 'retrying' ? '正在重连…' : '正在读取…';
@@ -5379,7 +5395,7 @@ let aiAbort = null;
 async function runAI() {
   if (!cloud.sample) return;
   const top = MODELS.filter(owned).sort((a, b) => modelOut(b) - modelOut(a)).slice(0, 5).map(m => `${m.n}（${TIERS[m.t].id}，${LABS[m.lab].name}）`).join('、');
-  const sig = S.sig ? MODEL_BY_ID[S.sig].n : '未设置';
+  const sig = featuredModel()?.n ?? '未设置';
   const prompt = `你是科技媒体的快讯编辑。请为一款放置抽卡小游戏里玩家经营的虚构 AI 实验室，写一段中文发布会快讯，120 到 180 字。语气热闹、带一点幽默。真实存在的模型名可以作为“阵容”被提及，但不要编造真实公司的新闻、数据或评价。只输出正文，不要标题，不要 Markdown。
 
 实验室名称：${S.name}
@@ -6263,9 +6279,10 @@ let chatSeq = 0, chatMessages = [], chatReply = null, chatImagePayload = null, c
 const chatTargets = new Map();
 const chatActive = () => currentView === 'chat' && moderation.level !== 2;
 const chatAvatar = m => {
-  if (Object.hasOwn(MODEL_BY_ID,m.sig)) {
-    const model = MODEL_BY_ID[m.sig], v = [0,1,2,3].includes(m.sig_variant) ? m.sig_variant : 0;
-    return `<span class="chat-avatar chat-avatar-model" role="img" aria-label="${esc(model.n)} · ${VARIANTS[v].name}" title="${esc(model.n)} · ${VARIANTS[v].name}" style="--avatar:${TIER_HEX[model.t]}">${sharedArt(model)}</span>`;
+  const model = publicModel(m.sig,m.player_id);
+  if (model) {
+    const v = [0,1,2,3].includes(m.sig_variant) ? m.sig_variant : 0;
+    return `<span class="chat-avatar chat-avatar-model" role="img" aria-label="${esc(model.n)} · ${VARIANTS[v].name}" title="${esc(model.n)} · ${VARIANTS[v].name}" style="--avatar:${TIER_HEX[model.t] ?? LABS[model.lab].hue}">${sharedArt(model)}</span>`;
   }
   const hue = [...m.player_id].reduce((n,c) => (n * 31 + c.charCodeAt(0)) % 360, 0);
   return `<span class="chat-avatar" aria-hidden="true" style="--avatar:hsl(${hue} 60% 50%)">${esc(Array.from(m.name.trim())[0]?.toUpperCase() || '?')}</span>`;
@@ -6878,7 +6895,8 @@ function installSave(st) {
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
   $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
 }
-const ADMIN_CARD = Object.freeze({title:'??!!', tier:EXCLAMATION_TIER + 1, base:1e20});
+const ADMIN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇异', t:EXCLAMATION_TIER + 1,
+  base:1e20, lab:'horizon', s:'all', d:'事件视界闭合后留下的最后一道回波。', copies:Object.freeze([1,1,1,1])});
 let adminCard = {uid:null, owned:false, ready:false, busy:false, expires:0, error:''};
 let adminCardClient;
 
@@ -6888,14 +6906,21 @@ function adminCardEligible() {
 function adminCardValid() {
   return adminCardEligible() && adminCard.uid === cloud.uid && adminCard.ready && performance.now() < adminCard.expires;
 }
-function liveAdminCardBase() { return adminCard.owned && adminCardValid() ? ADMIN_CARD.base : 0; }
+function hasAdminCard() { return adminCard.owned && adminCardValid(); }
+function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === cloud.uid; }
+function liveAdminCardBase() { return hasAdminCard() ? rawUnits(ADMIN_CARD.copies) * ADMIN_CARD.base * trainMul(ADMIN_CARD.id) : 0; }
+function adminCardChanged() {
+  if (!hasAdminCard() && $('.detail[data-train-id="admin-nullpoint"]')) closeModal();
+  renderAdminCard();
+  markDirty('models','bench','world','hud');
+  cloudBump(true);
+}
 function clearAdminCard() {
   if (!adminCard.uid) return;
   adminCard = {uid:null, owned:false, ready:false, busy:false, expires:0, error:''};
   const dialog = $('#adminCardReveal');
   if (dialog.open) dialog.close();
-  renderAdminCard();
-  markDirty('models','hud');
+  adminCardChanged();
 }
 async function refreshAdminCard(claim = false) {
   if (!adminCardEligible()) { clearAdminCard(); return; }
@@ -6913,6 +6938,7 @@ async function refreshAdminCard(claim = false) {
   }
   if (adminCard.busy || (claim && (!adminCardValid() || adminCard.owned))) return;
   const check = adminCard;
+  const wasOwned = hasAdminCard();
   check.busy = claim ? 'claim' : 'status'; check.error = '';
   if (claim) renderAdminCard();
   try {
@@ -6926,7 +6952,7 @@ async function refreshAdminCard(claim = false) {
     check.expires = performance.now() + 30000;
     if (claim) {
       if (S.set.fx) showAdminCardReveal();
-      else toast('??!! 已入库', `基础产出 ${fmt(ADMIN_CARD.base)} Token/s`);
+      else toast('??!! 已入库', '四种变体各 1 张');
     }
   } catch {
     if (check !== adminCard || uid !== cloud.uid) return;
@@ -6934,15 +6960,18 @@ async function refreshAdminCard(claim = false) {
     check.error = claim ? '未能确认领取，可重试查询。' : '暂时无法验证专属档案。';
     if ($('#adminCardReveal').open) $('#adminCardReveal').close();
   } finally {
-    if (check === adminCard) { check.busy = false; renderAdminCard(); markDirty('models','hud'); }
+    if (check === adminCard) {
+      check.busy = false;
+      if (wasOwned !== hasAdminCard()) adminCardChanged();
+      else renderAdminCard();
+    }
   }
 }
 
-function adminCardFace() {
+function adminCardArt() {
   let marks = '';
   for (let i = 0; i < 36; i++) marks += `<path d="M90 46v${i%3 ? 3 : 7}" transform="rotate(${i*10} 90 110)"/>`;
-  return `<div class="admin-card-face" aria-hidden="true">
-    <svg viewBox="0 0 180 220">
+  return `<svg viewBox="0 0 180 220" aria-hidden="true">
       <path d="M12 32 32 12h116l20 20v156l-20 20H32l-20-20z" fill="#0a0b13" stroke="#b69868"/>
       <path d="M18 35 35 18h110l17 17v150l-17 17H35l-17-17z" fill="none" stroke="#6c5d7f" stroke-width=".7"/>
       <path d="M90 27 148 110 90 193 32 110zM90 38 133 110 90 182 47 110z" fill="#191425" fill-opacity=".6" stroke="#8a709d" stroke-width=".75"/>
@@ -6957,45 +6986,40 @@ function adminCardFace() {
       </g>
       <g stroke="#efd3aa" opacity=".65">${marks}</g>
       <circle cx="90" cy="110" r="37" fill="#07070c" stroke="#f1d5a7"/>
-      <text x="90" y="120" text-anchor="middle" fill="#fff5dc" font-family="Chakra Petch, sans-serif" font-size="31" font-weight="700">${ADMIN_CARD.title}</text>
+      <text x="90" y="120" text-anchor="middle" fill="#fff5dc" font-family="Chakra Petch, sans-serif" font-size="31" font-weight="700">${ADMIN_CARD.n}</text>
       <g fill="#f1d7af"><path d="M90 24l3 5-3 5-3-5zM90 186l3 5-3 5-3-5z"/><circle cx="27" cy="54" r="1.5"/><circle cx="153" cy="166" r="1.5"/></g>
       <g fill="#ffe7b9" stroke="#ffe7b9" stroke-width=".8"><path d="M24 181h9m-4.5-4.5v9M145 40h9m-4.5-4.5v9"/></g>
-    </svg>
-    <span>零点奇异 · ${ADMIN_CARD.tier} 阶</span>
-  </div>`;
+    </svg>`;
 }
 
 function renderAdminCard() {
   const panel = $('#adminCardSlot'), valid = adminCardValid();
-  panel.hidden = !adminCardEligible() || adminCard.uid !== cloud.uid || (!adminCard.ready && !adminCard.error);
+  panel.hidden = !adminCardEligible() || adminCard.uid !== cloud.uid || hasAdminCard() || (!adminCard.ready && !adminCard.error);
   if (panel.hidden) return;
   const button = $('[data-admin-card-action]',panel);
-  textIfChanged(button, adminCard.busy === 'claim' ? '领取中…' : !valid ? '重试查询' : adminCard.owned ? '重播过场' : '领取 ??!!');
+  textIfChanged(button, adminCard.busy === 'claim' ? '领取中…' : !valid ? '重试查询' : '领取 ??!!');
   button.disabled = adminCard.busy === 'claim';
-  const badge = $('[data-admin-card-state]', panel);
-  textIfChanged(badge, valid ? (adminCard.owned ? '已持有 · 1 张' : '管理员专属') : '等待服务器验证');
-  $('.admin-card-face',panel).hidden = !(valid && adminCard.owned);
-  textIfChanged($('[data-admin-card-rate]',panel), valid && adminCard.owned ? `当前产出 ${fmt(ADMIN_CARD.base * globalMul() * eventMultiplier('tokens'))} Token/s` : '');
   textIfChanged($('[data-admin-card-error]',panel), adminCard.error);
 }
 function showAdminCardReveal() {
-  if (!liveAdminCardBase()) return;
+  if (!hasAdminCard()) return;
   const dialog = $('#adminCardReveal');
   if (dialog.open) return;
   dialog.showModal();
 }
 function initAdminCard() {
   const slot = $('#adminCardSlot'), dialog = $('#adminCardReveal');
-  $('[data-admin-card-face]',slot).innerHTML = adminCardFace();
-  $('[data-admin-card-face]',dialog).innerHTML = adminCardFace();
-  $('[data-admin-card-tier]',slot).textContent = `${ADMIN_CARD.tier} 阶`;
-  for (const el of $$('[data-admin-card-base]')) el.textContent = `基础产出 ${fmt(ADMIN_CARD.base)} Token/s`;
+  $('[data-admin-card-face]',dialog).innerHTML = `<div class="admin-card-face" aria-hidden="true">${adminCardArt()}<span>${ADMIN_CARD.c} · ${ADMIN_CARD.t} 阶</span></div>`;
+  $('[data-admin-card-base]',dialog).textContent = `四种变体各 1 张 · 标准基础产出 ${fmt(ADMIN_CARD.base)} Token/s`;
   const action = $('[data-admin-card-action]',slot);
   action.addEventListener('click', () => {
-    if (liveAdminCardBase()) showAdminCardReveal();
-    else refreshAdminCard(adminCardValid());
+    if (!hasAdminCard()) refreshAdminCard(adminCardValid());
   });
-  dialog.addEventListener('close', () => { if (currentView === 'models' && !slot.hidden) action.focus(); });
+  dialog.addEventListener('close', () => {
+    if (currentView !== 'models') return;
+    if (!slot.hidden) action.focus();
+    else { renderModels(); $('#vault [data-model="admin-nullpoint"]')?.focus(); }
+  });
   window.addEventListener('offline',clearAdminCard);
 }
 
