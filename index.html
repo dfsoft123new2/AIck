@@ -855,6 +855,10 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 #accountPref .world-tools { margin:0; }
 .account-form label { display:grid; gap:4px; margin-bottom:10px; font-size:13px; color:var(--ink-2); }
 .account-form .input { width:100%; }
+.account-recent { margin-bottom:14px; font-size:13px; }
+.account-recent .world-tools { margin-top:5px; }
+.account-recent button { max-width:100%; min-height:36px; white-space:normal; overflow-wrap:anywhere; }
+#accountPref button { min-height:36px; }
 .cine-pref { display: block; }
 .cine-pref .mode { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .pref-checks { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 6px; }
@@ -1583,8 +1587,8 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         <div class="panel">
           <div class="panel-h"><h3>存档</h3><span class="side" id="saveSide"></span></div>
           <div class="pref" id="accountPref" hidden>
-            <div><div class="n">云存档</div><div class="d" id="accountSummary" role="status"></div></div>
-            <div class="world-tools"><button type="button" class="btn ghost small" id="accountRegister" aria-haspopup="dialog">注册并同步</button><button type="button" class="btn small" id="accountLogin" aria-haspopup="dialog">登录</button><button type="button" class="btn ghost small" id="accountLogout" hidden>退出账号</button></div>
+            <div><div class="n">账号与存档</div><div class="d" id="accountSummary" role="status"></div></div>
+            <div class="world-tools"><button type="button" class="btn ghost small" id="accountRegister" aria-haspopup="dialog">注册账号</button><button type="button" class="btn small" id="accountLogin" aria-haspopup="dialog">账号登录</button><button type="button" class="btn ghost small" id="accountLogout" hidden>返回游客档</button></div>
           </div>
           <div class="pref"><div><div class="n">重置进度</div><div class="d">清空全部卡片、升级和科技，无法恢复。</div></div><button class="btn danger small" id="resetBtn">重置</button></div>
         </div>
@@ -1597,17 +1601,18 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 <dialog id="accountLock" class="world-dialog notice-dialog" aria-labelledby="accountLockTitle">
   <header><h2 id="accountLockTitle">云存档连接暂停</h2></header>
   <div class="world-dialog-body"><p class="notice-message" id="accountLockDetail"></p><p class="note notice-status" id="accountLockStatus" role="status"></p>
-    <div class="world-tools"><button class="btn" id="accountLockLogin" type="button" autofocus>重新登录</button><button class="btn ghost" id="accountGuest" type="button">返回访客模式</button></div>
+    <div class="world-tools"><button class="btn" id="accountLockLogin" type="button" autofocus>重新登录</button><button class="btn ghost" id="accountGuest" type="button">返回游客档</button></div>
   </div>
 </dialog>
 <dialog id="accountDialog" class="world-dialog" aria-labelledby="accountDialogTitle">
   <header><h2 id="accountDialogTitle"></h2><form method="dialog"><button class="x-btn" aria-label="关闭账号面板">×</button></form></header>
   <form class="world-dialog-body account-form" id="accountForm">
-    <label id="accountEmailField">邮箱<input class="input" name="email" type="email" autocomplete="email" maxlength="254" required></label>
-    <label id="accountCodeField" hidden>邮箱验证码（已点邮件链接可留空）<input class="input" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10"></label>
-    <label id="accountPasswordField">密码<input class="input" name="password" type="password" autocomplete="current-password" maxlength="72" required></label>
+    <div id="accountRecent" class="account-recent" hidden><div class="muted">最近登录</div><div class="world-tools" id="accountRecentNames"></div></div>
+    <label><span id="accountNameLabel">用户名</span><input class="input" name="login_name" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="254" required></label>
+    <label>密码<input class="input" name="password" type="password" autocomplete="current-password" maxlength="72" required></label>
+    <p class="note" id="accountNameHelp" hidden>用户名 3–24 位，可用英文字母、数字、下划线。密码至少 8 位。</p>
     <p class="note notice-status" id="accountFormStatus" role="status"></p>
-    <div class="world-tools"><button type="submit" class="btn" id="accountSubmit"></button><button type="button" class="btn ghost" id="accountResend" hidden>重发验证邮件</button></div>
+    <div class="world-tools"><button type="submit" class="btn" id="accountSubmit"></button></div>
   </form>
 </dialog>
 <dialog id="labProfile" aria-labelledby="profileTitle" aria-describedby="profileCaption">
@@ -3510,13 +3515,13 @@ function advanceAutoPull(dt) {
 }
 
 /* =================== SAVE =================== */
-function saveLocal() {
+function saveLocal(requireStorage = false) {
   if ((typeof moderation !== 'undefined' && moderation.level === 2) ||
       (typeof accountPaused === 'function' && accountPaused() && !account.uid)) return '';
   S.lastSave = Date.now();
   const json = JSON.stringify(S);
-  lsSet(typeof activeSaveKey === 'function' ? activeSaveKey() : SAVE_KEY, json);
-  return json;
+  const stored = lsSet(typeof activeSaveKey === 'function' ? activeSaveKey() : SAVE_KEY, json);
+  return stored || !requireStorage ? json : '';
 }
 function loadLocal() {
   const raw = lsGet(SAVE_KEY);
@@ -5033,7 +5038,7 @@ function unwrap({data, error}) { if (error) throw error; return data; }
 async function boardIdentity(b) {
   let session = unwrap(await b.client.auth.getSession()).session;
   if (!session && account.pending) { accountLock('账号会话已结束，请重新登录或返回访客模式。'); return null; }
-  if (!session) session = unwrap(await b.client.auth.signInAnonymously()).session;
+  if (!session) session = await restoreGuestSession(b) || unwrap(await b.client.auth.signInAnonymously()).session;
   if (!session?.user?.id) throw new Error('Missing player session');
   if (!await accountIdentity(session)) return null;
   const uid = session.user.id;
@@ -5297,12 +5302,14 @@ async function refreshRanking(b, mode, uid, readBoard, readMine) {
 }
 
 const ACCOUNT_KEY = `${SAVE_KEY}:account:${WORLD_CONFIG?.url || 'offline'}`;
-const account = {available:false, uid:null, session:null, revision:0, email:'', savedAt:null,
+const GUEST_SESSION_KEY = `${ACCOUNT_KEY}:guest-session`;
+const ACCOUNT_NAMES_KEY = `${ACCOUNT_KEY}:recent-names`;
+const account = {available:false, usernameReady:false, uid:null, session:null, revision:0, loginName:'', savedAt:null,
   pending:!!WORLD_CONFIG && !!lsGet(ACCOUNT_KEY), working:false, blocked:'', next:0, flight:null};
 const accountPaused = () => account.pending || account.working || !!account.blocked;
 const activeSaveKey = () => account.uid ? `${ACCOUNT_KEY}:${account.uid}` : SAVE_KEY;
 const accountClient = () => cloud.board?.client;
-const accountCall = async (p_action, args = {}) => unwrap(await accountClient().rpc('frontier_account',{p_action,...args}));
+const accountCall = async (p_action, args = {}, client = accountClient()) => unwrap(await client.rpc('frontier_account',{p_action,...args}));
 const accountStale = error => ['FRONTIER_ACCOUNT_REPLACED','FRONTIER_ACCOUNT_RELOGIN','FRONTIER_ACCOUNT_SESSION'].includes(error?.message);
 const accountClock = performance.now.bind(performance);
 function accountMark() { markDirty('prefs'); renderAccountPanel(); }
@@ -5321,14 +5328,63 @@ function accountFault(error) {
 
 function startAccount(b) {
   b.checkAccount = async () => {
-    if (account.available || accountClock() < (b.accountProbe || 0)) return;
+    if ((account.available && account.usernameReady) || accountClock() < (b.accountProbe || 0)) return;
     b.accountProbe = accountClock() + 60000;
-    try { account.available = (await accountCall('available'))?.available === true; accountMark(); }
+    try {
+      account.available ||= (await accountCall('available'))?.available === true;
+      accountMark();
+      if (account.available) { account.usernameReady = (await usernameAuth())?.ready === true; accountMark(); }
+    }
     catch { /* Older databases remain in guest mode. */ }
   };
 }
+async function usernameAuth(action, username, password, token = WORLD_CONFIG.key) {
+  const res = await fetch(new URL('/functions/v1/frontier-username',WORLD_CONFIG.apiUrl || WORLD_CONFIG.url),{
+    method:action ? 'POST' : 'GET', headers:{apikey:WORLD_CONFIG.key, Authorization:`Bearer ${token}`,
+      ...(action ? {'Content-Type':'application/json'} : {})},
+    body:action ? JSON.stringify({action,username,password}) : undefined, signal:AbortSignal.timeout(28000),
+  });
+  const payload = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error('用户名服务暂时不可用，请稍后重试。'),{
+    code:res.status === 429 ? 'account_rate_limit' : payload.code || 'username_unavailable',
+  });
+  return payload;
+}
 function readRegistration() {
   try { return JSON.parse(lsGet(`${ACCOUNT_KEY}:registration`) || 'null'); } catch { return null; }
+}
+function recentAccountNames() {
+  try {
+    const names = JSON.parse(lsGet(ACCOUNT_NAMES_KEY) || '[]');
+    return Array.isArray(names) ? names.filter(name => typeof name === 'string' && name && name.length <= 254).slice(0,8) : [];
+  } catch { return []; }
+}
+function readGuestSession() {
+  try { return JSON.parse(lsGet(GUEST_SESSION_KEY) || 'null'); } catch { return null; }
+}
+function keepGuestSession(session) {
+  if (!session?.user?.is_anonymous || !session.access_token || !session.refresh_token) return;
+  if (!lsSet(GUEST_SESSION_KEY,JSON.stringify({uid:session.user.id,access_token:session.access_token,refresh_token:session.refresh_token}))) {
+    throw Error('无法在本机保留游客身份，未切换账号。请检查浏览器存储空间。');
+  }
+}
+async function restoreGuestSession(b) {
+  const guest = readGuestSession();
+  if (!guest?.uid || !guest.access_token || !guest.refresh_token) return null;
+  const {data,error} = await b.client.auth.setSession({access_token:guest.access_token,refresh_token:guest.refresh_token});
+  if (error && ![400,401,403].includes(error.status) && error.name !== 'AuthSessionMissingError') throw error;
+  if (data?.session?.user?.id === guest.uid && data.session.user.is_anonymous === true) {
+    lsDel(GUEST_SESSION_KEY);
+    return data.session;
+  }
+  if (data?.session) unwrap(await b.client.auth.signOut({scope:'local'}));
+  lsDel(GUEST_SESSION_KEY);
+  return null;
+}
+function recoverGuestSave(uid) {
+  if (!uid || lsGet(SAVE_KEY)) return;
+  const old = lsGet(`${ACCOUNT_KEY}:guest-backup:${uid}`);
+  if (old && !lsSet(SAVE_KEY, old)) throw Error('无法恢复旧游客存档，请检查本机存储空间。');
 }
 function installAccountSession(user, data, uploadedGuest = false) {
   const st = data.save ? parseSave(JSON.stringify(data.save)) : defaultState();
@@ -5340,14 +5396,12 @@ function installAccountSession(user, data, uploadedGuest = false) {
       if (draft.lastSave >= st.lastSave) Object.assign(st,draft);
     }
   } catch { /* Cloud save remains authoritative if the local cache cannot be read. */ }
-  if (uploadedGuest) {
-    const raw = lsGet(SAVE_KEY);
-    if (raw && lsSet(`${ACCOUNT_KEY}:guest-backup:${user.id}`,raw)) lsDel(SAVE_KEY);
-  }
   if (readRegistration()?.uid === user.id) lsDel(`${ACCOUNT_KEY}:registration`);
-  Object.assign(account,{uid:user.id, session:data.session_id, revision:data.revision, email:user.email || '',
+  Object.assign(account,{uid:user.id, session:data.session_id, revision:data.revision,
+    loginName:user.app_metadata?.frontier_username || user.email || '',
     pending:false, blocked:'', retry:null, savedAt:data.saved_at, next:0, verified:accountClock(), available:true});
   lsSet(ACCOUNT_KEY,user.id);
+  if (account.loginName) lsSet(ACCOUNT_NAMES_KEY,JSON.stringify([account.loginName,...recentAccountNames().filter(name => name !== account.loginName)].slice(0,8)));
   moderation.offlineFrom = 0;
   installSave(st);
   // Account saves use the server timestamp, not the exporting device's wall clock.
@@ -5369,6 +5423,10 @@ async function accountIdentity(session) {
     return !account.blocked;
   }
   if (account.uid === user.id) return true;
+  if (user.id !== (account.pending ? lsGet(ACCOUNT_KEY) : account.uid)) {
+    accountLock('此浏览器的登录身份已变更。请重新登录，或返回游客存档。');
+    return false;
+  }
   account.pending = true;
   try {
     const data = await accountCall('resume');
@@ -5421,96 +5479,140 @@ function accountTick(force) {
 async function waitForBoard(b) {
   while (b.busy || b.inboxBusy || account.flight) await new Promise(resolve => setTimeout(resolve,60));
 }
-async function registerAccount(email) {
-  if (!account.available || !accountClient() || !cloud.uid || accountPaused()) throw Error('账号服务未就绪，请先连接全服。');
-  if (S.packetDebit) throw Error('请先等红包结算完成。');
-  const id = cloud.uid, b = cloud.board;
-  saveLocal();
+function beginAccountSwitch() {
+  if (account.working || (!account.blocked && account.pending)) throw Error('正在读取存档，请稍后重试。');
   account.working = true;
+  $('.shell').inert = true;
+  resetAutoPull();
+  accountMark();
+}
+function finishAccountSwitch() {
+  account.working = false;
+  $('.shell').inert = moderation.booting;
+  accountMark();
+  void boardTick(true);
+}
+function reconnectAccountBoard(b, uid) {
+  if (cloud.uid !== uid) {
+    persistHits(b);
+    b.pending = []; b.changed = false;
+    b.presence?.disconnect(); pauseOnlineGPU(b);
+    cloud.uid = null;
+    moderation.adminId = null; moderation.ready = false; moderation.notice = null;
+  }
+  b.next = 0; b.nextTotals = 0; moderation.next = 0;
+  delete b.issues.session;
+  cloud.lastPlayerWrite = 0;
+  $('#accountLock').close();
+}
+async function flushOutgoingAccount() {
+  if (!account.uid || account.blocked || moderation.level === 2) return;
+  if (!saveLocal(true) || !await beforeAccountAck()) throw Error('当前账号尚未保存或同步，未切换。请检查连接和本机存储。');
+}
+function accountStagingClient(b) {
+  return window.supabase.createClient(WORLD_CONFIG.apiUrl || WORLD_CONFIG.url,WORLD_CONFIG.key,{
+    auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:`${b.store}:account-check`},
+    global:{fetch:boardFetch(WORLD_CONFIG)},
+  });
+}
+async function acceptAccount(b, staging, session, user, guest = null) {
+  const result = await accountCall('claim',guest ? {p_save:guest} : {},staging);
+  // Persist the intended identity before installing the session so a reload never saves it as guest.
+  if (!lsSet(ACCOUNT_KEY,user.id)) throw Error('本机无法保存登录状态，请检查浏览器存储空间。');
+  try {
+    const accepted = unwrap(await b.client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token}));
+    if (accepted?.user?.id !== user.id) throw Error('未能确认账号身份，请重新登录。');
+    installAccountSession(user,result,result.imported_guest === true);
+    reconnectAccountBoard(b,user.id);
+  } catch (error) {
+    accountLock('已验证账号，但本机未能切换到云存档。请重新登录或返回游客存档。');
+    throw error;
+  }
+}
+async function registerAccount(username,password) {
+  if (!account.usernameReady || !accountClient() || !cloud.uid || account.uid || accountPaused()) throw Error('请回到游客模式并连接全服后注册。');
+  if (S.packetDebit) throw Error('请先等红包结算完成。');
+  const b = cloud.board;
+  if (!saveLocal(true)) throw Error('无法保存本机游客档，未开始注册。请检查浏览器存储空间。');
+  beginAccountSwitch();
   try {
     await waitForBoard(b);
-    const current = unwrap(await b.client.auth.getUser()).user;
-    if (current?.id !== id) throw Error('没有可升级的访客身份。');
-    if (current.email_confirmed_at && current.email?.toLowerCase() === email) throw Error('邮箱已验证，请直接完成注册。');
-    if (current.is_anonymous === false) throw Error('没有可升级的访客身份。');
+    const {session} = unwrap(await b.client.auth.getSession());
+    const id = cloud.uid;
     const prior = readRegistration();
-    if (!lsSet(`${ACCOUNT_KEY}:registration`,JSON.stringify({uid:id,email}))) throw Error('本机无法保存注册状态。');
-    const emailRedirectTo = location.protocol === 'https:' || location.protocol === 'http:' ? location.origin+location.pathname : undefined;
-    const {error} = await b.client.auth.updateUser({email}, emailRedirectTo ? {emailRedirectTo} : {});
-    if (error) {
-      if (error.status >= 400 && error.status < 500) {
-        if (prior) lsSet(`${ACCOUNT_KEY}:registration`,JSON.stringify(prior)); else lsDel(`${ACCOUNT_KEY}:registration`);
+    const retry = prior?.uid === id && prior.username === username;
+    if (!retry && (session?.user?.id !== id || session.user.is_anonymous !== true)) throw Error('没有可升级的访客身份，请登录已有账号。');
+    if (!lsSet(`${ACCOUNT_KEY}:registration`,JSON.stringify({uid:id,username}))) throw Error('本机无法保存注册状态。');
+    try {
+      if (!session?.access_token || session.user?.id !== id) throw Object.assign(new Error(),{code:'guest_session_required'});
+      await usernameAuth('register',username,password,session.access_token);
+    } catch (error) {
+      if (!(retry && ['not_guest','register_pending','guest_session_required'].includes(error.code))) {
+        if (['username_taken','weak_password','invalid_username','not_guest','guest_session_required'].includes(error.code)) {
+          if (prior) lsSet(`${ACCOUNT_KEY}:registration`,JSON.stringify(prior)); else lsDel(`${ACCOUNT_KEY}:registration`);
+        }
+        throw error;
       }
-      throw error;
     }
-  } finally { account.working = false; accountMark(); }
+    const staging = accountStagingClient(b);
+    const verified = await signInUsername(staging,username,password,id);
+    await acceptAccount(b,staging,verified.session,verified.user,loadLocal());
+    if (readGuestSession()?.uid === id) lsDel(GUEST_SESSION_KEY);
+  } finally { finishAccountSwitch(); }
 }
-async function finishAccountRegistration(email,password,code) {
-  const b = cloud.board, registration = readRegistration();
-  if (!b?.client || !registration || registration.email !== email || accountPaused()) throw Error('没有待完成的邮箱注册。');
-  if (S.packetDebit) throw Error('请先等红包结算完成。');
-  saveLocal();
-  account.working = true;
-  try {
-    await waitForBoard(b);
-    const auth = b.client.auth;
-    let {user} = unwrap(await auth.getUser());
-    if (user?.id !== registration.uid) throw Error('请返回发起注册的设备和浏览器。');
-    if (code && (!user.email_confirmed_at || user.email?.toLowerCase() !== email)) {
-      ({user} = unwrap(await auth.verifyOtp({email,token:code,type:'email_change'})));
-    }
-    if (user?.id !== registration.uid || !user.email_confirmed_at || user.email?.toLowerCase() !== email) throw Error('请先验证注册邮箱。');
-    unwrap(await auth.updateUser({password}));
-    const verified = unwrap(await auth.refreshSession()).session?.user;
-    if (verified?.id !== registration.uid || verified.is_anonymous === true) throw Error('邮箱已验证，账号会话未就绪，请重新登录。');
-    const result = await accountCall('claim',{p_save:loadLocal() || S});
-    installAccountSession(verified,result,result.imported_guest === true);
-    b.next = 0; moderation.next = 0;
-  } finally { account.working = false; accountMark(); }
-  boardTick(true);
+async function signInUsername(client,username,password,expectedId) {
+  const session = await usernameAuth('login',username,password);
+  if (!session.uid || (expectedId && session.uid !== expectedId)) throw Error('未能确认账号身份，请重新登录。');
+  const checked = unwrap(await client.auth.setSession({access_token:session.access_token,refresh_token:session.refresh_token}));
+  if (!checked.session || checked.user?.id !== session.uid || checked.user.is_anonymous !== false) throw Error('未能确认账号身份，请重新登录。');
+  return checked;
 }
-async function loginAccount(email,password) {
+async function loginAccount(identifier,password) {
   const b = cloud.board;
   if (!b?.client || (!account.available && !account.blocked)) throw Error('账号服务未就绪，请先连接全服。');
   if (S.packetDebit && !account.blocked) throw Error('请先等红包结算完成。');
-  if (!account.uid && !account.blocked) saveLocal();
-  account.working = true;
-  let signedIn = false;
+  if (!account.uid && !account.blocked && !saveLocal(true)) throw Error('无法保存本机游客档，未切换账号。请检查浏览器存储空间。');
+  beginAccountSwitch();
   try {
     await waitForBoard(b);
-    const {data,error} = await b.client.auth.signInWithPassword({email,password});
-    if (error) throw error;
-    signedIn = true;
-    const user = data.user, registration = readRegistration();
+    await flushOutgoingAccount();
+    recoverGuestSave(account.uid || (account.blocked ? lsGet(ACCOUNT_KEY) : null));
+    const previous = unwrap(await b.client.auth.getSession()).session;
+    if (!account.uid && !account.blocked) keepGuestSession(previous);
+    const staging = accountStagingClient(b);
+    const {user, session} = identifier.includes('@')
+      ? unwrap(await staging.auth.signInWithPassword({email:identifier,password}))
+      : await signInUsername(staging,identifier,password);
+    if (!session || !user?.id || user.is_anonymous) throw Error('未能确认账号身份，请重新登录。');
+    const registration = readRegistration();
     const guest = registration?.uid === user.id ? loadLocal() : null;
-    const result = await accountCall('claim',guest ? {p_save:guest} : {});
-    installAccountSession(user,result,result.imported_guest === true);
-    $('#accountLock').close();
-    b.next = 0; b.nextTotals = 0; moderation.next = 0;
-  } catch (error) {
-    if (signedIn) accountLock('已验证身份，但云存档未就绪。请重新登录。');
-    throw error;
-  } finally { account.working = false; accountMark(); }
-  boardTick(true);
+    await acceptAccount(b,staging,session,user,guest);
+    if (readGuestSession()?.uid === user.id) lsDel(GUEST_SESSION_KEY);
+  } finally { finishAccountSwitch(); }
 }
 
 async function leaveAccount() {
   const b = cloud.board;
   if (!b?.client || account.working) return;
-  if (account.uid && !account.blocked && !await syncAccount(true)) throw Error('未完成云同步，暂不退出。');
-  account.working = true;
+  if (S.packetDebit && !account.blocked) throw Error('请先等红包结算完成。');
+  beginAccountSwitch();
   try {
     await waitForBoard(b);
+    await flushOutgoingAccount();
+    recoverGuestSave(account.uid || lsGet(ACCOUNT_KEY));
     const {error} = await b.client.auth.signOut({scope:'local'});
     if (error) throw error;
     lsDel(ACCOUNT_KEY);
-    Object.assign(account,{pending:false,uid:null,session:null,revision:0,email:'',savedAt:null,blocked:'',retry:null});
+    Object.assign(account,{pending:false,uid:null,session:null,revision:0,loginName:'',savedAt:null,blocked:'',retry:null});
     // Do not restore an account's cache as the guest save.
-    installSave(loadLocal() || defaultState());
-    b.next = 0; b.nextTotals = 0; moderation.next = 0;
-    $('#accountLock').close();
-  } finally { account.working = false; accountMark(); }
-  boardTick(true);
+    const st = loadLocal() || defaultState();
+    reconnectAccountBoard(b,null);
+    installSave(st);
+    if (moderation.level !== 2) applyOffline(st.lastSave);
+  } finally {
+    finishAccountSwitch();
+    if (!account.uid && !account.blocked) saveLocal();
+  }
 }
 
 const MODERATION_KEY = 'frontier:play-lock:' + (WORLD_CONFIG?.url || 'offline');
@@ -7154,25 +7256,26 @@ chatList.onclick = e => {
 };
 
 const accountDialog = $('#accountDialog'), accountLockDialog = $('#accountLock'), accountForm = $('#accountForm');
-const accountSubmit = $('#accountSubmit'), accountResend = $('#accountResend'), accountStatus = $('#accountFormStatus');
-const accountEmail = accountForm.elements.email, accountPassword = accountForm.elements.password, accountCode = accountForm.elements.code;
+const accountSubmit = $('#accountSubmit'), accountStatus = $('#accountFormStatus');
+const accountName = accountForm.elements.login_name, accountPassword = accountForm.elements.password;
 let accountMode = 'login', accountFormBusy = false;
 function currentRegistration() {
   const draft = readRegistration();
-  return draft?.uid === cloud.uid ? draft : null;
+  return draft?.uid === cloud.uid && draft.username ? draft : null;
 }
 
 function renderAccountPanel() {
   $('#accountPref').hidden = !WORLD_CONFIG;
   if (!WORLD_CONFIG) return;
-  const guest = !account.uid, registration = currentRegistration();
+  const guest = !account.uid, registration = currentRegistration(), ready = account.available && !account.pending;
   $('#accountSummary').textContent = account.blocked || (account.pending ? '正在读取云存档…' : guest ?
-    (registration ? '邮箱注册待完成' : account.available ? '访客 · 进度保存在本机' : '云存档服务未就绪') :
-    `${account.email} · ${account.savedAt ? `上次同步 ${new Date(account.savedAt).toLocaleTimeString('zh-CN')}` : '等待首次同步'}`);
-  $('#accountRegister').textContent = registration ? '继续注册' : '注册并同步';
-  $('#accountRegister').hidden = $('#accountLogin').hidden = !guest;
-  $('#accountRegister').disabled = !account.available || !cloud.uid || accountPaused();
-  $('#accountLogin').disabled = !account.available && !account.blocked;
+    (registration ? '游客档 · 注册待完成' : ready ? '游客档 · 保存在本浏览器' : '游客档 · 云存档未连接') :
+    `${account.loginName} · ${account.savedAt ? `上次同步 ${new Date(account.savedAt).toLocaleTimeString('zh-CN')}` : '等待首次同步'}`);
+  $('#accountRegister').textContent = registration ? '继续注册' : '注册账号';
+  $('#accountRegister').hidden = !guest;
+  $('#accountRegister').disabled = !account.usernameReady || !cloud.uid || accountPaused();
+  $('#accountLogin').textContent = guest ? '账号登录' : '切换账号';
+  $('#accountLogin').disabled = (!ready && !account.blocked) || account.working;
   $('#accountLogout').hidden = guest;
   $('#accountLogout').disabled = account.working;
 }
@@ -7182,68 +7285,77 @@ function showAccountLock(message) {
   if (!accountLockDialog.open) { $('#accountLockStatus').textContent = ''; accountLockDialog.showModal(); }
 }
 accountLockDialog.addEventListener('cancel',e => e.preventDefault());
-function openAccountForm(mode, email = '') {
+function openAccountForm(mode, name = '') {
   accountMode = mode;
-  const login = mode === 'login', verify = mode === 'verify';
-  accountForm.reset(); accountEmail.value = email;
-  accountEmail.readOnly = verify;
-  accountCode.disabled = $('#accountCodeField').hidden = !verify;
-  accountPassword.disabled = $('#accountPasswordField').hidden = mode === 'register';
+  const login = mode === 'login';
+  accountForm.reset(); accountName.value = name;
+  const recent = login ? recentAccountNames() : [];
+  $('#accountRecent').hidden = !recent.length;
+  $('#accountRecentNames').replaceChildren(...recent.map(value => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'btn ghost small'; button.textContent = value;
+    button.onclick = () => { accountName.value = value; accountPassword.value = ''; accountPassword.focus(); };
+    return button;
+  }));
+  accountName.maxLength = login ? 254 : 24;
+  $('#accountNameLabel').textContent = login ? '用户名或已有邮箱' : '用户名';
+  $('#accountNameHelp').hidden = login;
+  if (login) accountName.removeAttribute('aria-describedby');
+  else accountName.setAttribute('aria-describedby','accountNameHelp');
   accountPassword.autocomplete = login ? 'current-password' : 'new-password';
-  accountPassword.minLength = verify ? 8 : 0;
-  $('#accountDialogTitle').textContent = login ? '登录云存档' : verify ? '完成邮箱注册' : '注册并同步存档';
-  accountSubmit.textContent = login ? '登录' : verify ? '完成注册' : '发送验证邮件';
-  accountResend.hidden = !verify;
+  accountPassword.minLength = login ? 0 : 8;
+  $('#accountDialogTitle').textContent = login ? (account.uid && !account.blocked ? '切换账号' : '登录云存档') : '注册账号';
+  accountSubmit.textContent = login ? '登录' : '注册';
   accountStatus.textContent = '';
   if (!accountDialog.open) accountDialog.showModal();
-  (verify ? accountCode : accountEmail).focus();
+  accountName.focus();
 }
-$('#accountRegister').onclick = () => {
-  const registration = currentRegistration();
-  openAccountForm(registration ? 'verify' : 'register',registration?.email);
-};
-$('#accountLogin').onclick = $('#accountLockLogin').onclick = () => openAccountForm('login',account.email);
-accountDialog.addEventListener('close', () => { accountPassword.value = accountCode.value = ''; });
+$('#accountRegister').onclick = () => openAccountForm('register',currentRegistration()?.username);
+$('#accountLogin').onclick = () => openAccountForm('login',currentRegistration()?.username);
+$('#accountLockLogin').onclick = () => openAccountForm('login',account.loginName || currentRegistration()?.username);
+accountDialog.addEventListener('cancel', e => { if (accountFormBusy) e.preventDefault(); });
+accountDialog.addEventListener('close', () => { accountPassword.value = ''; });
 const accountErrorText = e => ({
-  invalid_credentials:'邮箱或密码不正确。', email_not_confirmed:'请先验证邮箱。',
-  email_exists:'此邮箱已注册，请直接登录。', user_already_exists:'此邮箱已注册，请直接登录。',
-  otp_expired:'验证码无效或已过期，请重发邮件。', weak_password:'密码不符合服务端要求，请更换密码。',
-  over_email_send_rate_limit:'发送过于频繁，请稍后重试。',
+  invalid_credentials:'账号或密码不正确。', email_not_confirmed:'这个旧版邮箱账号尚未验证。',
+  invalid_username:'用户名需为 3–24 位英文字母、数字或下划线。', username_taken:'这个用户名已被使用，请换一个。',
+  register_pending:'注册正在处理，请稍后重试。', guest_session_required:'访客会话已过期，请刷新后重试，或登录已注册的账号。',
+  not_guest:'当前身份已注册，请登录。', weak_password:'密码不符合要求，请换一个至少 8 位的密码。',
+  username_unavailable:'用户名服务暂时不可用，请稍后重试。', account_rate_limit:'操作过于频繁，请稍后重试。',
 }[e?.code] || (e?.name === 'Error' ? e.message : '操作未完成，请检查连接后重试。'));
 
 async function runAccountForm(action) {
   if (accountFormBusy || account.working) return;
-  accountFormBusy = accountSubmit.disabled = accountResend.disabled = true;
+  accountFormBusy = accountSubmit.disabled = true;
+  $('#accountDialog header button').disabled = true;
   accountStatus.textContent = '正在连接…';
   try { await action(); }
   catch (error) { accountStatus.textContent = accountErrorText(error); }
-  finally { accountFormBusy = accountSubmit.disabled = accountResend.disabled = false; }
+  finally { accountFormBusy = accountSubmit.disabled = $('#accountDialog header button').disabled = false; }
 }
 accountForm.onsubmit = e => {
   e.preventDefault();
-  const email = accountEmail.value.trim().toLowerCase(), password = accountPassword.value;
+  const name = accountName.value.trim().toLowerCase(), password = accountPassword.value;
   runAccountForm(async () => {
-    if (accountMode === 'register') {
-      await registerAccount(email);
-      openAccountForm('verify',email);
-      accountStatus.textContent = '已发送验证邮件。';
-      return;
+    if ((accountMode === 'register' || !name.includes('@')) && !/^[a-z0-9_]{3,24}$/.test(name)) {
+      accountName.focus();
+      throw Object.assign(new Error(),{code:'invalid_username'});
     }
-    if (accountMode === 'verify') await finishAccountRegistration(email,password,accountCode.value.trim());
-    else await loginAccount(email,password);
+    if (accountMode === 'register') await registerAccount(name,password);
+    else await loginAccount(name,password);
     accountDialog.close();
   });
 };
-accountResend.onclick = () => runAccountForm(async () => {
-  await registerAccount(accountEmail.value);
-  accountStatus.textContent = '已重新发送验证邮件。';
-});
 for (const [button, target] of [['#accountLogout','#accountSummary'],['#accountGuest','#accountLockStatus']]) {
   $(button).onclick = async () => {
     $(button).disabled = true;
-    try { await leaveAccount(); }
-    catch (error) { $(target).textContent = accountErrorText(error); }
-    finally { $(button).disabled = false; }
+    try {
+      await leaveAccount();
+      if (!account.uid && !$('#accountLogin').disabled) $('#accountLogin').focus();
+    } catch (error) {
+      $(target).textContent = accountErrorText(error);
+      $(button).disabled = false;
+      $(button).focus();
+    } finally { $(button).disabled = false; }
   };
 }
 renderAccountPanel();
