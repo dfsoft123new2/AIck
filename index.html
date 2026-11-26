@@ -1036,6 +1036,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         <div class="world-top">
           <div class="panel">
             <div class="panel-h"><h3>我的实验室</h3><span class="side" id="cloudSide"></span></div>
+            <p class="note" id="cloudIssue" role="status" hidden></p>
             <div class="me-card">
               <div class="sig" id="mySig"></div>
               <div style="flex:1;min-width:0">
@@ -4076,6 +4077,7 @@ const PROFILE_RANK_LIMIT = 100;
 const BOARD_REFRESH_MS = 15000;
 const BOARD_REQUEST_TIMEOUT_MS = 25000;
 const BOARD_OFFLINE_AFTER = 3;
+const BOARD_ISSUE_AFTER = 2;
 const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
 const HIT_LIMIT = 256;
 function newEventId() {
@@ -4149,18 +4151,26 @@ function boardOffline() {
 function boardSynced(b) {
   if (navigator.onLine === false) { boardOffline(); return; }
   b.errors = 0; b.next = 0; cloud.ready = true;
-  const currentRank = 'rank:' + lbMode;
-  const partial = Object.keys(b.issues).some(key => !key.startsWith('rank:') || key === currentRank);
-  setCloudStatus(partial ? 'partial' : 'on');
+  const status = activeBoardIssues(b).some(([, issue]) => issue.visible) ? 'partial' : 'on';
+  if (cloud.status !== status) setCloudStatus(status);
 }
-async function syncBoardPart(b, key, run) {
+function activeBoardIssues(b) {
+  return Object.entries(b?.issues || {}).filter(([key]) => !key.includes(':') || key.endsWith(':' + lbMode));
+}
+async function syncBoardPart(b, key, run, missing = false) {
   try {
     await run();
     delete b.issues[key];
+    return true;
   } catch {
-    b.issues[key] = Date.now() + BOARD_REFRESH_MS * (1 + Math.random() / 4);
+    const prior = b.issues[key], failures = (prior?.failures || 0) + 1;
+    const delay = BOARD_REFRESH_MS * 2 ** Math.min(2, failures - 1);
+    b.issues[key] = {failures, visible:missing || prior?.visible || failures >= BOARD_ISSUE_AFTER,
+      next:Date.now() + delay * (1 + Math.random() / 4)};
+    return false;
+  } finally {
+    markDirty('world');
   }
-  markDirty('world');
 }
 function unwrap({data, error}) { if (error) throw error; return data; }
 async function boardIdentity(b) {
@@ -4175,6 +4185,8 @@ async function boardIdentity(b) {
       b.pending = saved.filter(validWorldHit).concat(b.pending).slice(-HIT_LIMIT);
     } catch {}
     cloud.uid = uid; b.scoreIssue = null; b.changed = true; cloudBump(true);
+    b.boards = {};
+    for (const key of Object.keys(b.issues)) if (key.includes(':')) delete b.issues[key];
   }
   b.presence.connect(uid);
   return uid;
@@ -4187,20 +4199,27 @@ async function boardTick(force = false) {
   if (!b.client || b.busy || now < b.next) return;
   if (moderation.level === 2 && !force && now < moderation.next) return;
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
-  const rankKey = 'rank:' + mode;
   const viewing = currentView === 'world' && !document.hidden;
-  const can = key => force || now >= (b.issues[key] || 0);
-  const readBoard = viewing && can(rankKey) && (!b.boards[mode] || now - b.boards[mode].at > BOARD_REFRESH_MS);
+  const can = key => force || now >= (b.issues[key]?.next || 0);
+  const board = b.boards[mode];
+  const readBoard = viewing && can('rank:' + mode) && (!board?.at || now - board.at > BOARD_REFRESH_MS);
+  const readMine = viewing && !board?.migrating && can('mine:' + mode) &&
+    (readBoard || !board?.mineAt || now - board.mineAt > BOARD_REFRESH_MS);
   const readFeed = viewing && can('feed') && now - b.feedAt > BOARD_REFRESH_MS;
   const readTotals = can('totals') && (!b.totals || now >= b.nextTotals);
-  const writeScore = can('score') && (!b.issues.totals || readTotals) &&
+  const writeScore = can('session') && can('score') && (!b.issues.totals || readTotals) &&
     (force || b.issues.score || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000));
-  const writeHits = can('hits') && b.pending.length && (force || now >= b.nextHits);
-  if (!readBoard && !readFeed && !readTotals && !writeScore && !writeHits && now < moderation.next) return;
+  const writeHits = can('session') && can('hits') && b.pending.length && (force || now >= b.nextHits);
+  if (!readBoard && !readMine && !readFeed && !readTotals && !writeScore && !writeHits &&
+      !b.errors && !(can('session') && now >= moderation.next)) {
+    if (cloud.ready) boardSynced(b);
+    return;
+  }
   b.busy = true;
   try {
     const uid = await boardIdentity(b);
     await syncModeration(b, force || b.errors > 0);
+    const sessionOK = !b.issues.session;
     if (moderation.level) { delete b.issues.score; delete b.issues.hits; }
     if (moderation.level === 2) { boardSynced(b); return; }
     const beforeMilestones = worldMilestones;
@@ -4208,9 +4227,9 @@ async function boardTick(force = false) {
       b.totals = unwrap(await b.client.rpc('leaderboard_totals'));
       b.nextTotals = Date.now() + 60000;
       recomputeWorld();
-    });
+    }, !b.totals);
     // Never upload production before the milestone multiplier is known and current.
-    if (b.totals && !b.issues.totals && !moderation.level &&
+    if (sessionOK && b.totals && !b.issues.totals && !moderation.level &&
         (writeScore || worldMilestones !== beforeMilestones && can('score'))) await syncBoardPart(b, 'score', async () => {
       const p = sanitizePlayer(uid, playerDoc());
       cloud.priority = false;
@@ -4240,27 +4259,21 @@ async function boardTick(force = false) {
       if (!b.scoreIssue) syncInventorySnapshot(b,uid);
     });
     pulseOnlineGPU(b);
-    if (writeScore) syncGPUReview(b,uid);
+    if (sessionOK && writeScore) syncGPUReview(b,uid);
     if (b.scoreIssue || !b.pending.length) delete b.issues.hits;
-    if (writeHits && b.pending.length && !b.scoreIssue && !moderation.level) await syncBoardPart(b, 'hits', async () => {
+    if (sessionOK && writeHits && b.pending.length && !b.scoreIssue && !moderation.level) await syncBoardPart(b, 'hits', async () => {
       const batch = b.pending.slice(0, 64), ids = new Set(batch.map(r => r.event));
       unwrap(await b.client.from('leaderboard_hits').upsert(batch.map(r => ({player_id: uid, event_id: r.event, name: r.name,
         pack: r.pack, model: r.id, variant: r.v, chance: r.chance, drawn_at: r.ts})), {onConflict: 'player_id,event_id', ignoreDuplicates: true}));
       b.pending = b.pending.filter(r => !ids.has(r.event)); b.changed = true; persistHits(b); b.nextHits = now + 4000;
     });
-    const ranking = readBoard && syncBoardPart(b, rankKey, async () => {
-      if (now < b.legacyUntil && EXTRA_SCORES.includes(mode)) b.boards[mode] = {at:now, migrating:true};
-      else {
-        const data = await readRanking(b.client, mode, uid);
-        b.boards[mode] = {at:Date.now(), ...data};
-      }
-    });
+    const ranking = (readBoard || readMine) && refreshRanking(b, mode, uid, readBoard, readMine);
     const feed = readFeed && syncBoardPart(b, 'feed', async () => {
       const hits = unwrap(await b.client.from('leaderboard_hits').select('player_id,event_id,name,pack,model,variant,chance,drawn_at')
         .order('drawn_at', {ascending:false}).order('event_id', {ascending:false}).limit(30));
       b.feed = hits.map(r => ({owner:r.player_id, event:r.event_id, name:r.name, pack:r.pack, id:r.model, v:r.variant, chance:r.chance, ts:r.drawn_at})).filter(validWorldHit);
       b.feedAt = Date.now();
-    });
+    }, !b.feed);
     await Promise.all([ranking, feed]);
     boardSynced(b);
   } catch {
@@ -4268,6 +4281,7 @@ async function boardTick(force = false) {
     if (navigator.onLine === false) { boardOffline(); return; }
     // Spread retries across clients when the backend comes back under load.
     b.next = Date.now() + 2000 * 2 ** Math.min(5, b.errors++) * (1 + Math.random() / 4);
+    if (cloud.ready && b.errors === 1) return;
     const status = b.errors >= BOARD_OFFLINE_AFTER ? 'warn' : 'retrying';
     if (cloud.status !== status) setCloudStatus(status);
   } finally { b.busy = false; }
@@ -4350,22 +4364,43 @@ async function readLabRank(player, mode) {
   return viewer === cloud.uid ? ids.indexOf(player.id) + 1 : 0;
 }
 
-async function readRanking(client, mode, uid) {
-  if (!BOARD_KEYS.includes(mode)) throw new Error('Unknown ranking');
-  const table = () => client.from('leaderboard_players');
+async function refreshRanking(b, mode, uid, readBoard, readMine) {
+  const rankKey = 'rank:' + mode, mineKey = 'mine:' + mode;
+  if (Date.now() < b.legacyUntil && EXTRA_SCORES.includes(mode)) {
+    b.boards[mode] = {at:Date.now(), migrating:true};
+    delete b.issues[rankKey]; delete b.issues[mineKey];
+    markDirty('world');
+    return;
+  }
+  if (!b.boards[mode] || b.boards[mode].migrating) b.boards[mode] = {};
+  const board = b.boards[mode], table = () => b.client.from('leaderboard_players');
   const fields = 'player_id,name,sig,sig_variant,' + mode;
   const player = r => ({...sanitizePlayer(r.player_id, {...r,sigV:r.sig_variant}), me:r.player_id === uid});
-  const rows = (await readTopBoard(client, mode, fields, 10)).map(player);
-  const pos = rows.findIndex(p => p.me);
-  if (pos >= 0) return {rows, mine:rows[pos], rank:pos+1};
-  const own = unwrap(await table().select(fields).eq('player_id',uid).maybeSingle());
-  if (!own || own[mode] == null) return {rows, mine:null, rank:null};
-  // Count the exact same ordering as the top ten; a HEAD query returns no player list.
-  const value = own[mode];
-  const ahead = await table().select('player_id',{head:true,count:'exact'})
-    .or(mode+'.gt.'+value+',and('+mode+'.eq.'+value+',player_id.lt.'+uid+')');
-  unwrap(ahead);
-  return {rows, mine:player(own), rank:Number.isSafeInteger(ahead.count) ? ahead.count+1 : null};
+  const fresh = readBoard && await syncBoardPart(b, rankKey, async () => {
+    board.rows = (await readTopBoard(b.client, mode, fields, 10)).map(player);
+    board.at = Date.now();
+  }, !board.rows);
+  const pos = fresh ? board.rows.findIndex(p => p.me) : -1;
+  if (pos >= 0) {
+    Object.assign(board, {mine:board.rows[pos], rank:pos+1, mineAt:board.at});
+    delete b.issues[mineKey]; markDirty('world');
+  } else if (readMine) await syncBoardPart(b, mineKey, async () => {
+    const own = unwrap(await table().select(fields).eq('player_id',uid).maybeSingle());
+    if (!own || own[mode] == null) {
+      Object.assign(board, {mine:null, rank:null, mineAt:Date.now()});
+      return;
+    }
+    // The player's row and the exact position have independent availability.
+    if (board.mine?.[mode] !== own[mode]) board.rank = null;
+    board.mine = player(own);
+    markDirty('world');
+    const value = own[mode];
+    const ahead = await table().select('player_id',{head:true,count:'exact'})
+      .or(mode+'.gt.'+value+',and('+mode+'.eq.'+value+',player_id.lt.'+uid+')');
+    unwrap(ahead);
+    if (!Number.isSafeInteger(ahead.count) || ahead.count < 0) throw new Error('Missing ranking count');
+    Object.assign(board, {rank:ahead.count+1, mineAt:Date.now()});
+  });
 }
 
 const MODERATION_KEY = 'frontier:play-lock:' + (WORLD_CONFIG?.url || 'offline');
@@ -4502,9 +4537,11 @@ function startInbox(b) {
 
 function syncModeration(b, force) {
   if (b.inboxBusy) return b.inboxBusy;
-  if (!force && Date.now() < moderation.next) return Promise.resolve();
+  if (!force && Date.now() < Math.max(moderation.next, b.issues.session?.next || 0)) return Promise.resolve();
   moderation.next = Date.now() + 9500;
-  b.inboxBusy = readModerationStatus(b).finally(() => { b.inboxBusy = null; });
+  b.inboxBusy = syncBoardPart(b, 'session', () => readModerationStatus(b)).then(ok => {
+    if (!ok) finishModerationBoot();
+  }).finally(() => { b.inboxBusy = null; });
   return b.inboxBusy;
 }
 
@@ -4705,7 +4742,13 @@ function renderWorld() {
   textIfChanged($('#ownPlayerId'), cloud.uid || '');
   const scoreNotice = moderation.level === 1 ? '限制：不参与全服排名' : cloud.board?.scoreIssue === 'FRONTIER_SCORE_HELD' ? '成绩待管理员复核' :
     cloud.board?.scoreIssue ? '微调等级异常，成绩未上报' : '';
-  $('#cloudSide').textContent = scoreNotice || { local: '仅本机', connecting: '连接中', retrying: '重连中', partial: '部分数据同步失败', on: '已同步', warn: '暂时离线', readonly: '只读' }[cloud.status];
+  const issueNames = {session:'会话检查', totals:'全服进度', score:'成绩上报', hits:'稀有卡上报', feed:'全服播报', rank:'榜单前十', mine:'个人名次'};
+  const retryLabels = activeBoardIssues(cloud.board).map(([key]) => issueNames[key.split(':')[0]]);
+  textIfChanged($('#cloudSide'), scoreNotice || { local: '仅本机', connecting: '连接中', retrying: '重连中', partial: '部分数据同步失败',
+    on: retryLabels.length ? '后台重试中' : '已同步', warn: '暂时离线', readonly: '只读' }[cloud.status]);
+  const issueNote = $('#cloudIssue');
+  issueNote.hidden = !retryLabels.length || cloud.status === 'warn' || cloud.status === 'retrying';
+  textIfChanged(issueNote, issueNote.hidden ? '' : `待更新：${retryLabels.join('、')}。`);
   const { loaded, progress, pulls } = recomputeWorld();
   const issues = cloud.board?.issues;
   textIfChanged($('#worldPulls'), loaded ? fmt(progress) : '—');
@@ -4736,13 +4779,14 @@ function renderWorld() {
   const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare.map(r=>({...r,owner:p.id}))).sort((a,b) => b.ts - a.ts);
   refreshWorldTitles([...(top || []).map(p=>p.id),mine?.id,...(feed || []).slice(0,30).map(r=>r.owner)]);
   const rank = board?.rank ?? (mine && list && cloud.players.length < 500 ? list.indexOf(mine)+1 : null);
+  const minePending = issues?.['mine:' + key] || (cloud.board && !board?.mineAt);
   const label = { tps:'Token/s', dex:'图鉴格', stage:'评测关', pulls:'抽卡数', power:'评测战力', achievements:'已解锁成就', lifetime:'累计 Token' }[key];
   function row(p, n, own) {
     const sm = p.sig ? MODEL_BY_ID[p.sig] : null;
-    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
+    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? `<small>我的排名${minePending ? ' · 待更新' : ''}</small>` : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : cloud.status === 'retrying' ? '正在重连…' : '正在读取…';
-  const ownRow = mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || '尚未上报成绩'}</td></tr>`;
+  const ownRow = mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || (minePending ? '待更新' : '尚未上报成绩')}</td></tr>`;
   const rankWait = board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : issues?.['rank:' + key] ? '暂时读不到榜单，将自动重试。' : waiting;
   setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${rankWait}</div>`);
   setWorldList($('#feed'), feed?.length ? feed.slice(0, 30).map(r => {
