@@ -2113,13 +2113,13 @@ const PACKS = [
   { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600,
     special: { t: EXCLAMATION_TIER, chance: 1e-8 } },
   { id: 13, name: '终极计算机', hw: '终局算力', cost: 5e29, r: [[7,0.8],[8,0.1998998],[9,1e-4],[EXCLAMATION_TIER,2e-7]], hiddenChance: 1e-9,
-    pt: 9, pn: 50000, fixedPity: true }
+    pt: 9, pn: 50000, noPityNews: true }
 ];
 
 const UPGRADES = [
-  { key: 'multi', name: '并行推理', desc: '每次抽卡多抽 1 张，费用同比增加。', base: 1e8, g: 20, max: 49, eff: lv => `每次 ${lv + 1} 张` },
-  { key: 'speed', name: '推理加速', desc: '自动抽卡间隔 ×0.95。', base: 1e6, g: 12, max: 50, eff: lv => `间隔 ${Math.pow(0.95, lv).toFixed(3)}s` },
-  { key: 'clone', name: '数据增强', desc: '抽到的每张卡数量 +1。', base: 1e12, g: 100, max: null, eff: lv => `每张 ×${lv + 1}` },
+  { key: 'multi', name: '并行推理', desc: '每级增加基础抽数，费用同比增加。', base: 1e8, g: 20, max: 49, eff: lv => `每批 ${(lv + 1) * techDouble('doubleDraw')} 抽` },
+  { key: 'speed', name: '推理加速', desc: '自动抽卡间隔 ×0.95。', base: 1e6, g: 12, max: 50, eff: lv => `间隔 ${basePullInterval(lv).toFixed(3)}s` },
+  { key: 'clone', name: '数据增强', desc: '每级增加 1 张基础卡片份数。', base: 1e12, g: 100, max: null, eff: lv => `每张 ×${(lv + 1) * techDouble('doubleCopies')}` },
   { key: 'price', name: 'API 商业化', desc: '全局产出 ×1.2。', base: 1e9, g: 20, max: null, eff: lv => `产出 ×${fmtMul(Math.pow(1.2, lv))}` }
 ];
 
@@ -2138,7 +2138,12 @@ const TECH = [
   { key: 'upfocus', name: '定向邀约', desc: 'UP 实验室的优先概率 +8%。', max: 5, cost: lv => 3 + 2 * lv, eff: lv => `UP 优先 ${50 + 8 * lv}%` },
   { key: 'distill', name: '知识蒸馏', desc: '微调费用 −8%。', max: 5, cost: lv => 2 + 2 * lv, eff: lv => `微调费用 −${8 * lv}%` },
   { key: 'redteam', name: '红队演练', desc: '评测战力 ×1.25。', max: 8, cost: lv => 3 + 2 * lv, eff: lv => `战力 ×${fmtMul(Math.pow(1.25, lv))}` },
-  { key: 'compound', name: '算力复利', desc: '全局产出 ×1.5，可以无限升级。', max: null, cost: lv => Math.ceil(10 * Math.pow(1.7, lv)), eff: lv => `产出 ×${fmtMul(Math.pow(1.5, lv))}` }
+  { key: 'compound', name: '算力复利', desc: '全局产出 ×1.5，可以无限升级。', max: null, cost: lv => Math.ceil(10 * Math.pow(1.7, lv)), eff: lv => `产出 ×${fmtMul(Math.pow(1.5, lv))}` },
+  { key: 'doubleDraw', name: '双核推理', desc: '每批独立抽数翻倍，Token 费用同比增加。', max: 1, cost: () => 6000, eff: lv => `每批抽数 ×${1 + lv}` },
+  { key: 'doubleCopies', name: '镜像复制', desc: '每次命中的卡片份数翻倍，不增加抽数或保底进度。', max: 1, cost: () => 8000, eff: lv => `卡片份数 ×${1 + lv}` },
+  { key: 'doubleOdds', name: '超频采样', desc: '思考、满血、全息变体和权重泄露概率翻倍，仍受各自上限限制。', max: 1, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
+  { key: 'doubleSpeed', name: '瞬时推理', desc: '自动抽卡间隔减半。', max: 1, cost: () => 12000, eff: lv => `自动抽卡速度 ×${1 + lv}` },
+  { key: 'doubleNews', name: '热点增幅', desc: '所有热点的数值效果翻倍；折后价再减半。频率和时长不变。', max: 1, cost: () => 20000, eff: lv => `热点强度 ×${1 + lv}` }
 ];
 
 const BENCHES = [
@@ -2153,18 +2158,18 @@ const BENCHES = [
 ];
 
 const NEWS = [
-  { type: 'frenzy', w: 26, title: '发布会之夜', desc: '全部产出 ×7', dur: 30, mul: 7 },
-  { type: 'lab', w: 22, title: '{lab} 深夜上新', desc: '{lab} 的模型产出 ×15', dur: 45, mul: 15 },
-  { type: 'sale', w: 14, title: 'GPU 降价潮', desc: '卡池费用 −50%', dur: 40, mul: 0.5 },
-  { type: 'rush', w: 14, title: '算力现货到港', desc: '自动抽卡速度 ×3', dur: 30, mul: 3 },
-  { type: 'luck', w: 12, title: '榜单大洗牌', desc: '变体概率 ×5', dur: 30, mul: 5 },
-  { type: 'cash', w: 10, title: '融资到账', desc: '立即获得 3 分钟产出' },
-  { type: 'gpu', w: 2, title: '显卡黄牛落网', desc: '获得 1 枚 GPU 芯片' },
-  { type: 'uplab', w: 12, title: 'UP 加急', desc: '当前 UP：{lab} 的模型产出 ×20', dur: 45, mul: 20 },
-  { type: 'bench', w: 8, title: '评测集疑似泄题', desc: '评测战力 ×3', dur: 60, mul: 3 },
-  { type: 'train', w: 8, title: '开源社区共建', desc: '微调费用 −60%', dur: 40, mul: 0.4 },
-  { type: 'leak', w: 5, title: '爆料大 V 发帖', desc: '权重泄露概率 ×5', dur: 30, mul: 5 },
-  { type: 'pity', w: 6, title: '保底补偿', desc: '当前卡池的保底进度推进 25%' }
+  { type: 'frenzy', w: 26, title: '发布会之夜', desc: '全部产出 ×{strength}', dur: 30, mul: 7 },
+  { type: 'lab', w: 22, title: '{lab} 深夜上新', desc: '{lab} 的模型产出 ×{strength}', dur: 45, mul: 15 },
+  { type: 'sale', w: 14, title: 'GPU 降价潮', desc: '卡池费用 −{strength}%', dur: 40, mul: 0.5 },
+  { type: 'rush', w: 14, title: '算力现货到港', desc: '自动抽卡速度 ×{strength}', dur: 30, mul: 3 },
+  { type: 'luck', w: 12, title: '榜单大洗牌', desc: '变体概率 ×{strength}', dur: 30, mul: 5 },
+  { type: 'cash', w: 10, title: '融资到账', desc: '立即获得 {strength} 分钟产出' },
+  { type: 'gpu', w: 2, title: '显卡黄牛落网', desc: '获得 {strength} 枚 GPU 芯片' },
+  { type: 'uplab', w: 12, title: 'UP 加急', desc: '当前 UP：{lab} 的模型产出 ×{strength}', dur: 45, mul: 20 },
+  { type: 'bench', w: 8, title: '评测集疑似泄题', desc: '评测战力 ×{strength}', dur: 60, mul: 3 },
+  { type: 'train', w: 8, title: '开源社区共建', desc: '微调费用 −{strength}%', dur: 40, mul: 0.4 },
+  { type: 'leak', w: 5, title: '爆料大 V 发帖', desc: '权重泄露概率 ×{strength}', dur: 30, mul: 5 },
+  { type: 'pity', w: 6, title: '保底补偿', desc: '当前卡池的保底进度推进 {strength}%' }
 ];
 
 const CODES = {
@@ -2505,6 +2510,7 @@ const INFO_GROUPS = { newCard: '新模型入库', rareCard: '稀有卡与变体'
 const LEGACY_PULL_MUTES = ['newCard', 'rareCard', 'autoBench'];
 const DEFAULT_UP_LAB = 'anthropic';
 const UP_SWITCH_COOLDOWN = 10 * 60_000;
+const DOUBLE_TECH_KEYS = ['doubleDraw', 'doubleCopies', 'doubleOdds', 'doubleSpeed', 'doubleNews'];
 function mutedInfo() { return S.set.mutedInfo ?? (S.set.toast ? [] : LEGACY_PULL_MUTES); }
 function isInfoMuted(key) { return !!key && mutedInfo().includes(key); }
 function defaultCinePrefs() { return { custom: false, tiers: [...TIERS.slice(6).map(t => t.id), 'LEAK'] }; }
@@ -2514,9 +2520,10 @@ function defaultState() {
     tokens: 1000, lifetime: 0, gpu: 0,
     cards: { [STARTER.id]: [1, 0, 0, 0] }, train: {}, leaks: 0,
     up: { multi: 0, speed: 0, clone: 0, price: 0 },
-    tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, eventDuration: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0 },
+    tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, eventDuration: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0,
+      ...Object.fromEntries(DOUBLE_TECH_KEYS.map(key => [key, 0])) },
     pack: 1, upLab: DEFAULT_UP_LAB, upSwitchAt: 0, auto: false, autoReb: false, autoBench: false,
-    pity: {}, rebirths: 0, stage: 0,
+    pity: {}, rebirths: 0, stage: 0, titlePeakTps: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
     name: randomLabName(), sig: null, adminCardProgress: null, hiddenCard: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
@@ -2534,8 +2541,10 @@ function mergeState(base, saved) {
   return base;
 }
 function sanitizeState(st) {
+  st.titlePeakTps = Number.isFinite(st.titlePeakTps) && st.titlePeakTps > 0 ? Math.min(st.titlePeakTps, 1e300) : 0;
   if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
   st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
+  for (const key of DOUBLE_TECH_KEYS) st.tech[key] = Number(st.tech[key] === 1);
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
   st.set.hideCompleteDex = st.set.hideCompleteDex === true;
   const cine = st.set.cine;
@@ -2655,14 +2664,17 @@ function addBuff(b) {
   if (b.type === 'lab') invalidateProduction();
   markDirty('hud');
 }
-function multi(event = activeWorldEvent()) { return pullTest.count() ?? (1 + S.up.multi)*eventMultiplier('count',event); }
-function cloneN() { return 1 + S.up.clone; }
-function interval() { return Math.max(0.05, Math.pow(0.95, S.up.speed)) / buffMul('rush'); }
+function techDouble(key) { return 1 + S.tech[key]; }
+function multi(event = activeWorldEvent()) { return pullTest.count() ?? (1 + S.up.multi)*techDouble('doubleDraw')*eventMultiplier('count',event); }
+function cloneN() { return (1 + S.up.clone) * techDouble('doubleCopies'); }
+function basePullInterval(lv = S.up.speed) { return Math.max(0.05, Math.pow(0.95, lv)) / techDouble('doubleSpeed'); }
+function interval() { return basePullInterval() / buffMul('rush'); }
 function packCost(p,event = activeWorldEvent()) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale') * eventMultiplier('price',event); }
 function pullCost(p,event = activeWorldEvent()) { return packCost(p,event) * multi(event); }
-function pityN(p) { return p.fixedPity ? p.pn : Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity))); }
-function leakChance() { return Math.min(0.02, 1e-4 * Math.pow(2, S.tech.leak) * buffMul('leak')); }
-function varLuck() { return (1 + 0.25 * S.tech.luck) * buffMul('luck'); }
+function pityN(p) { return Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity))); }
+function pityProgress(p, goal = pityN(p)) { return Math.min(goal, S.pity[p.id] || 0); }
+function leakChance() { return Math.min(0.02, 1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak')); }
+function varLuck() { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck'); }
 function variantProbs() {
   const L = varLuck();
   const h = Math.min(0.05, 0.001 * L), mx = Math.min(0.15, 0.01 * L), th = Math.min(0.5, 0.1 * L);
@@ -2847,7 +2859,7 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
   if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
-  const clone = cloneN(), table = drawTables.get(p);
+  const clone = cloneN(), leakCopies = techDouble('doubleCopies'), table = drawTables.get(p);
   const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
   const special = p.special, specialChance = special?.chance ?? 0;
   const hiddenChance = p.hiddenChance ?? 0, hiddenCutoff = 1 - hiddenChance;
@@ -2875,10 +2887,10 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
     }
     if (ticket < leak) {
       if (!S.leaks) structural = true;
-      S.leaks++;
-      if (compact && drawSlots[0]) drawSlots[0].n++;
+      S.leaks += leakCopies;
+      if (compact && drawSlots[0]) drawSlots[0].n += leakCopies;
       else {
-        const r = { leak: true, t: 7, v: 3, prob: leak, hitProb: leak, n: 1 };
+        const r = { leak: true, t: 7, v: 3, prob: leak, hitProb: leak, n: leakCopies };
         res.push(r); if (compact) drawSlots[0] = r;
       }
       if (compact && isBroadcastHit(leak)) hits.push({leak:true, v:3, hitProb:leak});
@@ -3042,19 +3054,27 @@ function spawnNews() {
   renderNews();
 }
 function newsText(s, lab) { return s.replace(/\{lab\}/g, LABS[lab].name); }
-function newsCash() { return Math.max(1000, lastYield * 180); }
+function newsCash() { return Math.max(1000, lastYield * 180) * techDouble('doubleNews'); }
+function newsBuffMul(def) {
+  const factor = techDouble('doubleNews');
+  return def.mul < 1 ? def.mul / factor : def.mul * factor;
+}
 function newsPity(p) {
-  if (p.fixedPity) return S.pity[p.id] || 0;
-  const goal = pityN(p);
-  return Math.min(goal - 1, (S.pity[p.id] || 0) + Math.ceil(goal * 0.25));
+  const pc = S.pity[p.id] || 0, goal = pityN(p);
+  if (p.noPityNews || pc >= goal - 1) return pc;
+  return Math.min(goal - 1, pc + Math.ceil(goal * 0.25 * techDouble('doubleNews')));
 }
 function newsEffect({ def, lab }) {
-  const effect = newsText(def.desc, def.type === 'uplab' ? S.upLab : lab);
+  const factor = techDouble('doubleNews'), mul = newsBuffMul(def);
+  const strength = def.dur ? (mul < 1 ? Math.round((1 - mul) * 100) : mul)
+    : factor * ({cash: 3, gpu: 1, pity: 25}[def.type]);
+  const effect = newsText(def.desc, def.type === 'uplab' ? S.upLab : lab).replace('{strength}', strength);
   if (def.type === 'cash') return `${effect}（约 ${fmt(newsCash())} Token）`;
   if (def.type === 'pity') {
     const p = curPack();
-    if (p.fixedPity) return `${p.name}的固定保底不受此热点影响`;
-    return `${effect}：${p.name} ${S.pity[p.id] || 0} → ${newsPity(p)} / ${pityN(p)}`;
+    if (p.noPityNews) return `${p.name}的保底不受此热点影响`;
+    const goal = pityN(p);
+    return `${effect}：${p.name} ${pityProgress(p, goal)} → ${Math.min(goal, newsPity(p))} / ${goal}`;
   }
   return effect;
 }
@@ -3064,10 +3084,12 @@ function claimNews() {
   const { def, lab } = news;
   const title = newsText(def.title, lab), desc = newsEffect(news) + (def.dur ? ' · ' + newsTiming(def) : '');
   if (def.type === 'cash') addTokens(newsCash());
-  else if (def.type === 'gpu') S.gpu += 1;
+  else if (def.type === 'gpu') S.gpu += techDouble('doubleNews');
   else if (def.type === 'pity') { const p = curPack(); S.pity[p.id] = newsPity(p); }
-  else if (def.type === 'uplab') { const up = S.upLab; addBuff({ type: 'lab', mul: def.mul, dur: def.dur, event: true, lab: up, label: LABS[up].name + ' ×' + def.mul }); }
-  else addBuff({ type: def.type, mul: def.mul, dur: def.dur, event: true, lab: def.type === 'lab' ? lab : null, label: def.type === 'lab' ? LABS[lab].name + ' ×' + def.mul : title });
+  else {
+    const mul = newsBuffMul(def), targetLab = def.type === 'uplab' ? S.upLab : def.type === 'lab' ? lab : null;
+    addBuff({ type: targetLab ? 'lab' : def.type, mul, dur: def.dur, event: true, lab: targetLab, label: targetLab ? LABS[targetLab].name + ' ×' + mul : title });
+  }
   S.stats.news++;
   news = null; scheduleNews(); renderNews();
   toast(title, desc, 'news');
@@ -3551,7 +3573,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   const logBatch = [];
   for (const r of lastResults) {
     if (!r.leak && r.t < 3 && r.v < 2) continue;
-    const entry = r.leak ? { id: 'leak', v: 3, ts: now } : { id: r.id, v: r.v, ts: now, n: r.n };
+    const entry = { id: r.leak ? 'leak' : r.id, v: r.v, ts: now, n: r.n };
     logBatch.push(entry);
   }
   // Match sequential unshift order, without shifting the previous log once per card.
@@ -3724,13 +3746,13 @@ function renderPull() {
   const maxP = Math.max(...p.r.map(x => x[1]));
   const rates = p.r.slice().reverse();
   if (p.special) rates.unshift([p.special.t, p.special.chance]);
-  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.fixedPity && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
+  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.hiddenChance && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
   if (p.hiddenChance) $('#rates').insertAdjacentHTML('beforeend', '<div class="note" style="margin-top:8px">有隐藏卡</div>');
   const vp = variantProbs();
-  const pc = S.pity[p.id] || 0, pn = pityN(p);
-  $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
+  const pn = pityN(p), pc = pityProgress(p, pn);
+  $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 抽</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.fixedPity ? '表中概率以未触发泄露和保底为前提。固定 50,000 抽保底，泄露不计入；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance())}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
@@ -3841,7 +3863,7 @@ function renderLog() {
       const hidden = isHiddenCard(m.id);
       tag.style.color=leak || hidden?'':tierColor(m.t); tag.textContent=leak?'LEAK':hidden?HIDDEN_CARD_LABEL:TIERS[m.t].id;
     }
-    textIfChanged(row.children[1], (l.v && !leak ? VARIANTS[l.v].name+'版 ' : '')+m.n);
+    textIfChanged(row.children[1], (l.v && !leak ? VARIANTS[l.v].name+'版 ' : '')+m.n+(l.n > 1 ? ` ×${fmt(l.n)}` : ''));
     textIfChanged(row.children[2], ago(l.ts));
   }
   while (el.childElementCount>i) el.lastElementChild.remove();
@@ -4620,7 +4642,10 @@ async function boardTick(force = false) {
         b.pending = []; b.changed = true; persistHits(b);
       }
       cloud.lastPlayerWrite = now;
-      if (!b.scoreIssue) syncInventorySnapshot(b,uid);
+      if (!b.scoreIssue && uid === cloud.uid) {
+        void syncInventorySnapshot(b,uid);
+        void syncMilestoneTitles(b,uid);
+      }
     });
     pulseOnlineGPU(b);
     if (sessionOK && writeScore) syncGPUReview(b,uid);
@@ -4669,12 +4694,13 @@ async function syncInventorySnapshot(b, uid) {
   const pending = b.inventory;
   if (pending.busy || Date.now()<pending.next) return;
   const cards = {};
-  for (const m of MODELS) {
-    const counts = S.cards[m.id];
-    if (!counts) continue;
+  const add = (id, counts) => {
+    if (!counts) return;
     const safe = VARIANTS.map((_,v) => num(Math.floor(counts[v]),Number.MAX_SAFE_INTEGER));
-    if (safe.some(Boolean)) cards[m.id] = safe;
-  }
+    if (safe.some(Boolean)) cards[id] = safe;
+  };
+  for (const m of MODELS) add(m.id, S.cards[m.id]);
+  add(HIDDEN_CARD.id, hiddenCardInventory());
   const p_epoch = S.saveEpoch || null, json = JSON.stringify([p_epoch,cards]);
   if (pending.json === json) return;
   pending.next = Date.now()+45000; pending.busy = true;
@@ -4684,6 +4710,27 @@ async function syncInventorySnapshot(b, uid) {
   } catch (error) {
     if (missingWorldRPC(error)) pending.next = Date.now()+120000;
   } finally { pending.busy = false; }
+}
+
+function drawnTitleFlags() {
+  // Draw counters exclude cards received as gifts. The hidden card's save entry excludes the admin grant.
+  return (S.stats.byTier[EXCLAMATION_TIER - 1] > 0 ? 1 : 0) |
+    (S.stats.byTier[EXCLAMATION_TIER] > 0 ? 2 : 0) | (S.hiddenCard ? 4 : 0);
+}
+
+async function syncMilestoneTitles(b, uid) {
+  if (b.milestoneTitles?.uid !== uid) b.milestoneTitles = {uid,next:0};
+  const request = b.milestoneTitles;
+  if (request.busy || Date.now() < request.next) return;
+  request.busy = true;
+  try {
+    const added = unwrap(await b.client.rpc('frontier_title_milestones', {
+      p_draws:drawnTitleFlags(), p_peak_tps:S.titlePeakTps, p_epoch:S.saveEpoch || null
+    }));
+    if (added > 0 && uid === cloud.uid && b.milestoneTitles === request) milestoneTitlesChanged(uid);
+  } catch (error) {
+    request.next = Date.now() + (missingWorldRPC(error) ? 120000 : 15000);
+  } finally { request.busy = false; }
 }
 
 async function readLabProfile(uid) {
@@ -5692,8 +5739,12 @@ async function loadAdminDetail() {
     if (!r) { box.textContent = '该玩家未上报成绩；请先安装新版数据库更新。'; return; }
     const p = r.score ? sanitizePlayer(id,{...r.score,team:r.score.top_cards}) : null;
     const name = p?.name || nameHint || '未上榜玩家';
+    const online = r.online, lastSeen = online?.last_seen ? new Date(online.last_seen) : null;
+    const onlineTime = online ? fmtDur(online.seconds) : Object.hasOwn(r,'online') ? '暂无记录' : '未启用';
     const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理 GPU 标记'};
     box.innerHTML = `<h3>${esc(name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
+      <dl class="profile-stats" id="adminOnlineTime"><div><dt>累计在线</dt><dd>${onlineTime}</dd></div>
+      <div><dt>最近心跳</dt><dd>${lastSeen && Number.isFinite(+lastSeen) ? `<time datetime="${lastSeen.toISOString()}">${esc(lastSeen.toLocaleString('zh-CN'))}</time>` : '暂无记录'}</dd></div></dl>
       <button type="button" class="btn ghost small" id="adminComposeNotice">发私密通知或赠礼</button>
       <button type="button" class="btn ghost small" id="adminComposeTitle">发放称号</button>
       ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
@@ -6171,6 +6222,12 @@ async function readWornTitles(ids) {
 const ownTitleChoice = $('#titleChoice'), ownTitleStatus = $('#ownTitleStatus');
 let titleAccount = null, titleList = null, titleListAt = 0, titleReadSeq = 0, titleSaving = false;
 let titlePublic = {}, titlePublicKey = '', titlePublicAt = 0, titlePublicSeq = 0;
+function milestoneTitlesChanged(uid) {
+  if (uid !== cloud.uid) return;
+  titleReadSeq++; titleListAt = 0;
+  titlePublicSeq++; titlePublicAt = 0;
+  markDirty('world');
+}
 function resetTitleCache() {
   if (titleAccount === cloud.uid) return;
   titleAccount = cloud.uid; titleList = null; titleListAt = titlePublicAt = 0;
@@ -6291,10 +6348,13 @@ async function loadInventoryTotals() {
   try {
     const data = unwrap(await cloud.board.client.rpc('frontier_inventory_totals'));
     if (!current()) return;
-    inventoryRows = MODELS.map(m => {
+    const row = m => {
       const values = VARIANTS.map((_,v) => BigInt(data.cards[m.id]?.[v] || '0'));
       return {m,values,sum:values.reduce((a,b)=>a+b,0n)};
-    });
+    };
+    inventoryRows = MODELS.map(row);
+    const hidden = row(HIDDEN_CARD);
+    if (hidden.sum > 0n) inventoryRows.push(hidden);
     inventoryMeta = `已上报 ${Number(data.players).toLocaleString('zh-CN')} 个实验室${data.latest ? ` · 最新上报 ${new Date(data.latest).toLocaleString('zh-CN')}` : ''}`;
     renderInventoryTotals();
   } catch (error) {
@@ -6314,7 +6374,7 @@ function renderInventoryTotals() {
   const format = n => n.toLocaleString('zh-CN');
   inventoryStatus.textContent = inventoryMeta;
   inventoryTable.innerHTML = `<table class="lb inventory-table"><thead><tr><th scope="col">模型</th>${VARIANTS.map(v=>`<th scope="col" class="val">${v.name}</th>`).join('')}<th scope="col" class="val">合计</th></tr></thead><tbody>${rows.slice(start,start+INVENTORY_PAGE_SIZE).map(({m,values,sum})=>
-    `<tr><th scope="row"><span class="tier-name">${TIERS[m.t].id}</span> ${esc(m.n)}</th>${values.map(n=>`<td class="val">${format(n)}</td>`).join('')}<td class="val">${format(sum)}</td></tr>`).join('') || '<tr><td colspan="6">没有匹配的模型。</td></tr>'}</tbody></table>`;
+    `<tr><th scope="row"><span class="tier-name">${isHiddenCard(m.id) ? HIDDEN_CARD_LABEL : TIERS[m.t].id}</span> ${esc(m.n)}</th>${values.map(n=>`<td class="val">${format(n)}</td>`).join('')}<td class="val">${format(sum)}</td></tr>`).join('') || '<tr><td colspan="6">没有匹配的模型。</td></tr>'}</tbody></table>`;
   $('#inventoryPage').textContent = `${inventoryPage+1}／${pages}`;
   $('#inventoryPrev').disabled = inventoryPage<=0;
   $('#inventoryNext').disabled = inventoryPage>=pages-1;
@@ -6780,7 +6840,7 @@ function renderActive(force) {
   }
 }
 function renderPityOnly() {
-  const p = curPack(), pc = S.pity[p.id] || 0, pn = pityN(p);
+  const p = curPack(), pn = pityN(p), pc = pityProgress(p, pn);
   const el = $('#pity'); if (!el.firstElementChild) return;
   const counters = el.querySelectorAll('.pity-top .num'); const bar = el.querySelector('.bar > i');
   if (counters.length === 2) { textIfChanged(counters[0], fmt(pn - pc)); textIfChanged(counters[1], `${fmt(pc)}/${fmt(pn)}`); }
@@ -6917,6 +6977,8 @@ function advanceSimulation(now, dt, elapsed) {
     buffs = buffs.filter(b => b.until > now); invalidateProduction(); markDirty('pull', 'models');
   }
   lastYield = computeYield();
+  const displayedYield = lastYield * eventMultiplier('tokens');
+  if (Number.isFinite(displayedYield) && displayedYield > S.titlePeakTps) S.titlePeakTps = Math.min(displayedYield, 1e300);
   addTokens(eventTokenCredit(lastYield,dt,elapsed));
   advanceAutoPull(dt);
   if (S.autoReb && S.tech.autoReb && S.tokens >= rebirthCost()) doRebirth(true);
