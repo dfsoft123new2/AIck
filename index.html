@@ -2141,7 +2141,7 @@ const TECH = [
   { key: 'compound', name: '算力复利', desc: '全局产出 ×1.5，可以无限升级。', max: null, cost: lv => Math.ceil(10 * Math.pow(1.7, lv)), eff: lv => `产出 ×${fmtMul(Math.pow(1.5, lv))}` },
   { key: 'doubleDraw', name: '双核推理', desc: '每批独立抽数翻倍，Token 费用同比增加。', max: 1, cost: () => 6000, eff: lv => `每批抽数 ×${1 + lv}` },
   { key: 'doubleCopies', name: '镜像复制', desc: '每次命中的卡片份数翻倍，不增加抽数或保底进度。', max: 1, cost: () => 8000, eff: lv => `卡片份数 ×${1 + lv}` },
-  { key: 'doubleOdds', name: '超频采样', desc: '思考、满血、全息变体和权重泄露概率翻倍，仍受各自上限限制。', max: 1, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
+  { key: 'doubleOdds', name: '超频采样', desc: '思考、满血、全息变体和权重泄露概率翻倍，权重泄露最高 2%。', max: 1, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
   { key: 'doubleSpeed', name: '瞬时推理', desc: '自动抽卡间隔减半。', max: 1, cost: () => 12000, eff: lv => `自动抽卡速度 ×${1 + lv}` },
   { key: 'doubleNews', name: '热点增幅', desc: '所有热点的数值效果翻倍；折后价再减半。频率和时长不变。', max: 1, cost: () => 20000, eff: lv => `热点强度 ×${1 + lv}` }
 ];
@@ -2677,8 +2677,10 @@ function leakChance() { return Math.min(0.02, 1e-4 * Math.pow(2, S.tech.leak) * 
 function varLuck() { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck'); }
 function variantProbs() {
   const L = varLuck();
-  const h = Math.min(0.05, 0.001 * L), mx = Math.min(0.15, 0.01 * L), th = Math.min(0.5, 0.1 * L);
-  return [1 - h - mx - th, th, mx, h];
+  // Once the rare variants fill the roll, preserve their 100:10:1 ratio.
+  if (L >= 1 / 0.111) return [0, 100 / 111, 10 / 111, 1 / 111];
+  const h = 0.001 * L, mx = 0.01 * L, th = 0.1 * L;
+  return [Math.max(0, 1 - h - mx - th), th, mx, h];
 }
 function rollVariant(p = variantProbs()) {
   const r = Math.random();
@@ -3616,7 +3618,7 @@ let openBuff = null, buffSerial = 0;
 function buffEffect(b) {
   const mul = '×' + fmtMul(b.mul);
   switch (b.type) {
-    case 'luck': return `思考、满血和全息变体概率 ${mul}（各自有上限）`;
+    case 'luck': return `思考、满血和全息变体概率 ${mul}（合计超出 100% 时按比例分配）`;
     case 'lab': return `${LABS[b.lab].name} 的模型产出 ${mul}`;
     case 'frenzy': return `全部模型产出 ${mul}`;
     case 'sale': return `卡池抽取费用 ${mul}`;
