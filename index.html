@@ -3892,8 +3892,8 @@ function withTimeout(p, ms) {
 function setCloudStatus(s) {
   cloud.status = s;
   const led = $('#cloudLed'), txt = $('#cloudText');
-  led.className = 'cloud-led' + (s === 'on' ? ' on' : s === 'warn' || s === 'connecting' || s === 'readonly' ? ' warn' : '');
-  txt.textContent = { local: '本地存档', connecting: '连接中', on: cloud.board ? '全服已连接' : '云端同步', warn: '云端离线', readonly: '只读' }[s] || '本地存档';
+  led.className = 'cloud-led' + (s === 'on' ? ' on' : ['warn','connecting','retrying','partial','readonly'].includes(s) ? ' warn' : '');
+  txt.textContent = { local: '本地存档', connecting: '连接中', retrying: '重连中', partial: '同步不完整', on: cloud.board ? '全服已连接' : '云端同步', warn: '云端离线', readonly: '只读' }[s] || '本地存档';
   markDirty('world', 'prefs');
 }
 function num(x, max) { x = Number(x); return isFinite(x) && x >= 0 ? Math.min(x, max) : 0; }
@@ -4074,6 +4074,8 @@ const EXTRA_SCORES = ['power', 'achievements', 'lifetime'];
 const BOARD_KEYS = ['tps', 'dex', 'stage', 'pulls', ...EXTRA_SCORES];
 const PROFILE_RANK_LIMIT = 100;
 const BOARD_REFRESH_MS = 15000;
+const BOARD_REQUEST_TIMEOUT_MS = 25000;
+const BOARD_OFFLINE_AFTER = 3;
 const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
 const HIT_LIMIT = 256;
 function newEventId() {
@@ -4100,21 +4102,65 @@ function persistHits(b) {
   if (!cloud.uid || !b.changed) return;
   try { sessionStorage.setItem(`${b.store}:${cloud.uid}`, JSON.stringify(b.pending)); b.changed = false; } catch {}
 }
+function boardFetch(config) {
+  const origin = new URL(config.url).origin;
+  return async (input, init = {}) => {
+    const url = new URL(input instanceof Request ? input.url : input);
+    if (url.origin === origin && url.pathname.startsWith('/rest/v1/')) {
+      const headers = new Headers(init.headers ?? (input instanceof Request ? input.headers : undefined));
+      const token = headers.get('Authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1];
+      // On refresh failure the SDK may fall back to the project key, not a player session.
+      if (!token || token === config.key) {
+        return Response.json({code:'FRONTIER_AUTH_PENDING',message:'Player session unavailable'}, {status:401});
+      }
+    }
+    const signal = init.signal ?? (input instanceof Request ? input.signal : undefined);
+    const timeout = AbortSignal.timeout(BOARD_REQUEST_TIMEOUT_MS);
+    return fetch(input, { ...init, signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
+  };
+}
 function initLeaderboard(config) {
   cloud.board = { boards: {}, feed: null, totals: null, pending: [], changed: false,
     store: `frontier:outbox:${config.url}`, client: null, busy: false, next: 0, errors: 0,
-    nextHits: 0, nextTotals: 0, feedAt: 0 };
+    nextHits: 0, nextTotals: 0, feedAt: 0, issues: {} };
   setCloudStatus('connecting');
   try {
     cloud.board.client = window.supabase.createClient(config.url, config.key, {
       auth: { detectSessionInUrl: false },
-      global: { fetch: (input, init = {}) => fetch(input, { ...init, signal: init.signal ? AbortSignal.any([init.signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000) }) }
+      global: { fetch: boardFetch(config) }
     });
   } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
   cloud.board.presence = setupPresence(cloud.board.client);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
+  window.addEventListener('offline', boardOffline);
+  window.addEventListener('online', () => {
+    const b = cloud.board;
+    b.next = 0; b.errors = 0; moderation.next = 0;
+    setCloudStatus('retrying');
+    boardTick(false);
+  });
   startInbox(cloud.board);
   boardTick(false);
+}
+function boardOffline() {
+  finishModerationBoot();
+  if (cloud.status !== 'warn') setCloudStatus('warn');
+}
+function boardSynced(b) {
+  if (navigator.onLine === false) { boardOffline(); return; }
+  b.errors = 0; b.next = 0; cloud.ready = true;
+  const currentRank = 'rank:' + lbMode;
+  const partial = Object.keys(b.issues).some(key => !key.startsWith('rank:') || key === currentRank);
+  setCloudStatus(partial ? 'partial' : 'on');
+}
+async function syncBoardPart(b, key, run) {
+  try {
+    await run();
+    delete b.issues[key];
+  } catch {
+    b.issues[key] = Date.now() + BOARD_REFRESH_MS * (1 + Math.random() / 4);
+  }
+  markDirty('world');
 }
 function unwrap({data, error}) { if (error) throw error; return data; }
 async function boardIdentity(b) {
@@ -4136,28 +4182,36 @@ async function boardIdentity(b) {
 async function boardTick(force = false) {
   const b = cloud.board, now = Date.now();
   persistHits(b);
+  if (navigator.onLine === false) { boardOffline(); return; }
   b.presence?.connect(cloud.uid);
   if (!b.client || b.busy || now < b.next) return;
   if (moderation.level === 2 && !force && now < moderation.next) return;
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
+  const rankKey = 'rank:' + mode;
   const viewing = currentView === 'world' && !document.hidden;
-  const readBoard = viewing && (!b.boards[mode] || now - b.boards[mode].at > BOARD_REFRESH_MS);
-  const readFeed = viewing && now - b.feedAt > 15000;
-  const writeScore = force || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000);
-  const writeHits = b.pending.length && (force || now >= b.nextHits);
-  if (!readBoard && !readFeed && !writeScore && !writeHits && now < b.nextTotals && now < moderation.next) return;
+  const can = key => force || now >= (b.issues[key] || 0);
+  const readBoard = viewing && can(rankKey) && (!b.boards[mode] || now - b.boards[mode].at > BOARD_REFRESH_MS);
+  const readFeed = viewing && can('feed') && now - b.feedAt > BOARD_REFRESH_MS;
+  const readTotals = can('totals') && (!b.totals || now >= b.nextTotals);
+  const writeScore = can('score') && (!b.issues.totals || readTotals) &&
+    (force || b.issues.score || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000));
+  const writeHits = can('hits') && b.pending.length && (force || now >= b.nextHits);
+  if (!readBoard && !readFeed && !readTotals && !writeScore && !writeHits && now < moderation.next) return;
   b.busy = true;
   try {
     const uid = await boardIdentity(b);
-    await syncModeration(b, force);
-    if (moderation.level === 2) return;
+    await syncModeration(b, force || b.errors > 0);
+    if (moderation.level) { delete b.issues.score; delete b.issues.hits; }
+    if (moderation.level === 2) { boardSynced(b); return; }
     const beforeMilestones = worldMilestones;
-    if (!b.totals || Date.now() >= b.nextTotals) {
+    if (readTotals || (!b.issues.totals && !b.nextTotals)) await syncBoardPart(b, 'totals', async () => {
       b.totals = unwrap(await b.client.rpc('leaderboard_totals'));
       b.nextTotals = Date.now() + 60000;
       recomputeWorld();
-    }
-    if ((writeScore || worldMilestones !== beforeMilestones) && !moderation.level) {
+    });
+    // Never upload production before the milestone multiplier is known and current.
+    if (b.totals && !b.issues.totals && !moderation.level &&
+        (writeScore || worldMilestones !== beforeMilestones && can('score'))) await syncBoardPart(b, 'score', async () => {
       const p = sanitizePlayer(uid, playerDoc());
       cloud.priority = false;
       const base = {player_id:uid, name:p.name, sig:p.sig, sig_variant:p.sigV, tps:p.tps, dex:Math.floor(p.dex), stage:Math.floor(p.stage), pulls:Math.floor(p.pulls)};
@@ -4184,30 +4238,38 @@ async function boardTick(force = false) {
       }
       cloud.lastPlayerWrite = now;
       if (!b.scoreIssue) syncInventorySnapshot(b,uid);
-    }
+    });
     pulseOnlineGPU(b);
     if (writeScore) syncGPUReview(b,uid);
-    if (writeHits && b.pending.length && !b.scoreIssue && !moderation.level) {
+    if (b.scoreIssue || !b.pending.length) delete b.issues.hits;
+    if (writeHits && b.pending.length && !b.scoreIssue && !moderation.level) await syncBoardPart(b, 'hits', async () => {
       const batch = b.pending.slice(0, 64), ids = new Set(batch.map(r => r.event));
       unwrap(await b.client.from('leaderboard_hits').upsert(batch.map(r => ({player_id: uid, event_id: r.event, name: r.name,
         pack: r.pack, model: r.id, variant: r.v, chance: r.chance, drawn_at: r.ts})), {onConflict: 'player_id,event_id', ignoreDuplicates: true}));
       b.pending = b.pending.filter(r => !ids.has(r.event)); b.changed = true; persistHits(b); b.nextHits = now + 4000;
-    }
-    if (readBoard) {
+    });
+    const ranking = readBoard && syncBoardPart(b, rankKey, async () => {
       if (now < b.legacyUntil && EXTRA_SCORES.includes(mode)) b.boards[mode] = {at:now, migrating:true};
-      else b.boards[mode] = {at:now, ...await readRanking(b.client, mode, uid)};
-    }
-    if (readFeed) {
+      else {
+        const data = await readRanking(b.client, mode, uid);
+        b.boards[mode] = {at:Date.now(), ...data};
+      }
+    });
+    const feed = readFeed && syncBoardPart(b, 'feed', async () => {
       const hits = unwrap(await b.client.from('leaderboard_hits').select('player_id,event_id,name,pack,model,variant,chance,drawn_at')
         .order('drawn_at', {ascending:false}).order('event_id', {ascending:false}).limit(30));
       b.feed = hits.map(r => ({owner:r.player_id, event:r.event_id, name:r.name, pack:r.pack, id:r.model, v:r.variant, chance:r.chance, ts:r.drawn_at})).filter(validWorldHit);
-      b.feedAt = now;
-    }
-    b.errors = 0; cloud.ready = true; setCloudStatus('on');
+      b.feedAt = Date.now();
+    });
+    await Promise.all([ranking, feed]);
+    boardSynced(b);
   } catch {
     finishModerationBoot();
-    b.next = Date.now() + Math.min(120000, 2000 * 2 ** Math.min(6, b.errors++));
-    setCloudStatus('warn');
+    if (navigator.onLine === false) { boardOffline(); return; }
+    // Spread retries across clients when the backend comes back under load.
+    b.next = Date.now() + 2000 * 2 ** Math.min(5, b.errors++) * (1 + Math.random() / 4);
+    const status = b.errors >= BOARD_OFFLINE_AFTER ? 'warn' : 'retrying';
+    if (cloud.status !== status) setCloudStatus(status);
   } finally { b.busy = false; }
 }
 
@@ -4643,10 +4705,12 @@ function renderWorld() {
   textIfChanged($('#ownPlayerId'), cloud.uid || '');
   const scoreNotice = moderation.level === 1 ? '限制：不参与全服排名' : cloud.board?.scoreIssue === 'FRONTIER_SCORE_HELD' ? '成绩待管理员复核' :
     cloud.board?.scoreIssue ? '微调等级异常，成绩未上报' : '';
-  $('#cloudSide').textContent = scoreNotice || { local: '仅本机', connecting: '连接中', on: '已同步', warn: '暂时离线', readonly: '只读' }[cloud.status];
+  $('#cloudSide').textContent = scoreNotice || { local: '仅本机', connecting: '连接中', retrying: '重连中', partial: '部分数据同步失败', on: '已同步', warn: '暂时离线', readonly: '只读' }[cloud.status];
   const { loaded, progress, pulls } = recomputeWorld();
+  const issues = cloud.board?.issues;
   textIfChanged($('#worldPulls'), loaded ? fmt(progress) : '—');
-  textIfChanged($('#worldTotal'), loaded ? `全服上报总抽数：${fmt(pulls)} 次` : '全服上报总抽数：—');
+  textIfChanged($('#worldTotal'), loaded ? `全服上报总抽数：${fmt(pulls)} 次${issues?.totals ? '（待更新）' : ''}` :
+    issues?.totals ? '全服总抽数暂未同步' : '全服上报总抽数：—');
   textIfChanged($('#worldCap'), fmt(WORLD_LAB_CAP));
   const lo = 3, hi = Math.log10(WORLD_MS[WORLD_MS.length - 1]);
   const pos = x => Math.max(0, Math.min(100, (Math.log10(Math.max(1, x)) - lo) / (hi - lo) * 100));
@@ -4657,8 +4721,8 @@ function renderWorld() {
   $('#worldMs').innerHTML = WORLD_MS.map(m => `<span style="left:${pos(m)}%;${progress >= m ? 'color:var(--gold);font-weight:700' : ''}">${fmt(m)}</span>`).join('');
   textIfChanged($('#worldBonus'), loaded ? `全服加成 ×${fmtMul(worldMul())}` : '全服加成 —');
   for (const b of $$('#lbSeg button')) b.setAttribute('aria-pressed', b.dataset.lb === lbMode);
-  if (!loaded) {
-    const msg = cloud.status === 'connecting' ? '正在连接全服数据…' : cloud.status === 'warn' ? '全服暂时离线，将自动重试。本机存档不受影响。' : '当前未连接排行榜数据库，进度仅保存在本机。';
+  if (!loaded && !cloud.board) {
+    const msg = cloud.status === 'connecting' ? '正在连接全服数据…' : cloud.status === 'retrying' ? '正在重新连接全服数据…' : cloud.status === 'warn' ? '全服暂时离线，将自动重试。本机存档不受影响。' : '当前未连接排行榜数据库，进度仅保存在本机。';
     setWorldList($('#lbWrap'), `<div class="empty">${msg}</div>`);
     setWorldList($('#feed'), '<div class="empty">全服播报会在联网后出现。</div>');
     return;
@@ -4677,15 +4741,16 @@ function renderWorld() {
     const sm = p.sig ? MODEL_BY_ID[p.sig] : null;
     return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? '<small>我的排名</small>' : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
-  const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : '正在读取…';
+  const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : cloud.status === 'retrying' ? '正在重连…' : '正在读取…';
   const ownRow = mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || '尚未上报成绩'}</td></tr>`;
-  setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : waiting}</div>`);
+  const rankWait = board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : issues?.['rank:' + key] ? '暂时读不到榜单，将自动重试。' : waiting;
+  setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${rankWait}</div>`);
   setWorldList($('#feed'), feed?.length ? feed.slice(0, 30).map(r => {
     const m = modelOrLeak(r.id);
     const what = r.id === 'leak' ? '泄露的权重' : `${VARIANTS[r.v].name}版 ${m.n}`;
     const pack = PACKS.find(p => p.id === r.pack);
     return `<div class="feed-row" data-event="${esc(r.event || r.ts)}"><span class="ic">${sharedArt(m)}</span><span>${labLink(r.owner,r.name)}${labTitleBadge(titlePublic[r.owner],true)} 在${esc(pack.name)}抽到了 ${esc(what)}<br><small>单抽约 1/${Math.round(1/r.chance).toLocaleString('zh-CN')}</small></span><span class="when">${ago(r.ts)}</span></div>`;
-  }).join('') : `<div class="empty">${feed ? '还没有单抽概率低至十万分之一的记录。' : waiting}</div>`);
+  }).join('') : `<div class="empty">${issues?.feed ? '暂时读不到全服播报，将自动重试。' : feed ? '还没有单抽概率低至十万分之一的记录。' : waiting}</div>`);
 }
 function logoSVGInline() { return `<svg viewBox="0 0 120 120">${logoSVG()}</svg>`; }
 
@@ -5613,7 +5678,7 @@ function renderChat(messages) {
 async function updateChat(action = 'list', args = {}) {
   if (!chatActive()) return false;
   if (!cloud.uid || !cloud.board?.client) {
-    chatStatus.textContent = cloud.status === 'warn' ? '暂时无法连接。' : '正在连接…';
+    chatStatus.textContent = cloud.status === 'warn' ? '暂时无法连接。' : cloud.status === 'retrying' ? '正在重连…' : '正在连接…';
     return false;
   }
   const seq = ++chatSeq, client = cloud.board.client;
@@ -5640,7 +5705,7 @@ async function updateChat(action = 'list', args = {}) {
     if (missingWorldRPC(reply.error)) { chatStatus.textContent = '聊天室尚未启用。'; return false; }
     const messages = unwrap(reply);
     renderChat(messages);
-    if (action !== 'list' || !chatStatus.textContent || ['还没有消息。','正在连接…','暂时无法连接。'].includes(chatStatus.textContent)) {
+    if (action !== 'list' || !chatStatus.textContent || ['还没有消息。','正在连接…','正在重连…','暂时无法连接。'].includes(chatStatus.textContent)) {
       chatStatus.textContent = messages.length ? '' : '还没有消息。';
     }
     return true;
