@@ -1085,6 +1085,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
             </div>
           </div>
           <div id="dexLabGroups"></div>
+          <div id="dexHidden" class="lab-block" hidden></div>
           <p class="note" id="dexEmpty" hidden>没有这个稀有度的模型。</p>
         </div>
       </section>
@@ -1515,6 +1516,9 @@ const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, 
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
 const EXCLAMATION_TIER = 10;
+const HIDDEN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇异', t:EXCLAMATION_TIER + 1,
+  base:1e20, lab:'horizon', s:'all', d:'事件视界闭合后留下的最后一道回波。'});
+const HIDDEN_CARD_LABEL = '隐藏';
 const TIERS = [
   { id: 'N',   name: '小众', base: 1 },
   { id: 'R',   name: '知名', base: 6 },
@@ -2108,7 +2112,7 @@ const PACKS = [
   { id: 8, name: '戴森球算力环', hw: '恒星供能', cost: 5e18, r: [[5,0.1],[6,0.82],[7,0.078],[8,0.002]], pt: 7, pn: 150 },
   { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600,
     special: { t: EXCLAMATION_TIER, chance: 1e-8 } },
-  { id: 13, name: '终极计算机', hw: '终局算力', cost: 5e29, r: [[7,0.8],[8,0.1998998],[9,1e-4],[EXCLAMATION_TIER,2e-7]],
+  { id: 13, name: '终极计算机', hw: '终局算力', cost: 5e29, r: [[7,0.8],[8,0.1998998],[9,1e-4],[EXCLAMATION_TIER,2e-7]], hiddenChance: 1e-9,
     pt: 9, pn: 50000, fixedPity: true }
 ];
 
@@ -2515,7 +2519,7 @@ function defaultState() {
     pity: {}, rebirths: 0, stage: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
-    name: randomLabName(), sig: null, adminCardProgress: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
+    name: randomLabName(), sig: null, adminCardProgress: null, hiddenCard: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
     set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cine: undefined, mutedInfo: undefined }
   };
 }
@@ -2560,7 +2564,10 @@ function sanitizeState(st) {
   const exclusive = st.adminCardProgress;
   st.adminCardProgress = exclusive && typeof exclusive.uid === 'string' && /^[0-9a-f-]{36}$/i.test(exclusive.uid) &&
     Number.isInteger(exclusive.level) && exclusive.level >= 0 && exclusive.level <= 900 ? {uid:exclusive.uid,level:exclusive.level} : null;
-  if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(isAdminCard(st.sig) && st.adminCardProgress)) st.sig = null;
+  const hidden = st.hiddenCard;
+  const copies = Array.isArray(hidden?.copies) ? [0,1,2,3].map(i => Number.isSafeInteger(hidden.copies[i]) && hidden.copies[i] > 0 ? hidden.copies[i] : 0) : null;
+  st.hiddenCard = copies?.some(Boolean) ? {copies, level:Number.isInteger(hidden.level) && hidden.level >= 0 && hidden.level <= 900 ? hidden.level : 0} : null;
+  if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(isHiddenCard(st.sig) && (st.adminCardProgress || st.hiddenCard))) st.sig = null;
   if (typeof st.name !== 'string' || !st.name.trim()) st.name = randomLabName();
   st.name = st.name.slice(0, 16);
   return st;
@@ -2699,12 +2706,17 @@ function pickModel(t, up = S.upLab, focus = upChance()) {
   return pick(pool);
 }
 function total(c) { return c ? c[0] + c[1] + c[2] + c[3] : 0; }
-function isAdminCard(id) { return typeof ADMIN_CARD !== 'undefined' && id === ADMIN_CARD.id; }
-function modelById(id) { return isAdminCard(id) ? ADMIN_CARD : Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : null; }
+function isHiddenCard(id) { return typeof HIDDEN_CARD !== 'undefined' && id === HIDDEN_CARD.id; }
+function modelById(id) { return isHiddenCard(id) ? HIDDEN_CARD : Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : null; }
 function modelBase(m) { return m.base ?? TIERS[m.t].base; }
-function modelInventory(m) { return isAdminCard(m.id) ? (hasAdminCard() ? ADMIN_CARD.copies : null) : S.cards[m.id]; }
+function hiddenCardInventory() {
+  const pulled = S.hiddenCard?.copies;
+  const grant = typeof hasAdminCard === 'function' && hasAdminCard() ? ADMIN_CARD_COPIES : null;
+  return pulled && grant ? pulled.map((n, v) => n + grant[v]) : pulled || grant;
+}
+function modelInventory(m) { return isHiddenCard(m.id) ? hiddenCardInventory() : S.cards[m.id]; }
 function owned(m) { return !!m && total(modelInventory(m)) > 0; }
-function featuredModel() { return isAdminCard(S.sig) && !adminCardProgressMatches() ? null : modelById(S.sig); }
+function featuredModel() { return isHiddenCard(S.sig) && !S.hiddenCard && !(typeof adminCardProgressMatches === 'function' && adminCardProgressMatches()) ? null : modelById(S.sig); }
 function bondRate() { return 0.03 + 0.01 * S.tech.bond; }
 function labStats() {
   if (caches.lab) return caches.lab;
@@ -2736,7 +2748,11 @@ function dexInfo() {
   return caches.dex = { n, mul: 1 + b };
 }
 function dexCount() { return dexInfo().n; }
-function trainLv(id) { return isAdminCard(id) ? (adminCardProgressMatches() ? S.adminCardProgress.level : 0) : S.train[id] || 0; }
+function trainLv(id) {
+  if (!isHiddenCard(id)) return S.train[id] || 0;
+  const granted = typeof adminCardProgressMatches === 'function' && adminCardProgressMatches() ? S.adminCardProgress.level : 0;
+  return Math.max(S.hiddenCard?.level || 0, granted);
+}
 function trainMul(id) { return 1 + 0.3 * trainLv(id); }
 function trainCost(m, level = trainLv(m.id)) { return modelBase(m) * 1e4 * Math.pow(3, level) * (1 - 0.08 * S.tech.distill) * buffMul('train'); }
 function trainQuote(m, limit = Infinity) {
@@ -2799,11 +2815,15 @@ function updateDuplicate(m, c) {
   p.amounts[i] = rawUnits(c) * p.units[i]; p.dirty = true;
 }
 function bestSingle() { return production().best; }
+function hiddenCardBase() {
+  const c = hiddenCardInventory();
+  return c ? rawUnits(c) * HIDDEN_CARD.base * trainMul(HIDDEN_CARD.id) : 0;
+}
 function computeYield() {
   const { sum, best } = production();
-  return (sum + S.leaks * best + liveAdminCardBase()) * globalMul();
+  return (sum + S.leaks * best + hiddenCardBase()) * globalMul();
 }
-function modelOut(m) { const c = modelInventory(m); return total(c) ? rawUnits(c) * (isAdminCard(m.id) ? modelBase(m) * trainMul(m.id) : perCard(m)) * globalMul() * eventMultiplier('tokens') : 0; }
+function modelOut(m) { const c = modelInventory(m); return total(c) ? (isHiddenCard(m.id) ? hiddenCardBase() : rawUnits(c) * perCard(m)) * globalMul() * eventMultiplier('tokens') : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
 function rebirthCost() { return 1e10 * 12 ** Math.min(14, S.rebirths) * 5 ** Math.max(0, S.rebirths - 14); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
@@ -2811,7 +2831,8 @@ function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
 /* =================== PULL =================== */
 // A slot is used only while settling this synchronous batch. Never retain the previous result list.
-const drawSlots = new Array((MODELS.length + 1) * 4);
+const drawSlots = new Array((MODELS.length + 2) * 4);
+function drawSlot(m, v) { return (m.idx ?? MODELS.length + 1) * 4 + v; }
 let bulkOdds;
 function oddsForUpLab(lab, focus) {
   if (!bulkOdds || bulkOdds.lab !== lab || bulkOdds.focus !== focus) {
@@ -2829,13 +2850,29 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
   const clone = cloneN(), table = drawTables.get(p);
   const leak = leakChance(), variants = variantProbs(), pity = pityN(p);
   const special = p.special, specialChance = special?.chance ?? 0;
-  const specialCutoff = 1 - specialChance, normalChance = 1 - leak - specialChance;
+  const hiddenChance = p.hiddenChance ?? 0, hiddenCutoff = 1 - hiddenChance;
+  const specialCutoff = hiddenCutoff - specialChance, normalChance = 1 - leak - specialChance - hiddenChance;
   const res = [], stats = S.stats, cards = S.cards, up = S.upLab, focus = upChance();
   const odds = compact ? oddsForUpLab(up, focus) : null;
   const hits = compact ? [] : null;
   let structural = false;
   for (let i = 0; i < n; i++) {
     const ticket = Math.random();
+    // The hidden ticket is separate from leaks and the pity counter.
+    if (hiddenChance && ticket >= hiddenCutoff) {
+      const v = rollVariant(variants), isNew = !S.hiddenCard;
+      const hidden = S.hiddenCard ??= {copies:[0,0,0,0], level:0};
+      if (!hidden.copies[v]) structural = true;
+      hidden.copies[v] += clone;
+      if (v > stats.maxVar) stats.maxVar = v;
+      const slot = drawSlot(HIDDEN_CARD, v);
+      if (compact && drawSlots[slot]) drawSlots[slot].n += clone;
+      else {
+        const r = {id:HIDDEN_CARD.id, v, t:HIDDEN_CARD.t, isNew, n:clone};
+        res.push(r); if (compact) drawSlots[slot] = r;
+      }
+      continue;
+    }
     if (ticket < leak) {
       if (!S.leaks) structural = true;
       S.leaks++;
@@ -2868,7 +2905,7 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
     stats.byTier[t]++;
     if (t > stats.maxTier) stats.maxTier = t;
     if (v > stats.maxVar) stats.maxVar = v;
-    const slot = m.idx * 4 + v;
+    const slot = drawSlot(m, v);
     if (compact && drawSlots[slot]) drawSlots[slot].n += clone;
     else {
       const r = { id: m.id, v, t, isNew, prob, hitProb, pity: viaPity, n: clone };
@@ -2879,8 +2916,8 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
   stats.pulls += n;
   if (compact) for (const r of res) {
     if (r.leak) { drawSlots[0] = undefined; continue; }
-    const m = MODEL_BY_ID[r.id]; drawSlots[m.idx * 4 + r.v] = undefined;
-    if (!structural) updateDuplicate(m, cards[r.id]);
+    const m = modelById(r.id); drawSlots[drawSlot(m, r.v)] = undefined;
+    if (!structural && !isHiddenCard(r.id)) updateDuplicate(m, cards[r.id]);
   }
   if (structural) invalidate();
   return { res, structural, count:n, hits };
@@ -2928,9 +2965,12 @@ function trainModel(id, limit = 1, maxCost = Infinity) {
   if (!quote.levels || quote.cost > maxCost) return false;
   const level = trainLv(id) + quote.levels;
   S.tokens = quote.remaining;
-  if (isAdminCard(id)) {
-    if (!adminCardProgressMatches() && S.sig === id) S.sig = null;
-    S.adminCardProgress = {uid:adminCard.uid, level};
+  if (isHiddenCard(id)) {
+    if (S.hiddenCard) S.hiddenCard.level = level;
+    else {
+      if (!adminCardProgressMatches() && S.sig === id) S.sig = null;
+      S.adminCardProgress = {uid:adminCard.uid, level};
+    }
     saveLocal(); cloudBump(true);
   } else S.train[id] = level;
   invalidateProduction();
@@ -2950,9 +2990,9 @@ function cardPower(m, v, count, spec) {
 }
 function bestTeam(spec, powerFactor = 1) {
   const cand = [];
-  const length = MODELS.length + (typeof hasAdminCard === 'function' && hasAdminCard() ? 1 : 0);
+  const length = MODELS.length + (hiddenCardInventory() ? 1 : 0);
   for (let index = 0; index < length; index++) {
-    const m = index === MODELS.length ? ADMIN_CARD : MODELS[index];
+    const m = index === MODELS.length ? HIDDEN_CARD : MODELS[index];
     const c = modelInventory(m); if (!total(c)) continue;
     let best = null;
     for (let v = 0; v < 4; v++) if (c[v] > 0) { const pw = cardPower(m, v, c[v], spec); if (!best || pw > best.pw) best = { m, v, pw, match: m.s === spec || m.s === 'all' }; }
@@ -3221,7 +3261,7 @@ function logoSVG() {
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
 function cardArt(m) {
-  if (isAdminCard(m.id)) return adminCardArt();
+  if (isHiddenCard(m.id)) return adminCardArt();
   if (artCache.has(m.id)) return artCache.get(m.id);
   const L = LABS[m.lab], hue = L.hue, rnd = rngFrom(hashStr(m.id + '#' + m.lab));
   const gid = 'g_' + m.id;
@@ -3325,8 +3365,8 @@ function sharedArt(m) {
 }
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
-  const exclusive = isAdminCard(m.id), tierId = exclusive ? m.n : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
-  const cls = `card t-${exclusive ? 'NULLPOINT' : m.id === 'leak' ? 'AGI' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
+  const hidden = isHiddenCard(m.id), tierId = hidden ? HIDDEN_CARD_LABEL : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
+  const cls = `card t-${hidden ? 'NULLPOINT' : m.id === 'leak' ? 'AGI' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
   return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
@@ -3480,9 +3520,10 @@ function doPull(auto, originEl, paced = false, event = activeWorldEvent()) {
   return true;
 }
 function isExclamationResult(r) { return !r.leak && TIERS[r.t]?.id === '!'; }
-function resultScore(r) { return isExclamationResult(r) ? 2e9 + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
+function resultScore(r) { return isHiddenCard(r.id) ? 3e9 + r.v : isExclamationResult(r) ? 2e9 + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
 function cinePick(sorted, auto) {
   if (auto && !S.set.autoCine) return;
+  if (isHiddenCard(sorted[0]?.id)) return sorted[0];
   const prefs = S.set.cine;
   if (prefs?.custom) return sorted.find(r => prefs.tiers.includes(r.leak ? 'LEAK' : TIERS[r.t].id));
   const r = sorted[0];
@@ -3523,7 +3564,13 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   // reveal decision
   const best = lastResults[0];
   const cine = cinePick(lastResults, auto);
-  if (cine) { if (!paced || !cineOpen || isExclamationResult(cine)) { playRare(cine.t >= 7, isExclamationResult(cine)); showCine(cine); } }
+  const hidden = isHiddenCard(best?.id);
+  if (hidden) {
+    saveLocal(); cloudBump(true);
+    if (cine === best && S.set.fx) { playRare(true); showAdminCardReveal(best); }
+    else toast('??!! 已入库', `${HIDDEN_CARD_LABEL} · ${VARIANTS[best.v].name} ×${fmt(best.n)}`);
+  }
+  else if (cine) { if (!paced || !cineOpen || isExclamationResult(cine)) { playRare(cine.t >= 7, isExclamationResult(cine)); showCine(cine); } }
   else {
     if (!auto) playPull();
     for (const r of lastResults.slice(0, 3)) {
@@ -3536,7 +3583,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
       if (paced) nextFastNotice = now + 150;
     }
   }
-  if (!auto && originEl && S.set.fx) burstAt(originEl, best ? TIER_HEX[best.t] : '#fff');
+  if (!auto && originEl && S.set.fx) burstAt(originEl, (best && TIER_HEX[best.t]) || '#fff');
   markDirty('pullLite', 'models', 'bench', 'hud');
 }
 
@@ -3678,6 +3725,7 @@ function renderPull() {
   const rates = p.r.slice().reverse();
   if (p.special) rates.unshift([p.special.t, p.special.chance]);
   $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.fixedPity && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
+  if (p.hiddenChance) $('#rates').insertAdjacentHTML('beforeend', '<div class="note" style="margin-top:8px">有隐藏卡</div>');
   const vp = variantProbs();
   const pc = S.pity[p.id] || 0, pn = pityN(p);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 张</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
@@ -3790,7 +3838,8 @@ function renderLog() {
     if (row.dataset.tier!==key) {
       row.dataset.tier=key; const tag=row.children[0];
       tag.className=leak?'tag':'tag tier-text'+(m.t===9?' tier-q':'');
-      tag.style.color=leak?'':tierColor(m.t); tag.textContent=leak?'LEAK':TIERS[m.t].id;
+      const hidden = isHiddenCard(m.id);
+      tag.style.color=leak || hidden?'':tierColor(m.t); tag.textContent=leak?'LEAK':hidden?HIDDEN_CARD_LABEL:TIERS[m.t].id;
     }
     textIfChanged(row.children[1], (l.v && !leak ? VARIANTS[l.v].name+'版 ' : '')+m.n);
     textIfChanged(row.children[2], ago(l.ts));
@@ -3821,7 +3870,7 @@ function makeVaultRow(m, v, count) {
 }
 function renderModels() {
   renderAdminCard();
-  const grid = $('#vault'), exclusive = hasAdminCard(), labs = Object.keys(LABS).filter(k => labStats()[k].own || (exclusive && k === ADMIN_CARD.lab));
+  const grid = $('#vault'), hidden = owned(HIDDEN_CARD), labs = Object.keys(LABS).filter(k => labStats()[k].own || (hidden && k === HIDDEN_CARD.lab));
   if (!labs.includes(vaultLab)) vaultLab = 'all';
   const key = labs.join('|') + ':' + vaultLab;
   if (filterKey !== key) {
@@ -3829,9 +3878,9 @@ function renderModels() {
     $('#labFilter').innerHTML = `<button data-lab="all" aria-pressed="${vaultLab === 'all'}">全部</button>` + labs.map(k => `<button data-lab="${k}" aria-pressed="${vaultLab === k}"><span class="sw" style="background:${LABS[k].hue}"></span>${esc(LABS[k].name)}</button>`).join('');
   }
   let list = MODELS.filter(owned).filter(m => vaultLab === 'all' || m.lab === vaultLab);
-  if (exclusive && (vaultLab === 'all' || vaultLab === ADMIN_CARD.lab)) list.push(ADMIN_CARD);
+  if (hidden && (vaultLab === 'all' || vaultLab === HIDDEN_CARD.lab)) list.push(HIDDEN_CARD);
   const prod = production(), mul = globalMul();
-  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : isAdminCard(m.id) ? liveAdminCardBase() : prod.amounts[m.idx-1]) * mul;
+  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : isHiddenCard(m.id) ? hiddenCardBase() : prod.amounts[m.idx-1]) * mul;
   if (vaultSort === 'out') list.sort((a, b) => output(b) - output(a));
   else if (vaultSort === 'tier') list.sort((a, b) => b.t - a.t || bestVar(modelInventory(b)) - bestVar(modelInventory(a)));
   else list.sort((a, b) => total(modelInventory(b)) - total(modelInventory(a)));
@@ -3856,7 +3905,7 @@ function renderModels() {
     if (row.count !== count) { row.count = count; textIfChanged(row.badge, '×' + fmt(count)); }
     const rate = output(m);
     if (row.output !== rate) { row.output = rate; textIfChanged(row.rate, '+' + fmt(rate) + '/s'); }
-    const label = leak ? '复制' : `Lv.${trainLv(m.id)}${S.sig === m.id ? ' · 镇馆' : ''}`;
+    const label = leak ? '复制' : `Lv.${trainLv(m.id)}${featuredModel() === m ? ' · 镇馆' : ''}`;
     if (row.lastLabel !== label) { row.lastLabel = label; row.label.textContent = label; }
     if (row.el !== next) grid.insertBefore(row.el, next);
     next = row.el.nextElementSibling;
@@ -3872,24 +3921,24 @@ function refreshTrainButtons(detail) {
   bulk.trainOffer = quote;
 }
 function openDetail(id) {
-  const m = modelById(id), exclusive = isAdminCard(id); if (!m || (exclusive && !owned(m))) return;
+  const m = modelById(id), hidden = isHiddenCard(id); if (!m || (hidden && !owned(m))) return;
   const html = () => {
     const c = modelInventory(m) || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
     return `<div class="modal-h"><h3>${esc(m.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
     <div class="detail" data-train-id="${esc(m.id)}">
       ${cardHTML(m, has ? bestVar(c) : 0, { count: total(c), locked: !has })}
       <div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${exclusive ? `<span class="tag">${m.t} 阶 · 管理员专属</span>` : tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${hidden ? `<span class="tag">${HIDDEN_CARD_LABEL}</span>` : tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
         <p class="desc">${esc(m.d)}</p>
         ${m.t === EXCLAMATION_TIER ? `<p class="note">${esc(TIER_RULE[m.t])}</p>` : ''}
-        ${exclusive ? '' : ratingHTML(m)}
+        ${hidden ? '' : ratingHTML(m)}
         <dl class="kv">
           <dt>代号</dt><dd>${esc(m.c)}</dd>
           ${releaseDateRow(m)}
           ${m.st ? `<dt>状态</dt><dd class="plain">${esc(STATUS[m.st].desc)}</dd>` : ''}
           ${SERIES_OF[m.id] ? `<dt>所属系列</dt><dd class="plain">${SERIES_OF[m.id].map(se => esc(se.n)).join('、')}</dd>` : ''}
           <dt>单卡基础产出</dt><dd>${fmt(modelBase(m))}/s</dd>
-          ${exclusive ? '' : `<dt>实验室羁绊</dt><dd>×${fmtMul(ls.mul)}（${ls.own}/${ls.total}${ls.full ? '，已集齐' : ''}）</dd>`}
+          ${hidden ? '' : `<dt>实验室羁绊</dt><dd>×${fmtMul(ls.mul)}（${ls.own}/${ls.total}${ls.full ? '，已集齐' : ''}）</dd>`}
           <dt>微调等级</dt><dd>Lv.${trainLv(m.id)} · 产出 ×${fmtMul(trainMul(m.id))} · 战力 ×${fmtMul(benchTrainMul(m))}</dd>
           <dt>当前总产出</dt><dd style="color:var(--ok)">+${fmt(modelOut(m))}/s</dd>
         </dl>
@@ -3917,9 +3966,9 @@ function openDetail(id) {
     };
     el.querySelector('[data-act=sig]').onclick = () => {
       if (!owned(m)) return;
-      if (exclusive && !adminCardProgressMatches()) S.adminCardProgress = {uid:adminCard.uid,level:0};
+      if (hidden && !S.hiddenCard && !adminCardProgressMatches()) S.adminCardProgress = {uid:adminCard.uid,level:0};
       S.sig = m.id;
-      if (exclusive) saveLocal();
+      if (hidden) saveLocal();
       markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n);
     };
   };
@@ -3931,6 +3980,15 @@ function openDetail(id) {
 // is only attached near the viewport; labels and buttons always exist.
 let dexGrid;
 const DEX_COMPLETE = (1 << VARIANTS.length) - 1;
+function syncHiddenDex() {
+  const slot = $('#dexHidden'), copies = S.hiddenCard?.copies;
+  const mask = copies?.reduce((n, count, v) => n | (count > 0 ? 1 << v : 0), 0) || 0;
+  if (dexGrid.hiddenMask !== mask) {
+    dexGrid.hiddenMask = mask;
+    slot.innerHTML = mask ? `<div class="dex-grid"><button type="button" class="dex-row" data-model="${HIDDEN_CARD.id}"><span class="ic" aria-hidden="true">${cardArt(HIDDEN_CARD)}</span><span><span class="t1"><span class="tag">${HIDDEN_CARD_LABEL}</span><span>${esc(HIDDEN_CARD.n)}</span></span><span class="cells">${VARIANTS.map((v,i) => `<i class="c${i}${copies[i] > 0 ? ' on' : ''}" title="${v.name}"></i>`).join('')}</span></span></button></div>` : '';
+  }
+  slot.hidden = !mask || !!$('#dexTier').value || (S.set.hideCompleteDex && mask === DEX_COMPLETE);
+}
 function mountDex() {
   const root = $('#view-dex');
   const labs = $$('.lab-block', $('#dexLabGroups')).map(el => ({ el, rows: $$('.dex-row', el).map(row => ({
@@ -3953,6 +4011,7 @@ function mountDex() {
 }
 function filterDexTier() {
   if (!dexGrid) return;
+  syncHiddenDex();
   const tier = $('#dexTier').value;
   const hideComplete = S.set.hideCompleteDex;
   dexGrid.hideComplete = hideComplete;
@@ -3972,6 +4031,7 @@ function filterDexTier() {
   textIfChanged($('#dexMatchCount'), `显示 ${matches} / ${dexGrid.rows.length} 款`);
 }
 function syncDex() {
+  syncHiddenDex();
   const di = dexInfo(), si = seriesInfo(), ls = labStats();
   if (dexGrid.snapshot === di) {
     if (dexGrid.hideComplete !== S.set.hideCompleteDex) filterDexTier();
@@ -4184,8 +4244,11 @@ function setCloudStatus(s) {
   markDirty('world', 'prefs');
 }
 function num(x, max) { x = Number(x); return isFinite(x) && x >= 0 ? Math.min(x, max) : 0; }
+const PULLED_HIDDEN_CARD_ID = 'hidden-nullpoint';
+function playerModelId(m) { return isHiddenCard(m?.id) && S.hiddenCard ? PULLED_HIDDEN_CARD_ID : m?.id ?? null; }
 function publicModel(id, player) {
-  return isAdminCard(id) && !verifiedAdmin(player) ? null : modelById(id);
+  if (id === PULLED_HIDDEN_CARD_ID) return HIDDEN_CARD;
+  return isHiddenCard(id) && !verifiedAdmin(player) ? null : modelById(id);
 }
 function publicTeam(rows, player) {
   if (!Array.isArray(rows)) return null;
@@ -4201,7 +4264,7 @@ function sanitizePlayer(id, d) {
   if (!d || typeof d !== 'object') return null;
   const rare = Array.isArray(d.rare) ? d.rare.slice(0, 8).filter(validWorldHit) : [];
   return {
-    id, name: String(d.name || '无名实验室').slice(0, 16), sig: publicModel(d.sig,id)?.id ?? null,
+    id, name: String(d.name || '无名实验室').slice(0, 16), sig: publicModel(d.sig,id) ? d.sig : null,
     sigV: [0, 1, 2, 3].includes(d.sigV) ? d.sigV : 0,
     tps: num(d.tps, 1e300), dex: num(d.dex, 4000), stage: num(d.stage, 1e6), pulls: num(d.pulls, 1e15), reb: num(d.reb, 1e6),
     power: d.power == null ? null : num(d.power, 1e300), achievements: d.achievements == null ? null : num(d.achievements, 1e6),
@@ -4212,10 +4275,10 @@ function sanitizePlayer(id, d) {
 function playerDoc() {
   const team = bestTeam(benchInfo(S.stage).s), sig = featuredModel();
   return {
-    name: S.name.slice(0, 16), sig: sig?.id ?? null, sigV: sig ? bestVar(modelInventory(sig) || [0, 0, 0, 0]) : 0,
+    name: S.name.slice(0, 16), sig: playerModelId(sig), sigV: sig ? bestVar(modelInventory(sig) || [0, 0, 0, 0]) : 0,
     tps: computeYield(), dex: dexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
     power: team.reduce((sum, x) => sum + x.pw, 0),
-    team: team.map(({m,v,pw}) => ({id:m.id,v,pw:num(pw,1e300),count:modelInventory(m)[v],lv:trainLv(m.id)})),
+    team: team.map(({m,v,pw}) => ({id:playerModelId(m),v,pw:num(pw,1e300),count:modelInventory(m)[v],lv:trainLv(m.id)})),
     achievements: ACH.filter(a => S.ach[a.id]).length, lifetime: S.lifetime,
     rare: S.rare.slice(0, 5), ts: Date.now()
   };
@@ -5237,7 +5300,7 @@ function profileTeamHTML(p) {
     const m = publicModel(c.id,p.id);
     if (!m) return '';
     const match = m.s === 'all' || m.s === info.s;
-    return `<li><span class="profile-art">${sharedArt(m)}</span><div><strong>${esc(m.n)}</strong><div>${esc(LABS[m.lab].name)} · ${isAdminCard(m.id) ? esc(m.n) : TIERS[m.t].id} · ${VARIANTS[c.v].name}版</div><div>${SPECS[m.s].name}${match ? '（专长匹配 ×2）' : ''} · 微调 Lv.${c.lv} · 持有 ${fmt(c.count)} 张</div></div><span class="profile-pw"><small>战力</small>${fmt(c.pw)}</span></li>`;
+    return `<li><span class="profile-art">${sharedArt(m)}</span><div><strong>${esc(m.n)}</strong><div>${esc(LABS[m.lab].name)} · ${isHiddenCard(m.id) ? HIDDEN_CARD_LABEL : TIERS[m.t].id} · ${VARIANTS[c.v].name}版</div><div>${SPECS[m.s].name}${match ? '（专长匹配 ×2）' : ''} · 微调 Lv.${c.lv} · 持有 ${fmt(c.count)} 张</div></div><span class="profile-pw"><small>战力</small>${fmt(c.pw)}</span></li>`;
   }).join('')}</ol>`;
 }
 let profileRequest = 0, profileOrigin = null;
@@ -6894,8 +6957,7 @@ function installSave(st) {
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
   $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
 }
-const ADMIN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇异', t:EXCLAMATION_TIER + 1,
-  base:1e20, lab:'horizon', s:'all', d:'事件视界闭合后留下的最后一道回波。', copies:Object.freeze([1,1,1,1])});
+const ADMIN_CARD_COPIES = Object.freeze([1,1,1,1]);
 const isAdminCardUID = id => typeof id === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
 const adminCardKey = uid => `frontier:admin-card:${WORLD_CONFIG.url}:${uid}`;
 const adminCardState = (uid, owned = false) => ({uid, owned, role:null, ready:false, busy:false, error:''});
@@ -6909,9 +6971,11 @@ function adminCardValid() {
 }
 function hasAdminCard() { return adminCard.owned; }
 function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === adminCard.uid; }
-function liveAdminCardBase() { return hasAdminCard() ? rawUnits(ADMIN_CARD.copies) * ADMIN_CARD.base * trainMul(ADMIN_CARD.id) : 0; }
 function adminCardChanged() {
-  if (!hasAdminCard() && $('.detail[data-train-id="admin-nullpoint"]')) closeModal();
+  if ($('.detail[data-train-id="admin-nullpoint"]')) {
+    if (owned(HIDDEN_CARD)) openDetail(HIDDEN_CARD.id);
+    else closeModal();
+  }
   renderAdminCard();
   markDirty('models','bench','world','hud');
   cloudBump(true);
@@ -6922,7 +6986,7 @@ function bindAdminCardIdentity(uid) {
   // A receipt is outside exported saves and scoped to this server and the active Auth identity.
   adminCard = adminCardState(uid, !!uid && lsGet(adminCardKey(uid)) === '1');
   const dialog = $('#adminCardReveal');
-  if (dialog.open) dialog.close();
+  if (dialog.open && !S.hiddenCard) dialog.close();
   adminCardChanged();
 }
 function observeAdminCardRole(uid, adminId) {
@@ -6937,7 +7001,7 @@ function observeAdminCardRole(uid, adminId) {
   adminCard = adminCardState(uid);
   adminCard.role = false;
   const dialog = $('#adminCardReveal');
-  if (dialog.open) dialog.close();
+  if (dialog.open && !S.hiddenCard) dialog.close();
   adminCardChanged();
 }
 async function refreshAdminCard(claim = false) {
@@ -6993,7 +7057,7 @@ function adminCardArt() {
       </g>
       <g stroke="#efd3aa" opacity=".65">${marks}</g>
       <circle cx="90" cy="110" r="37" fill="#07070c" stroke="#f1d5a7"/>
-      <text x="90" y="120" text-anchor="middle" fill="#fff5dc" font-family="Chakra Petch, sans-serif" font-size="31" font-weight="700">${ADMIN_CARD.n}</text>
+      <text x="90" y="120" text-anchor="middle" fill="#fff5dc" font-family="Chakra Petch, sans-serif" font-size="31" font-weight="700">${HIDDEN_CARD.n}</text>
       <g fill="#f1d7af"><path d="M90 24l3 5-3 5-3-5zM90 186l3 5-3 5-3-5z"/><circle cx="27" cy="54" r="1.5"/><circle cx="153" cy="166" r="1.5"/></g>
       <g fill="#ffe7b9" stroke="#ffe7b9" stroke-width=".8"><path d="M24 181h9m-4.5-4.5v9M145 40h9m-4.5-4.5v9"/></g>
     </svg>`;
@@ -7008,16 +7072,17 @@ function renderAdminCard() {
   button.disabled = adminCard.busy === 'claim';
   textIfChanged($('[data-admin-card-error]',panel), adminCard.error);
 }
-function showAdminCardReveal() {
-  if (!hasAdminCard()) return;
+function showAdminCardReveal(pull) {
+  if (!pull && !hasAdminCard()) return;
   const dialog = $('#adminCardReveal');
   if (dialog.open) return;
+  $('[data-admin-card-base]',dialog).textContent = `${pull ? `${VARIANTS[pull.v].name} ×${fmt(pull.n)}` : '四种变体各 1 张'} · 标准基础产出 ${fmt(HIDDEN_CARD.base)} Token/s`;
+  $('button',dialog).textContent = pull ? '继续' : '返回模型库';
   dialog.showModal();
 }
 function initAdminCard() {
   const slot = $('#adminCardSlot'), dialog = $('#adminCardReveal');
-  $('[data-admin-card-face]',dialog).innerHTML = `<div class="admin-card-face" aria-hidden="true">${adminCardArt()}<span>${ADMIN_CARD.c} · ${ADMIN_CARD.t} 阶</span></div>`;
-  $('[data-admin-card-base]',dialog).textContent = `四种变体各 1 张 · 标准基础产出 ${fmt(ADMIN_CARD.base)} Token/s`;
+  $('[data-admin-card-face]',dialog).innerHTML = `<div class="admin-card-face" aria-hidden="true">${adminCardArt()}<span>${HIDDEN_CARD_LABEL}</span></div>`;
   const action = $('[data-admin-card-action]',slot);
   action.addEventListener('click', () => {
     if (!hasAdminCard()) refreshAdminCard(adminCardValid());
