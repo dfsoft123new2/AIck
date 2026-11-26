@@ -881,10 +881,23 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .modal-h h3 { margin: 0; font-size: 18px; }
 .x-btn { border: 0; background: var(--bg-3); width: 32px; height: 32px; border-radius: 8px; font-size: 18px; line-height: 1; color: var(--ink-2); }
 .detail { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 18px; }
-.detail .vars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
-.vcell { padding: 6px; border-radius: var(--r-s); background: var(--bg-3); border: 1px solid var(--line); text-align: center; font-size: 12px; }
-.vcell b { display: block; font-family: var(--font-num); font-size: 14px; }
-.vcell.off { opacity: .45; }
+.variant-preview { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.variant-preview > [data-act=replay] { justify-content: center; width: 100%; }
+.variant-face .card .body { min-height: 52px; }
+.variant-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.variant-choice {
+  --variant-ink: var(--ink-2);
+  min-height: 47px; min-width: 0; padding: 4px 3px; display: grid; justify-items: center; align-content: center; gap: 2px;
+  background: var(--bg-3); border: 1px solid var(--line); border-radius: var(--r-s); line-height: 1.1; cursor: pointer;
+}
+.variant-choice[data-variant-choice="1"] { --variant-ink: var(--copper); }
+.variant-choice[data-variant-choice="2"] { --variant-ink: var(--t-BANG); }
+.variant-choice[data-variant-choice="3"] { --variant-ink: var(--ok); }
+.variant-choice span { color: var(--ink); font-weight: 700; font-size: 13px; }
+.variant-choice small { max-width: 100%; color: var(--ink-2); font-size: 11px; overflow-wrap: anywhere; }
+.variant-choice:hover { border-color: var(--variant-ink); }
+.variant-choice[aria-pressed="true"] { border-color: var(--variant-ink); box-shadow: inset 0 -2px var(--variant-ink); }
+.variant-choice:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; margin: 10px 0; }
 .kv dt { color: var(--ink-3); } .kv dd { margin: 0; font-family: var(--font-num); font-weight: 600; }
 .desc { color: var(--ink-2); font-size: 13.5px; margin: 6px 0 0; }
@@ -902,77 +915,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .cine .sub { position: relative; color: rgba(255,255,255,.72); font-size: 14px; text-align: center; animation: fadeUp .5s .6s both; }
 .cine .hint { position: relative; color: rgba(255,255,255,.45); font-size: 12.5px; animation: fadeUp .5s 1s both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
-.cine.agi { background: radial-gradient(circle at 50% 45%, #fff 0%, #ffe9f5 18%, #1a1030 60%, #050308 100%); }
-.cine.aleph { background: radial-gradient(circle at 50% 45%, #E9E2FF 0%, #7B5CFF 16%, #160F3A 52%, #020106 100%); }
-.cine.aleph .rays { background: repeating-conic-gradient(from 0deg, rgba(190,170,255,.4) 0deg 3deg, transparent 3deg 9deg); opacity: .8; }
-.cine.qm { background: radial-gradient(circle at 50% 45%, #2a2a2a 0%, #080808 45%, #000 100%); }
-.cine.qm .rays { background: repeating-conic-gradient(from 0deg, rgba(255,45,85,.35) 0deg 2deg, transparent 2deg 7deg, rgba(0,229,255,.3) 7deg 9deg, transparent 9deg 15deg); opacity: .8; }
-.cine.qm .wafer { opacity: .15; }
-.cine.qm .title, .cine.qm .kicker { color: #fff; text-shadow: -2px 0 #FF2D55, 2px 0 #00E5FF; }
-.bang-scene, .bang-continue { display: none; }
-.cine.bang {
-  --bang-impact-at: .68s;
-  isolation: isolate; gap: clamp(5px, 1.7dvh, 14px); padding: 12px 16px 64px;
-  background: radial-gradient(ellipse at 51% 39%, #29131b, #0a1018 42%, #04060a 77%);
-}
-.cine.bang :is(.rays, .wafer, .kicker, .hint) { display: none; }
-.cine.bang .bang-scene { display: block; position: absolute; z-index: -1; left: 50%; top: 0; width: max(100%, 740px); height: 100%; transform: translateX(-50%); pointer-events: none; }
-.cine.bang .bang-stars { opacity: .62; }
-.cine.bang .bang-infall { opacity: 0; animation: horizon-infall var(--bang-impact-at) cubic-bezier(.3,.04,.77,.72) both; }
-.cine.bang .bang-hole { opacity: .78; animation: horizon-lens 1.5s both; }
-.cine.bang :is(.bang-impact, .bang-flare) { opacity: 0; }
-.cine.bang .bang-impact { animation: horizon-shock .62s var(--bang-impact-at) cubic-bezier(.08,.65,.19,1) both; }
-.cine.bang .bang-flare { animation: horizon-flare .47s var(--bang-impact-at) cubic-bezier(.12,.67,.21,1) both; }
-.cine.bang .holder { width: min(234px, 60vw, 40dvh); animation: horizon-reveal .64s calc(var(--bang-impact-at) + .09s) cubic-bezier(.16,.84,.27,1) both; }
-.cine.bang .card.t-BANG { border-color: #e6a680; box-shadow: 0 18px 40px -21px #ef765b; }
-.cine.bang .title { color: #fff2d9; font-size: clamp(24px, 5dvh, 44px); animation: horizon-caption .34s 1.02s ease-out both; }
-.cine.bang .sub { color: #f3d6c8; white-space: pre-line; line-height: 1.45; animation: horizon-caption .34s 1.14s ease-out both; }
-.cine:is(.bang,[data-replay]) .bang-continue {
-  display: block; position: absolute; inset-inline-end: max(16px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
-  min-width: 64px; min-height: 44px; padding: 0 12px; border-radius: 6px; color: #d5ecf2; border: 1px solid #385160; background: #0b121c;
-}
-.cine:is(.bang,[data-replay]) .bang-continue:hover { border-color: #99d7e5; color: #fff; }
-.cine:is(.bang,[data-replay]) .bang-continue:focus-visible { outline: 2px solid #99d7e5; outline-offset: 3px; }
-.cine[data-replay] .hint { display:none; }
-.cine[data-replay]:not(.bang) { gap:12px; padding:12px 16px 64px; }
-.cine[data-replay]:not(.bang) .holder { width:min(220px,60vw,42dvh); }
-.cine[data-static] *, .cine[data-static] *::after, .cine[data-static] *::before { animation:none !important; }
-@media (max-height:430px) {
-  .cine[data-replay]:not(.bang) { gap:5px; }
-  .cine[data-replay]:not(.bang) .holder { width:min(180px,52vw,37dvh); }
-}
-@keyframes horizon-infall {
-  0% { transform: scale(1.42); opacity: .12; }
-  42% { opacity: .8; }
-  100% { transform: scale(.19); opacity: 0; }
-}
-@keyframes horizon-lens {
-  0% { transform: scale(1.25) rotate(5deg); opacity: .42; animation-timing-function: cubic-bezier(.58,.06,.83,.7); }
-  44% { transform: scale(.33) rotate(-8deg); opacity: .88; animation-timing-function: cubic-bezier(.1,.74,.21,1); }
-  61% { transform: scale(1.11) rotate(1deg); opacity: 1; }
-  100% { transform: none; opacity: .78; }
-}
-@keyframes horizon-shock {
-  0% { transform: scale(.34); opacity: 0; }
-  13% { transform: scale(.96); opacity: .9; }
-  100% { transform: scale(2.25); opacity: 0; }
-}
-@keyframes horizon-flare {
-  0% { transform: scale(.19,.64); opacity: 0; }
-  26% { opacity: .92; }
-  100% { transform: scale(1.45,.63); opacity: 0; }
-}
-@keyframes horizon-reveal {
-  0% { transform: translateY(22px) scale(.69) rotate(-7deg); clip-path: inset(46% 0); opacity: 0; }
-  46% { clip-path: inset(0); opacity: 1; }
-  100% { transform: none; clip-path: inset(-25%); opacity: 1; }
-}
-@keyframes horizon-caption { from { opacity: 0; } }
-@media (max-height: 420px) {
-  .cine.bang { padding-bottom: 36px; }
-  .cine.bang .holder { width: min(166px, 37dvh); }
-}
-.cine.agi .rays { background: repeating-conic-gradient(from 0deg, rgba(255,120,180,.4) 0deg 5deg, rgba(120,220,255,.35) 5deg 10deg, transparent 10deg 18deg); opacity: .7; }
+.bang-continue { display: none; }
 .flash { position: fixed; inset: 0; z-index: 96; background: #fff; pointer-events: none; opacity: 0; }
 .flash.go { animation: flash .9s ease-out; }
 @keyframes flash { 0% { opacity: .9; } 100% { opacity: 0; } }
@@ -1021,6 +964,9 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .vault-item.offscreen { contain-intrinsic-block-size: auto 180px; }
   .detail { grid-template-columns: minmax(0,1fr); }
   .detail > .card { width: 170px; margin: 0 auto; }
+  .variant-preview { width: min(100%, 340px); margin-inline: auto; }
+  .variant-face { width: min(180px, 100%); margin-inline: auto; }
+  .variant-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .bench-stage { font-size: 44px; }
   .toasts { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); right: 10px; left: 10px; align-items: stretch; }
   .toast { max-width: none; }
@@ -1029,8 +975,150 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-  .cine.bang *, .cine.bang *::after { animation: none !important; }
 }
+.cine[data-scene] {
+  --cine-card: min(220px, 58vw, 37dvh);
+  --cine-stage: clamp(590px, 92vw, 1060px);
+  --cine-ease: cubic-bezier(.16,1,.3,1);
+  --cine-entry: cine-seat;
+  --cine-entry-time: .36s;
+  isolation: isolate;
+  gap: clamp(5px, 1.6dvh, 13px);
+  padding: 12px max(16px, env(safe-area-inset-right)) max(64px, calc(54px + env(safe-area-inset-bottom))) max(16px, env(safe-area-inset-left));
+  background: radial-gradient(ellipse at 50% 42%, var(--cine-ground), #080c12 60%, #05070a);
+}
+.cine[data-scene] :is(.rays,.wafer,.hint,.kicker), .cine[data-replay] .hint { display: none; }
+.cine[data-scene] .holder { width: var(--cine-card); animation: none; }
+.cine[data-scene] .holder > .card {
+  animation: var(--cine-entry) var(--cine-entry-time) var(--cine-cue) var(--cine-ease) both;
+}
+.cine[data-scene] .tier-scene {
+  position: absolute; z-index: -1; pointer-events: none;
+  top: calc(var(--cine-card) / 2); left: 50%; width: var(--cine-stage); height: auto;
+  transform: translate(-50%,-50%);
+  color: var(--cine-edge);
+}
+.cine[data-scene] .title, .cine[data-scene] .sub {
+  max-inline-size: min(100%, 46ch); overflow-wrap: anywhere; text-wrap: balance;
+  text-shadow: 0 2px 10px #05070a;
+  animation: cine-caption .21s calc(var(--cine-cue) + var(--cine-entry-time) * .54) ease-out both;
+}
+.cine[data-scene] .title { font-size: 27px; }
+.cine[data-scene] .sub { color: #d4dfeb; line-height: 1.35; }
+.cine[data-scene=horizon] .sub { color: #f4d9ca; white-space: pre-line; }
+.cine[data-scene=horizon] .title { color: #fff1d9; font-size: 38px; }
+.cine:is([data-scene],[data-replay]) .bang-continue {
+  display: block; position: absolute; inset-inline-end: max(16px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
+  min-width: 68px; min-height: 44px; padding: 0 13px; border-radius: 6px;
+  color: #e3edf5; background: #0b121c; border: 1px solid #4e6573; font-size: 13px;
+}
+.cine:is([data-scene],[data-replay]) .bang-continue:hover { border-color: var(--cine-edge, #99d7e5); color: white; }
+.cine:is([data-scene],[data-replay]) .bang-continue:focus-visible { outline: 2px solid var(--cine-edge, #99d7e5); outline-offset: 3px; }
+.cine[data-replay]:not([data-scene]) { gap: 12px; padding: 12px 16px 64px; }
+.cine[data-replay]:not([data-scene]) .holder { width: min(220px,60vw,42dvh); }
+
+.cine-layer { transform-box: view-box; transform-origin: 0 0; }
+.sc-scan { opacity: 0; animation: cine-scan .34s ease-out both; }
+.sc-relay { opacity: .54; animation: cine-relay .45s ease-out both; }
+.sc-relay path { stroke-dasharray: .19 1; stroke-dashoffset: -.75; animation: cine-wire .38s ease-out both; }
+.sc-focus { opacity: .64; animation: cine-focus .37s var(--cine-ease) both; }
+.sc-ripple { opacity: 0; animation: cine-ripple .59s var(--cine-cue) var(--cine-ease) both; }
+.sc-prism { opacity: .52; animation: cine-prism .65s var(--cine-ease) both; }
+.sc-forge { opacity: .62; animation: cine-forge .53s var(--cine-ease) both; }
+.sc-ignition { opacity: 0; animation: cine-ignition .73s .16s var(--cine-ease) both; }
+.sc-sparks { opacity: 0; animation: cine-sparks .66s var(--cine-cue) var(--cine-ease) both; }
+.sc-lock-left, .sc-lock-right { opacity: .42; animation: cine-unlock .91s ease-in-out both; }
+.sc-lock-left { --lock-shift: -78px; --lock-turn: -15deg; }
+.sc-lock-right { --lock-shift: 78px; --lock-turn: 15deg; }
+.sc-collapse { opacity: .34; animation: cine-collapse 1.06s cubic-bezier(.63,.03,.65,1) both; }
+.sc-orbit { opacity: .66; animation: cine-orbit 1.24s cubic-bezier(.45,.02,.25,1) both; }
+.sc-orbit-lock { opacity: .58; animation: cine-focus .47s calc(var(--cine-cue) - .11s) var(--cine-ease) both; }
+.sc-desync-a, .sc-desync-b { opacity: .57; animation: cine-desync .96s both; }
+.sc-desync-a { --desync-x: -126px; --desync-y: -22px; }
+.sc-desync-b { --desync-x: 126px; --desync-y: 22px; animation-delay: .06s; }
+.sc-accrete { opacity: 0; animation: cine-accrete var(--cine-cue) cubic-bezier(.56,.05,.84,.32) both; }
+.sc-horizon { opacity: .68; animation: cine-horizon calc(var(--cine-cue) + .66s) both; }
+.sc-rupture { opacity: 0; animation: cine-rupture .69s var(--cine-cue) var(--cine-ease) both; }
+
+.cine[data-scene=scan] { --cine-entry: cine-print; --cine-entry-time: .28s; }
+.cine[data-scene=focus] { --cine-entry: cine-register; }
+.cine[data-scene=prism] { --cine-entry: cine-refract; --cine-entry-time: .42s; }
+.cine[data-scene=forge] { --cine-entry: cine-press; --cine-entry-time: .41s; }
+.cine[data-scene=ignition] { --cine-entry: cine-ignite; --cine-entry-time: .49s; }
+.cine[data-scene=seal] { --cine-entry: cine-print; --cine-entry-time: .54s; }
+.cine[data-scene=singularity] { --cine-entry: cine-erupt; --cine-entry-time: .58s; }
+.cine[data-scene=orbit] { --cine-entry: cine-fold; --cine-entry-time: .62s; }
+.cine[data-scene=desync] { --cine-entry: cine-reassemble; --cine-entry-time: .62s; }
+.cine[data-scene=horizon] { --cine-entry: cine-cross; --cine-entry-time: .69s; --cine-card: min(234px, 61vw, 38dvh); }
+.cine[data-scene]:is([data-scene=singularity],[data-scene=orbit],[data-scene=desync],[data-scene=horizon]) { --cine-stage: clamp(735px, 110vw, 1200px); }
+
+@keyframes cine-caption { from { opacity: 0; } }
+@keyframes cine-print { from { clip-path: inset(0 0 100%); opacity: .35; } to { clip-path: inset(-20%); } }
+@keyframes cine-seat { from { transform: translateY(13px) scale(.96); opacity: .14; } }
+@keyframes cine-register { from { transform: scale(1.16); opacity: 0; } }
+@keyframes cine-refract { from { transform: skewX(-17deg) scaleX(.62); opacity: 0; } }
+@keyframes cine-press { from { transform: translateY(-26px) scale(.91); opacity: 0; } 56% { transform: scale(.985); opacity: 1; } }
+@keyframes cine-ignite { from { transform: translate(-21px,16px) scale(.84) rotate(-8deg); opacity: 0; } }
+@keyframes cine-erupt { from { transform: scale(.42) rotate(-13deg); opacity: 0; } 45% { opacity: 1; } }
+@keyframes cine-fold { from { transform: perspective(560px) rotateY(-73deg) rotateZ(-12deg) scale(.84); opacity: 0; } }
+@keyframes cine-reassemble {
+  0% { transform: translateX(20px) skewX(-8deg); opacity: .12; clip-path: polygon(0 18%,100% 18%,100% 38%,0 38%,0 70%,100% 70%,100% 86%,0 86%); }
+  36% { transform: translateX(-9px); opacity: .78; clip-path: inset(7% -10% 9%); }
+  100% { transform: none; opacity: 1; clip-path: inset(-20%); }
+}
+@keyframes cine-cross {
+  0% { transform: scale(.56) rotate(-20deg); clip-path: inset(48% 0); opacity: 0; }
+  45% { opacity: 1; clip-path: inset(0); }
+  100% { transform: none; clip-path: inset(-20%); }
+}
+@keyframes cine-scan { from { transform: translateY(-100px); opacity: .94; } to { transform: translateY(119px); opacity: 0; } }
+@keyframes cine-relay { from { opacity: 0; } 40% { opacity: .88; } }
+@keyframes cine-wire { from { stroke-dashoffset: 0; } }
+@keyframes cine-focus { from { transform: scale(1.47); opacity: 0; } }
+@keyframes cine-ripple { from { transform: scale(.63); opacity: 0; } 16% { opacity: .8; } to { transform: scale(1.68); opacity: 0; } }
+@keyframes cine-prism { from { transform: scaleX(.06) rotate(-8deg); opacity: .1; } 55% { opacity: .94; } }
+@keyframes cine-forge { from { transform: rotate(29deg) scale(1.45); opacity: .2; } 65% { transform: scale(.91); opacity: 1; } }
+@keyframes cine-ignition { from { transform: scale(.24) rotate(-12deg); opacity: 0; } 32% { opacity: .94; } to { transform: scale(1.25); opacity: 0; } }
+@keyframes cine-sparks { from { transform: scale(.6); opacity: 0; } 17% { opacity: .94; } to { transform: scale(1.83) rotate(11deg); opacity: 0; } }
+@keyframes cine-unlock { 0% { opacity: 0; transform: scale(1.15); } 45% { opacity: 1; transform: none; } 100% { transform: translateX(var(--lock-shift)) rotate(var(--lock-turn)); } }
+@keyframes cine-collapse {
+  0% { opacity: .12; transform: scale(1.38) rotate(-69deg); }
+  57% { opacity: .95; transform: scale(.24) rotate(32deg); }
+  100% { transform: scale(.93) rotate(38deg); }
+}
+@keyframes cine-orbit {
+  0% { transform: scale(.73,1.29) rotate(-65deg); opacity: .16; }
+  57% { transform: scale(1.08,.52) rotate(11deg); opacity: .94; }
+  100% { transform: none; }
+}
+@keyframes cine-desync {
+  0% { transform: translate(var(--desync-x),var(--desync-y)); opacity: .16; }
+  39% { transform: translateX(calc(var(--desync-x) * -.26)) skewX(-12deg); opacity: .82; }
+  68% { transform: translateX(calc(var(--desync-x) * .18)); opacity: .72; }
+  100% { transform: none; }
+}
+@keyframes cine-accrete { from { transform: scale(1.62) rotate(-67deg); opacity: .25; } 55% { opacity: .86; } to { transform: scale(.18) rotate(39deg); opacity: 0; } }
+@keyframes cine-horizon {
+  0% { transform: scale(1.56) rotate(-10deg); opacity: .36; animation-timing-function: cubic-bezier(.58,.06,.83,.7); }
+  55% { transform: scale(.16) rotate(24deg); opacity: .96; animation-timing-function: cubic-bezier(.1,.74,.21,1); }
+  73% { transform: scale(1.19); opacity: .87; }
+  100% { transform: none; }
+}
+@keyframes cine-rupture { from { transform: scale(.24); opacity: 0; } 22% { opacity: .83; } to { transform: scale(2.03) rotate(12deg); opacity: 0; } }
+
+@media (max-height: 480px) {
+  .cine[data-scene] { --cine-card: min(160px, 50vw, 32dvh); }
+  .cine[data-scene] .title, .cine[data-scene=horizon] .title { font-size: 21px; }
+  .cine[data-replay]:not([data-scene]) { gap: 5px; }
+  .cine[data-replay]:not([data-scene]) .holder { width: min(180px,52vw,37dvh); }
+}
+.cine[data-static] *, .cine[data-static] *::after, .cine[data-static] *::before { animation: none !important; }
+.cine[data-static] :is(.sc-lock-left,.sc-lock-right) { transform: translateX(var(--lock-shift)) rotate(var(--lock-turn)); }
+@media (prefers-reduced-motion: reduce) {
+  .cine *, .cine *::after, .cine *::before { animation: none !important; }
+  .cine :is(.sc-lock-left,.sc-lock-right) { transform: translateX(var(--lock-shift)) rotate(var(--lock-turn)); }
+}
+
 #adminCardSlot[hidden], .admin-card-error:empty { display:none; }
 .admin-card-error { display:block; margin-top:4px; font-size:13px; }
 .card.t-NULLPOINT { --tc:#ff9b60; --np-foil:#91f3ee; border-color:var(--tc); background:#05070a; box-shadow:0 8px 22px -11px var(--tc); }
@@ -1677,44 +1765,6 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 
 <div class="cine" id="cine">
   <div class="rays"></div><div class="wafer"></div>
-  <svg class="bang-scene" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-    <defs>
-      <linearGradient id="bang-disk" x2="100%" y2="0%"><stop stop-color="#832833" stop-opacity="0"/><stop offset=".18" stop-color="#e04f35"/><stop offset=".39" stop-color="#ffb867"/><stop offset=".57" stop-color="#fff1cb"/><stop offset=".82" stop-color="#e66042"/><stop offset="1" stop-color="#8e303c" stop-opacity="0"/></linearGradient>
-      <linearGradient id="bang-lens" x1="0%" y1="100%" x2="100%" y2="0%"><stop stop-color="#115964" stop-opacity="0"/><stop offset=".38" stop-color="#74dbec"/><stop offset=".57" stop-color="#c6f7fa"/><stop offset=".86" stop-color="#317d8f" stop-opacity=".2"/><stop offset="1" stop-color="#317d8f" stop-opacity="0"/></linearGradient>
-      <radialGradient id="bang-flare"><stop stop-color="#fff2d8"/><stop offset=".15" stop-color="#ffd09b" stop-opacity=".86"/><stop offset=".42" stop-color="#f57b52" stop-opacity=".3"/><stop offset="1" stop-color="#e35041" stop-opacity="0"/></radialGradient>
-      <radialGradient id="bang-aura"><stop offset=".48" stop-color="#05070c" stop-opacity="0"/><stop offset=".69" stop-color="#981e26" stop-opacity=".64"/><stop offset=".78" stop-color="#552936" stop-opacity=".3"/><stop offset="1" stop-color="#05070c" stop-opacity="0"/></radialGradient>
-    </defs>
-    <path class="bang-stars" d="M123 99h1M180 538h1M211 420h1M278 171h1M343 611h1M370 78h1M397 255h1M409 493h1M445 189h1M457 620h1M467 547h1M483 112h1M501 64h1M508 501h1M531 433h1M551 198h1M566 576h1M601 119h1M629 643h1M654 176h1M685 81h1M710 533h1M747 175h1M756 491h1M771 101h1M794 551h1M797 640h1M818 429h1M885 117h1M924 514h1M967 268h1M1008 624h1M1041 157h1M1089 444h1" fill="none" stroke="#a4d7df" stroke-width="1.6" stroke-linecap="round"/>
-    <g transform="translate(600 322)">
-      <g class="bang-infall" fill="none" stroke-linecap="round">
-        <path d="M-540 -220l305 131M-590 93l332 -59M-378 351l210 -190M358 -330l-169 153M580 -74l-316 35M505 234l-276 -122M221 418l-112 -202M-154 -413l76 205" stroke="#8be0ef" stroke-width="2.4"/>
-        <path d="M-440 -75l160 26M-500 248l253 -131M-209 399l84 -177M453 -214l-197 97M498 69l-223 -35M222 -388l-109 181" stroke="#e9885b" stroke-width="1.6"/>
-      </g>
-      <g class="bang-hole">
-        <circle r="220" fill="url(#bang-aura)"/>
-        <g transform="rotate(-21)" fill="none">
-          <ellipse rx="515" ry="93" stroke="url(#bang-lens)" stroke-width="1.5" opacity=".44"/>
-          <ellipse rx="480" ry="75" stroke="url(#bang-disk)" stroke-width="14" opacity=".24"/>
-          <ellipse rx="452" ry="65" stroke="url(#bang-disk)" stroke-width="3.2"/>
-          <ellipse rx="409" ry="54" stroke="url(#bang-disk)" stroke-width="1.4" opacity=".68"/>
-        </g>
-        <circle r="147" fill="#05070c" stroke="url(#bang-lens)" stroke-width="2.3"/>
-        <g transform="rotate(-21)" fill="none">
-          <path d="M-452 0a452 64 0 0 0 904 0" stroke="url(#bang-disk)" stroke-width="16" opacity=".25"/>
-          <path d="M-452 0a452 64 0 0 0 904 0" stroke="url(#bang-disk)" stroke-width="4.6"/>
-          <path d="M-495 0a495 79 0 0 0 990 0" stroke="url(#bang-disk)" stroke-width="1.7"/>
-        </g>
-      </g>
-      <g class="bang-impact" fill="none">
-        <circle r="218" stroke="url(#bang-lens)" stroke-width="2.5"/>
-        <circle r="171" stroke="url(#bang-disk)" stroke-width="1.3"/>
-        <path d="M-201 -27l-21 -2m33 130l-24 13m90 -276l-7 -18m200 365l9 21m126 -276l21 -7m-71 -94l13 -15m-4 251l19 9" stroke="#a8edf3" stroke-width="1.7"/>
-      </g>
-      <g transform="rotate(-21)">
-        <g class="bang-flare"><ellipse rx="486" ry="95" fill="url(#bang-flare)"/><path d="M-482 0H482" stroke="url(#bang-disk)" stroke-width="2"/></g>
-      </g>
-    </g>
-  </svg>
   <div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div>
   <div class="hint">点击任意处继续</div><button class="bang-continue" type="button" id="bangContinue">继续</button>
 </div>
@@ -3735,32 +3785,117 @@ function burstAt(el, color) {
     document.body.appendChild(p); setTimeout(() => p.remove(), 750);
   }
 }
+/* Geometry runs on a card-centered stage, independent of viewport layout. */
+const CINE_HORIZON_IMPACT = .82;
+const cineLayer = (motion, markup) => `<g class="cine-layer sc-${motion}">${markup}</g>`;
+const cineSpokes = (count, markup, offset = 0) => Array.from({length:count}, (_,i) =>
+  `<g transform="rotate(${offset+i*360/count})">${markup}</g>`).join('');
+const cineStars = (count, seed) => {
+  const next = rngFrom(seed);
+  return `<g fill="var(--cine-edge)" stroke="none">${Array.from({length:count}, (_,i) => {
+    const x = Math.round((next()-.5)*800), y = Math.round((next()-.5)*455);
+    return `<circle cx="${x}" cy="${y}" r="${i%6 ? 1 : 2}" opacity="${.22+(i%5)*.12}"/>`;
+  }).join('')}</g>`;
+};
+
+const TIER_CINEMATICS = [
+  ['scan', .08, () =>
+    `<path d="M-119-53v-47h47m144 0h47v47m0 106v47H72m-144 0h-47V53" stroke-dasharray="22 4" opacity=".52"/>`
+    +cineLayer('scan','<path d="M-145 0h290" stroke="url(#cine-rail)" stroke-width="3"/><path d="M-145 0l-8-5v10Zm290 0 8-5v10Z" fill="currentColor"/>')],
+  ['circuit', .14, () =>
+    `<path d="M-265-59h85l51 49h72m-208 72h70l45-38h95M265-68h-85l-51 49H56m209 81h-70l-45-38H56" opacity=".5"/>
+      <path d="M-266-59h2m-2 121h2m528-130h2m-2 130h2" stroke-width="8"/>`
+    +cineLayer('relay','<path pathLength="1" d="M-265-59h85l51 49h72m-208 72h70l45-38h95M265-68h-85l-51 49H56m209 81h-70l-45-38H56" stroke-width="3"/>')],
+  ['focus', .21, () =>
+    `<circle r="167" opacity=".25" stroke-dasharray="2 8"/><circle r="129" opacity=".25"/>`
+    +cineLayer('focus',cineSpokes(4,'<path d="M-26-132h52m-16-26h-20m0 6v-12m20 0v12M-40-104H-63v21m126 0v-21H40" stroke-width="2"/>',45))
+    +cineLayer('ripple','<circle r="135" stroke="url(#cine-rail)" stroke-width="2"/>')],
+  ['prism', .29, () =>
+    `<path d="M0-188 164 94h-328Z" opacity=".28"/><path d="M0 188 164-94h-328Z" opacity=".25" stroke-dasharray="6 8"/>`
+    +cineLayer('prism',`<path d="M-369 83-56-15 0-118 57-15 369-82M-362 111l296-92L0 122 67 19l299-120" stroke="url(#cine-rail)" stroke-width="2.5"/>
+      <path d="M0-118 108 63h-216Z" fill="var(--cine-edge)" fill-opacity=".1"/><path d="M0 122 90-55H-90Z" fill="var(--cine-foil)" fill-opacity=".17" stroke="var(--cine-foil)"/>`)],
+  ['forge', .37, () =>
+    `<circle r="171" stroke-dasharray="54 12 2 12" opacity=".45"/>`
+    +cineLayer('forge',cineSpokes(6,`<path d="M-31-144-23-159h46l8 15-18 23h-26Z" fill="var(--cine-ground)" stroke-width="2"/>
+      <path d="M-14-144h28m-7-7v5m-14-5v5" stroke="var(--cine-edge)"/>`))
+    +cineLayer('ripple','<circle r="164" stroke="url(#cine-rail)" stroke-width="3"/>')],
+  ['ignition', .44, () =>
+    `<g transform="rotate(-31)"><ellipse rx="289" ry="57" stroke="url(#cine-rail)" opacity=".52"/><ellipse rx="246" ry="39" opacity=".23" stroke-dasharray="38 12"/></g>`
+    +cineLayer('ignition','<g transform="rotate(-31)" stroke="url(#cine-rail)"><ellipse rx="362" ry="31" stroke-width="8"/><path d="M-417 0h262m310 0h262" stroke-width="2"/></g>')
+    +cineLayer('sparks',cineSpokes(12,'<path d="M0-138v-12m12-12 3-11m-24 56-3 12" stroke-width="1.7"/>',12))],
+  ['seal', .52, () =>
+    `<path d="M0-187 178-92v184L0 187-178 92V-92Z" opacity=".28" stroke-dasharray="2 7"/>`
+    +cineLayer('lock-left',`<path d="M0-142-133-72V72L0 142 25 91l-51-42 46-62-34-53Z" fill="var(--cine-ground)" stroke-width="2"/>
+     <path d="M-18-107-106-59V59l85 48m-64-63v-88" opacity=".58"/>`)
+    +cineLayer('lock-right',`<path d="M0-142 133-72V72L0 142 25 91l-51-42 46-62-34-53Z" fill="var(--cine-ground)" stroke-width="2"/>
+     <path d="M18-107 106-59V59l-85 48m64-63v-88" opacity=".58"/>`)
+    +cineLayer('ripple','<path d="M0-151 142-75V75L0 151-142 75V-75Z" stroke="url(#cine-rail)" stroke-width="2"/>')],
+  ['singularity', .61, () => cineStars(26,504)
+    +cineLayer('collapse',cineSpokes(6,`<path d="M0-226C131-214 157-115 81-69 49-49 17-52 0-78" stroke="url(#cine-rail)" stroke-width="3"/>
+      <path d="M10-204C87-186 104-130 72-100" opacity=".57"/>`))
+    +cineLayer('ripple','<circle r="166" stroke="url(#cine-rail)" stroke-width="3"/><circle r="141" opacity=".5" stroke-dasharray="38 22"/>')],
+  ['orbit', .71, () => cineStars(42,808)
+    +cineLayer('orbit',`<g transform="rotate(-32)"><ellipse rx="333" ry="69" stroke="url(#cine-rail)" stroke-width="2"/><ellipse rx="280" ry="48" stroke-dasharray="14 9" opacity=".53"/></g>
+      <g transform="rotate(33)"><ellipse rx="272" ry="73" stroke="var(--cine-edge)" opacity=".64"/><ellipse rx="239" ry="48" stroke="var(--cine-foil)"/></g>`)
+    +cineLayer('orbit-lock',cineSpokes(4,'<path d="M-31-177h-24l-12 14v17m134 0v-17l-12-14H31m-40 0h18m-9-9v18"/>',45))],
+  ['desync', .74, () =>
+    `<path d="M-353-92H-244l37 15h84m285 38h113l38 14h61M-355 77h124l36-13h35m312 42h82l27-18h115" opacity=".35" stroke-dasharray="23 5 4 6"/>`
+    +cineLayer('desync-a',`<path d="M-373-97h199l43 14h166l78 18h120m-533 115h228l42-19h219m-42 63h258" stroke-width="3" stroke-dasharray="36 8 3 15"/>
+      <path d="M-324-22h221v17h-221Zm282 77H302v15H-42Z" fill="var(--cine-foil)" fill-opacity=".2" stroke="none"/>`)
+    +cineLayer('desync-b',`<path d="M-281-61h237v14h306m-480 58h141m-16 36h194l57-12h178m-538 69h239" stroke="#fa769c" stroke-width="2" stroke-dasharray="55 6 9 12"/>
+      <path d="M-132-113h276v17h-276Zm65 197h111v13H-67Z" fill="#fa769c" fill-opacity=".21" stroke="none"/>`)],
+  ['horizon', CINE_HORIZON_IMPACT, () => cineStars(48,911)
+    +cineLayer('accrete',cineSpokes(8,'<path d="M-32-237q138 31 173 114" stroke="url(#cine-rail)" stroke-width="2.8"/><path d="M7-209q81 7 120 76" opacity=".56"/>',14))
+    +cineLayer('horizon',`<g transform="rotate(-23)" stroke="url(#cine-rail)"><ellipse rx="401" ry="77" stroke-width="1.5" opacity=".42"/><ellipse rx="369" ry="65" stroke-width="15" opacity=".18"/>
+      <ellipse rx="366" ry="60" stroke-width="4"/><ellipse rx="317" ry="48" opacity=".76"/></g>
+      <circle r="142" fill="#05060a" stroke="var(--cine-edge)" stroke-width="2"/>
+      <path d="M-143 3A143 143 0 0 1 102-100" stroke="#8de9f4" stroke-width="3" opacity=".72"/>
+      <g transform="rotate(-23)"><path d="M-366 0a366 60 0 0 0 732 0M-394 0a394 75 0 0 0 788 0" stroke="url(#cine-rail)" stroke-width="3.5"/>
+      <path d="M-365 0a365 60 0 0 0 730 0" stroke="var(--cine-foil)" stroke-width="11" opacity=".23"/></g>`)
+    +cineLayer('rupture',`<circle r="160" stroke="#93e9f0" stroke-width="2"/><circle r="188" stroke="var(--cine-edge)" stroke-width="2"/>
+      <g transform="rotate(-23)"><path d="M-417 0H417" stroke="url(#cine-rail)" stroke-width="5"/></g>${cineSpokes(8,'<path d="M0-200v-27m-7 16 1-8"/>',12)}`)]
+];
+
+function tierCineSVG(scene, draw) {
+  return `<svg class="tier-scene${scene === 'horizon' ? ' bang-scene' : ''}" viewBox="0 0 860 540" aria-hidden="true" focusable="false">
+    <defs><linearGradient id="cine-rail" gradientUnits="userSpaceOnUse" x1="-420" x2="420" y1="0" y2="0">
+      <stop stop-color="var(--cine-foil)" stop-opacity="0"/><stop offset=".24" stop-color="var(--cine-foil)"/>
+      <stop offset=".53" stop-color="var(--cine-edge)"/><stop offset=".8" stop-color="var(--cine-foil)"/>
+      <stop offset="1" stop-color="var(--cine-foil)" stop-opacity="0"/>
+    </linearGradient></defs><g transform="translate(430 270)" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${draw()}</g>
+  </svg>`;
+}
+
 let cineOpen = false, cineCloseTimer, cineReturnFocus;
 function showCine(r, replayFrom = null) {
   const c = $('#cine'), replay = !!replayFrom;
   const bang = isExclamationResult(r);
   if ($('#adminCardReveal').open || c.matches('.open[data-replay]') || (!replay && (!S.set.fx || (cineOpen && !bang)))) return;
   const m = r.leak ? LEAK_MODEL : MODEL_BY_ID[r.id];
-  const color = r.leak ? '#E6F0EA' : (bang || r.t < 7 ? TIER_HEX[r.t] : '#ffffff');
+  if (!m) return;
+  const scene = !r.leak && TIER_CINEMATICS[r.t];
+  const staticScene = !S.set.fx || matchMedia('(prefers-reduced-motion: reduce)').matches;
   clearTimeout(cineCloseTimer);
-  if (bang && c.classList.contains('open')) {
-    c.classList.remove('open'); void c.offsetWidth;
-  }
-  c.style.setProperty('--cc', color);
-  c.classList.toggle('agi', !r.leak && r.t === 7);
-  c.classList.toggle('aleph', !r.leak && r.t === 8);
-  c.classList.toggle('qm', !r.leak && r.t === 9);
-  c.classList.toggle('bang', bang);
+  c.style.setProperty('--cc', r.leak ? '#E6F0EA' : TIER_HEX[r.t]);
+  if (scene) {
+    const [key, cue] = scene, [ground, edge, foil] = CARD_MATERIALS[r.t];
+    c.dataset.scene = key;
+    c.style.setProperty('--cine-ground', ground);
+    c.style.setProperty('--cine-edge', edge);
+    c.style.setProperty('--cine-foil', foil);
+    c.style.setProperty('--cine-cue', `${cue}s`);
+  } else delete c.dataset.scene;
   c.toggleAttribute('data-replay',replay);
-  c.toggleAttribute('data-static',!S.set.fx);
-  $('#cineKicker').textContent = r.leak ? '异常文件' : (r.t >= 7 ? (m.k || '检测到通用智能') : r.isNew ? `${TIERS[r.t].id} 级新模型入库` : `${TIERS[r.t].id} · ${VARIANTS[r.v].name}`);
-  $('#cineCard').innerHTML = cardHTML(m, r.v, { count: r.n });
+  c.toggleAttribute('data-static', staticScene);
+  $('#cineKicker').textContent = r.leak ? '异常文件' : '';
+  $('#cineCard').innerHTML = (scene ? tierCineSVG(scene[0], scene[2]) : '') + cardHTML(m, r.v, { count: r.n, isNew: !replay && r.isNew });
   $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
   $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出'
     : bang ? `${replay ? VARIANTS[r.v].name : `黑洞计算机 · ${VARIANTS[r.v].name}版约 ${fmtProb(r.hitProb)}`}\n基础产出 ${fmt(TIERS[r.t].base)} Token/s`
     : `${LABS[m.lab].name} · 代号 ${m.c}${m.st ? ' · ' + STATUS[m.st].name : ''}${replay ? '' : ` · 出现概率 ${fmtProb(r.prob)}${r.pity ? '（保底）' : ''}`}`;
+  if (replay && r.preview) $('#cineSub').append(' · 未拥有');
   c.classList.add('open'); cineOpen = true;
-  if (bang || replay) {
+  if (scene || replay) {
     const next = $('#bangContinue');
     next.textContent = replay ? '返回详情' : '继续';
     if (replay) $('#modalBack').inert = true;
@@ -3769,7 +3904,7 @@ function showCine(r, replayFrom = null) {
     c.setAttribute('aria-labelledby', 'cineTitle'); c.setAttribute('aria-describedby', 'cineSub');
     $('#flash').classList.remove('go'); next.focus({preventScroll:true});
   }
-  if (!replay && !bang && (r.t >= 6 || r.leak)) { const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+  if (!replay && r.leak && !staticScene) { const f = $('#flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
   return true;
 }
 function closeCine() {
@@ -3777,7 +3912,7 @@ function closeCine() {
   if (!c.classList.contains('open')) return;
   const replay = c.hasAttribute('data-replay');
   c.classList.remove('open');
-  if (c.classList.contains('bang') || replay) {
+  if (c.hasAttribute('role')) {
     for (const attr of ['role','aria-modal','aria-labelledby','aria-describedby']) c.removeAttribute(attr);
     if (replay) $('#modalBack').inert = false;
     if (restoreFocus || replay) cineReturnFocus?.focus({preventScroll:true});
@@ -3788,12 +3923,12 @@ function closeCine() {
   clearTimeout(cineCloseTimer); cineCloseTimer = setTimeout(() => { cineOpen = false; }, 300);
 }
 
-function replayCardCine(m, trigger) {
+function replayCardCine(m, trigger, variant) {
   const leak = m === LEAK_MODEL, copies = leak ? null : modelInventory(m);
-  if (!leak && !copies) return;
-  const v = leak ? 3 : bestVar(copies), n = leak ? S.leaks : copies?.[v];
-  if (!(n > 0)) return;
-  const r = {id:m.id,t:m.t,v,n,leak};
+  if (leak ? !(S.leaks > 0) : !owned(m)) return;
+  const v = leak ? 3 : VARIANTS[variant] ? variant : bestVar(copies);
+  const n = leak ? S.leaks : copies[v] || 0;
+  const r = {id:m.id,t:m.t,v,n,leak,preview:!n};
   const played = isHiddenCard(m.id) ? showAdminCardReveal(r,true) : showCine(r,trigger);
   if (played && S.set.fx) playRare(m.t >= 7,isExclamationResult(r));
 }
@@ -3823,8 +3958,8 @@ function playBangSound() {
   stopBangSound();
   const bus = bangSound = actx.createGain();
   bus.connect(actx.destination);
-  const t = actx.currentTime, impact = t + .68; // Matches --bang-impact-at.
-  tone(148, t, .64, 'sine', .12, bus, 48);
+  const t = actx.currentTime, impact = t + CINE_HORIZON_IMPACT;
+  tone(148, t, CINE_HORIZON_IMPACT - .04, 'sine', .12, bus, 48);
   tone(96, impact, .72, 'sine', .23, bus, 41);
   tone(180, impact + .012, .22, 'triangle', .09, bus, 79);
   tone(220, impact + .09, .59, 'triangle', .055, bus);
@@ -4256,10 +4391,10 @@ function refreshTrainButtons(detail) {
   textIfChanged($('.cost', bulk), quote.levels ? `至 Lv.${trainLv(m.id) + quote.levels} · ${fmt(quote.cost)} Token` : has ? 'Token 不足' : '未拥有');
   bulk.trainOffer = quote;
 }
-const replayCardButton = `<button class="btn ghost" type="button" data-act="replay" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 9 9 9.75 9.75 0 0 1-6.74-2.74L3 15"/><path d="M3 21v-6h6"/></svg>重看过场</button>`;
-function bindCardReplay(el, m) {
+const replayCardButton = `<button class="btn ghost" type="button" data-act="replay" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 1 9 9 9.75 9.75 0 0 1-6.74-2.74L3 15"/><path d="M3 21v-6h6"/></svg><span>重看过场</span></button>`;
+function bindCardReplay(el, m, variant) {
   const replay = $('[data-act=replay]',el);
-  if (replay) replay.onclick = () => { initAudio(); replayCardCine(m,replay); };
+  if (replay) replay.onclick = () => { initAudio(); replayCardCine(m,replay,variant?.()); };
 }
 function openDetail(id) {
   if (id === LEAK_MODEL.id && S.leaks > 0) {
@@ -4270,15 +4405,20 @@ function openDetail(id) {
     return;
   }
   const m = modelById(id), hidden = isHiddenCard(id); if (!m || (hidden && !owned(m))) return;
+  let variant = owned(m) ? bestVar(modelInventory(m)) : 0;
   const html = () => {
     const c = modelInventory(m) || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
     return `<div class="modal-h"><h3>${esc(m.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
     <div class="detail" data-train-id="${esc(m.id)}">
-      ${cardHTML(m, has ? bestVar(c) : 0, { count: total(c), locked: !has })}
+      ${has ? `<div class="variant-preview">
+        <div class="variant-face" data-variant-face>${cardHTML(m, variant, {count:c[variant]})}</div>
+        <div class="variant-options" role="group" aria-label="卡片变体">${VARIANTS.map((v,i) =>
+          `<button class="variant-choice" type="button" data-variant-choice="${i}" aria-pressed="${i === variant}"><span>${v.name}</span><small>${c[i] > 0 ? '×' + fmt(c[i]) : '未拥有'}</small></button>`).join('')}</div>
+        ${replayCardButton}
+      </div>` : cardHTML(m, 0, {locked:true})}
       <div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${hidden ? `<span class="tag">${HIDDEN_CARD_LABEL}</span>` : tierTag(m.t)}${specTag(m.s)}${m.st ? statusTag(m.st) : ''}<span class="muted" style="font-size:13px">${esc(LABS[m.lab].name)}</span></div>
         <p class="desc">${esc(m.d)}</p>
-        ${m.t === EXCLAMATION_TIER ? `<p class="note">${esc(TIER_RULE[m.t])}</p>` : ''}
         ${hidden ? '' : ratingHTML(m)}
         <dl class="kv">
           <dt>代号</dt><dd>${esc(m.c)}</dd>
@@ -4290,19 +4430,31 @@ function openDetail(id) {
           <dt>微调等级</dt><dd>Lv.${trainLv(m.id)} · 产出 ×${fmtMul(trainMul(m.id))} · 战力 ×${fmtMul(benchTrainMul(m))}</dd>
           <dt>当前总产出</dt><dd style="color:var(--ok)">+${fmt(modelOut(m))}/s</dd>
         </dl>
-        <div class="vars">${VARIANTS.map((v, i) => `<div class="vcell${c[i] > 0 ? '' : ' off'}"><span>${v.name}</span><b>${fmt(c[i])}</b></div>`).join('')}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
           <button class="btn" data-act="train">微调至 Lv.${trainLv(m.id) + 1}<span class="cost"></span></button>
           <button class="btn ghost" data-act="train-max">一键微调<span class="cost"></span></button>
           <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${featuredModel() === m ? '已是镇馆模型' : '设为镇馆模型'}</button>
-          ${has ? replayCardButton : ''}
         </div>
         <p class="note" style="margin-top:8px">${m.t >= 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
       </div>
     </div>`;
   };
   const bind = el => {
-    bindCardReplay(el,m);
+    const choices = $$('[data-variant-choice]', el);
+    if (choices.length) {
+      const face = $('[data-variant-face]',el), label = $('[data-act=replay] span',el);
+      const updateLabel = () => textIfChanged(label, modelInventory(m)?.[variant] > 0 ? '重看过场' : '预览过场');
+      for (const choice of choices) choice.onclick = () => {
+        const next = +choice.dataset.variantChoice;
+        if (variant === next) return;
+        variant = next;
+        for (const option of choices) option.setAttribute('aria-pressed', String(option === choice));
+        face.innerHTML = cardHTML(m, variant, {count:modelInventory(m)?.[variant]});
+        updateLabel();
+      };
+      updateLabel();
+      bindCardReplay(el,m,() => variant);
+    }
     refreshTrainButtons($('.detail', el));
     el.querySelector('.x-btn').onclick = closeModal;
     el.querySelector('[data-act=train]').onclick = () => { if (trainModel(m.id)) { el.innerHTML = html(); bind(el); } };
@@ -7568,7 +7720,7 @@ function showAdminCardReveal(pull, replay = false) {
   const dialog = $('#adminCardReveal');
   if (dialog.open || $('#cine').matches('.open[data-replay]')) return;
   const variant = pull?.v ?? 3;
-  const label = pull ? `${VARIANTS[variant].name} ×${fmt(pull.n)}` : '四种变体各 1 张';
+  const label = pull ? VARIANTS[variant].name + (replay && pull.preview ? ' · 未拥有' : ` ×${fmt(pull.n)}`) : '四种变体各 1 张';
   const [heat, ion] = NULLPOINT_FOILS[variant];
   dialog.dataset.variant = variant;
   dialog.style.setProperty('--np-heat',heat);
