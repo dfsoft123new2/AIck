@@ -30,6 +30,7 @@
   --t-N: #707C77; --t-R: #23955A; --t-SR: #1F74C9; --t-SSR: #7B47D6;
   --t-UR: #B67A06; --t-LR: #D8431F; --t-MR: #C21C9E; --t-AGI: #0F2A24; --t-AL: #5A3FD0; --t-Q: #111111;
   --t-BANG: #993b26;
+  --t-CAUSAL: #11695b;
   --s-rs: #6B4FD8; --s-cd: #0E86A8; --s-ag: #C46A12; --s-mm: #C0367A; --s-ef: #23874F;
   --font-ui: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --font-num: "Chakra Petch", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
@@ -62,6 +63,7 @@
     --t-N: #9AA6A1; --t-R: #5CCB8C; --t-SR: #58A9FA; --t-SSR: #B48BFF;
     --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF; --t-Q: #FFFFFF;
     --t-BANG: #ffb68a;
+    --t-CAUSAL: #91f2dd;
     --s-rs: #A890FF; --s-cd: #4FD0EE; --s-ag: #F3A04A; --s-mm: #FF7EB6; --s-ef: #6FDC9C;
   }
 }
@@ -77,6 +79,7 @@
   --t-N: #9AA6A1; --t-R: #5CCB8C; --t-SR: #58A9FA; --t-SSR: #B48BFF;
   --t-UR: #F4BC45; --t-LR: #FF7452; --t-MR: #FF5CDC; --t-AGI: #FFFFFF; --t-AL: #D4C8FF; --t-Q: #FFFFFF;
   --t-BANG: #ffb68a;
+  --t-CAUSAL: #91f2dd;
   --s-rs: #A890FF; --s-cd: #4FD0EE; --s-ag: #F3A04A; --s-mm: #FF7EB6; --s-ef: #6FDC9C;
 }
 *, *::before, *::after { box-sizing: inherit; }
@@ -338,6 +341,13 @@ button.card { transition: transform .12s; }
 .card.t-ALEPH { --tc:#d7bfff; --rim:#7883ff; --plate:#19152f; }
 .card.t-Q { --tc:#8dfff3; --rim:#ef577a; --plate:#100e1d; }
 .card.t-BANG { --tc:#ffbf95; --rim:#df5f48; --plate:#231218; }
+.card.t-CAUSAL { --tc:#b0f8e8; --rim:#50b8a7; --plate:#0b282d; }
+.card.t-GENESIS { --tc:#ffe2ac; --rim:#d99c6c; --plate:#2c1729; }
+.card:is(.t-CAUSAL,.t-GENESIS) { background:var(--plate); border-color:var(--rim); }
+.card:is(.t-CAUSAL,.t-GENESIS) .body { background:linear-gradient(119deg,#080d13 28%,var(--plate)); border-top:1px solid var(--rim); }
+.card:is(.t-CAUSAL,.t-GENESIS) .nm { color:#fff8e9; }
+.card:is(.t-CAUSAL,.t-GENESIS) .cd { color:var(--tc); }
+.card:is(.t-CAUSAL,.t-GENESIS) .tier { background:#0b1017; color:var(--tc); box-shadow:inset 0 0 0 1px var(--rim); }
 .card.t-LEAK { --tc:#a0e8ad; --rim:#679e74; --plate:#102018; }
 .card:is(.t-N,.t-R,.t-SR,.t-SSR,.t-UR,.t-LR,.t-MR,.t-AGI,.t-ALEPH,.t-Q,.t-BANG,.t-LEAK) .body {
   background:linear-gradient(130deg,var(--plate) 58%,color-mix(in srgb,var(--tc) 19%,var(--plate)));
@@ -730,7 +740,12 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .chat-picker { display:flex; flex-wrap:wrap; gap:6px; max-height:138px; overflow:auto; margin-bottom:8px; padding:8px; background:var(--bg-2); border:1px solid var(--line); border-radius:var(--r-s); }
 #view-chat [hidden] { display:none; }
 .chat-picker .btn { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
-.chat-emojis .btn { min-width:40px; font-size:19px; }
+.chat-emojis { display:grid; gap:8px; max-height:none; overflow:visible; }
+.chat-emoji-categories { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(70px,100%),1fr)); gap:8px; }
+.chat-emoji-categories .btn { min-block-size:44px; padding-inline:4px; }
+.chat-emoji-categories .btn[aria-pressed=true] { border-color:var(--copper); background:var(--bg-2); }
+.chat-emoji-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); grid-auto-rows:44px; gap:8px; max-block-size:min(204px,30dvh); padding:3px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+.chat-emoji-grid .btn { padding:0; font-size:22px; line-height:1; font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif; }
 .chat-compose { flex-wrap:wrap; }
 .chat-compose #chatText { flex:1 0 8ch; }
 .chat-tool { padding-inline:9px; }
@@ -1022,6 +1037,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .nav-btn svg { width: 20px; height: 20px; }
   .nav-btn[aria-current="page"]::before { left: 12px; right: 12px; top: -4px; bottom: auto; width: auto; height: 3px; border-radius: 0 0 3px 3px; }
   .views { padding: 16px 14px calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .chat-compose { scroll-margin-block-end:calc(80px + env(safe-area-inset-bottom, 0px)); }
   .hud { padding: 10px 14px; gap: 8px 10px; }
   .hud-token .big { font-size: 24px; }
   .view-title { font-size: 21px; }
@@ -1075,6 +1091,31 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .cine[data-scene] .sub { color: #d4dfeb; line-height: 1.35; }
 .cine[data-scene=horizon] .sub { color: #f4d9ca; white-space: pre-line; }
 .cine[data-scene=horizon] .title { color: #fff1d9; font-size: 38px; }
+.cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) {
+  --cine-card: min(228px, 60vw, 37dvh);
+  --cine-stage: clamp(670px, 110vw, 1150px);
+  --cine-entry: causal-seat;
+  --cine-entry-time: .63s;
+}
+.cine[data-scene=genesis-collapse] { --cine-entry: genesis-seat; --cine-entry-time: .79s; }
+.cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) .title { color: #fff5dd; font-size: 36px; line-height: 1.13; }
+.cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) .sub { white-space: pre-line; color: #f5e9e2; }
+.sc-creation-field { opacity: .62; animation: creation-field .64s ease-out both; }
+.sc-causal-left, .sc-causal-right { opacity: .61; animation: causal-converge var(--cine-cue) cubic-bezier(.25,.1,.46,1) both; }
+.sc-causal-left { --turn: -46deg; --shift: -104px; }
+.sc-causal-right { --turn: 46deg; --shift: 104px; }
+.sc-genesis-infall { opacity:0; animation: genesis-infall var(--cine-cue) cubic-bezier(.62,0,.81,.42) both; }
+.sc-genesis-seed { opacity:0; animation: genesis-seed .53s .89s ease-in-out both; }
+.sc-creation-surge, .sc-genesis-birth { opacity:0; animation: creation-expand .88s var(--cine-cue) var(--cine-ease) both; }
+.sc-genesis-birth { animation-duration:1.15s; }
+.sc-creation-rails { opacity:.74; animation: creation-field .66s calc(var(--cine-cue) + .19s) ease-out both; }
+@keyframes creation-field { from { opacity:0; } }
+@keyframes causal-converge { from { opacity:0; transform:translateX(var(--shift)) rotate(var(--turn)) scale(.74); } 67% { opacity:.9; } }
+@keyframes genesis-infall { 0% { opacity:0; transform:rotate(-36deg) scale(1.31); } 29% { opacity:.9; } 88% { opacity:.85; } to { opacity:0; transform:rotate(50deg) scale(.04); } }
+@keyframes genesis-seed { 0%,100% { opacity:0; transform:scale(.24); } 66% { opacity:1; transform:scale(.76); } }
+@keyframes creation-expand { 0% { opacity:0; transform:scale(.09); } 19% { opacity:.86; } to { opacity:0; transform:scale(1.32); } }
+@keyframes causal-seat { 0% { opacity:0; transform:perspective(520px) rotateY(-80deg) scale(.81); } 68% { opacity:1; } }
+@keyframes genesis-seat { 0% { opacity:0; transform:translateY(18px) scale(.58); clip-path:inset(49% 0); } 48% { opacity:1; clip-path:inset(0); } to { clip-path:inset(-15%); } }
 .cine:is([data-scene],[data-replay]) .bang-continue {
   display: block; position: absolute; inset-inline-end: max(16px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
   min-width: 68px; min-height: 44px; padding: 0 13px; border-radius: 6px;
@@ -1447,11 +1488,6 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
               <button data-sort="tier" aria-pressed="false">按稀有度</button>
               <button data-sort="count" aria-pressed="false">按数量</button>
             </div>
-            <div id="adminCardSlot" hidden>
-              <button class="btn small" type="button" data-admin-card-action>领取 ??!!</button>
-              <span role="status" class="admin-card-error" data-admin-card-error></span>
-            </div>
-
             <button class="btn ghost small hidden" id="openBulkCards" type="button" aria-haspopup="dialog" aria-controls="bulkCards">一键增加全部卡</button>
           </div>
         </div>
@@ -1607,7 +1643,10 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
         <p class="note" id="chatStatus" role="status"></p>
         <div id="chatReplyDraft" class="chat-reply-draft" hidden><span id="chatReplyLabel"></span><button class="x-btn" type="button" id="chatCancelReply" aria-label="取消回复">×</button></div>
         <div class="chat-picker" id="chatMentions" aria-label="选择要提到的玩家" hidden></div>
-        <div class="chat-picker chat-emojis" id="chatEmojis" aria-label="选择表情" hidden></div>
+        <div class="chat-picker chat-emojis" id="chatEmojis" role="group" aria-label="选择表情" hidden>
+          <div class="chat-emoji-categories" id="chatEmojiCategories" role="group" aria-label="表情分类"></div>
+          <div class="chat-emoji-grid" id="chatEmojiGrid" role="group"></div>
+        </div>
         <form id="chatSend" class="chat-compose">
           <button class="btn ghost chat-tool" id="chatMentionButton" type="button" title="提到玩家" aria-label="提到玩家" aria-expanded="false" aria-controls="chatMentions"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4.5 8.35"/></svg></button>
           <button class="btn ghost chat-tool" id="chatEmojiButton" type="button" title="表情" aria-label="表情" aria-expanded="false" aria-controls="chatEmojis"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 14a4 4 0 0 0 8 0M9 9h.01M15 9h.01"/></svg></button>
@@ -1919,8 +1958,13 @@ const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, 
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
 const EXCLAMATION_TIER = 10;
-const HIDDEN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇异', t:EXCLAMATION_TIER + 1,
+const OMEGA_TIER = 11;
+const HIDDEN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇异', t:OMEGA_TIER + 1,
   base:1e20, lab:'horizon', s:'all', d:'事件视界闭合后留下的最后一道回波。'});
+const VOID_CARD = Object.freeze({id:'void-genesis', n:'Ω', c:'虚空创世', t:OMEGA_TIER + 2,
+  base:1e22, lab:'horizon', s:'all', d:'星图坍缩成一点。第一颗新星亮起时，旧宇宙已没有坐标。'});
+const HIDDEN_MODELS = [HIDDEN_CARD, VOID_CARD];
+const PULLED_HIDDEN_CARD_ID = 'hidden-nullpoint';
 const HIDDEN_CARD_LABEL = '隐藏';
 const TIERS = [
   { id: 'N',   name: '小众', base: 1 },
@@ -1933,15 +1977,17 @@ const TIERS = [
   { id: 'Ω',   name: '奇点', base: 1e7, css: 'AGI' },
   { id: 'ℵ',   name: '超限', base: 5e8, css: 'ALEPH' },
   { id: '?',   name: '未知', base: 1e12, css: 'Q' },
-  { id: '!',   name: '越界', base: 1e16, css: 'BANG' }
+  { id: '!',   name: '越界', base: 1e16, css: 'BANG' },
+  { id: 'ω',   name: '因果', base: 1e19, css: 'CAUSAL' }
 ];
-const TIER_HEX = ['#8C9894', '#4CC383', '#4BA2F8', '#A97CFF', '#F2B533', '#FF6A46', '#FF4FD8', '#FFFFFF', '#CDBEFF', '#F2F2F2', '#FFB68A'];
+const TIER_HEX = ['#8C9894', '#4CC383', '#4BA2F8', '#A97CFF', '#F2B533', '#FF6A46', '#FF4FD8', '#FFFFFF', '#CDBEFF', '#F2F2F2', '#FFB68A', '#91F2DD', '#FF9B60', '#FFD097'];
 const TIER_RULE = {
   6: '封印卡不按评分定级：凡是还没公开发布的模型都在这里，包括传闻、泄露、已官宣未上线、仍在训练、被叫停、只在内部使用或受限开放。',
   7: '奇点卡是游戏虚构的未来设想，不按评分定级。',
   8: '超限卡描绘的是远在奇点之后的设想，不按评分定级。',
   9: '?',
-  [EXCLAMATION_TIER]: '黑洞计算机单抽一亿分之一，不受保底或泄露影响；终极计算机未触发泄露和保底时为五百万分之一。两者均含所有变体。'
+  [EXCLAMATION_TIER]: '黑洞计算机单抽一亿分之一；终极计算机未触发泄露和保底时为五百万分之一；造物引擎单抽十万分之一。均含所有变体。',
+  [OMEGA_TIER]: '仅在造物引擎出现，单抽两千万分之一，含所有变体。'
 };
 
 const VARIANTS = [
@@ -2437,7 +2483,8 @@ const MODELS = [
   { id: 'byt5', n: 'ByT5', c: '字节到字节', lab: 'google', a: [2, 5, 4], s: 'ef', d: '不依赖专用子词词表，直接把 UTF-8 字节作为序列，研究词表无关输入对噪声与拼写的影响。' },
   { id: 'ul2', n: 'UL2', c: '混合去噪目标', lab: 'google', a: [3, 6, 4], s: 'rs', d: 'Google 将不同的掩码和补全任务混合到一个训练框架，让同一个模型兼顾多类语言任务。' },
   { id: 'flant5', n: 'Flan-T5', c: '指令微调', lab: 'google', a: [3, 8, 7], s: 'rs', d: 'Google 在 T5 架构上进行多任务指令微调，让同一模型能按自然语言指令处理更多任务。' },
-  { id: 'exclamation', n: '!', c: '视界回波', lab: 'horizon', t: EXCLAMATION_TIER, s: 'all', g: '!', k: '事件视界 · 异常回波', d: '游戏虚构卡。黑洞计算机停止回答，视界外只留下一个符号。' }
+  { id: 'exclamation', n: '!', c: '视界回波', lab: 'horizon', t: EXCLAMATION_TIER, s: 'all', g: '!', k: '事件视界 · 异常回波', d: '游戏虚构卡。黑洞计算机停止回答，视界外只留下一个符号。' },
+  { id: 'causal-omega', n: 'ω', c: '因果主宰', lab: 'horizon', t: OMEGA_TIER, s: 'all', g: 'ω', k: '事件视界 · 因果折叠', d: '两条时间线在同一刻闭合。它先选定结果，再让原因发生。' }
 ];
 // Rarity = 能力 + 影响力 + 调用量 (each 1–10). TIER_CUTS[t] is the lowest total for tier t.
 const TIER_CUTS = [0, 13, 16, 19, 21, 23];
@@ -2516,7 +2563,9 @@ const PACKS = [
   { id: 12, name: '黑洞计算机', hw: '事件视界', cost: 5e19, r: [[6,0.75],[7,0.23],[8,0.019995],[9,5e-06]], pt: 8, pn: 600,
     special: { t: EXCLAMATION_TIER, chance: 1e-8 } },
   { id: 13, name: '终极计算机', hw: '终局算力', cost: 5e29, r: [[7,0.8],[8,0.1998998],[9,1e-4],[EXCLAMATION_TIER,2e-7]], hiddenChance: 1e-9,
-    pt: 9, pn: 50000, noPityNews: true }
+    pt: 9, pn: 50000, noPityNews: true },
+  { id: 14, name: '造物引擎', hw: '事件视界', cost: 5e37, r: [[8,.99],[9,.01]], pt: 9, pn: 500, noPityNews: true,
+    rare: [[EXCLAMATION_TIER,1e-5],[OMEGA_TIER,5e-8]], hiddenChance: 5e-10, hiddenModel: VOID_CARD }
 ];
 
 const UPGRADES = [
@@ -2542,11 +2591,11 @@ const TECH = [
   { key: 'distill', name: '知识蒸馏', desc: '微调费用 −8%。', max: 5, cost: lv => 2 + 2 * lv, eff: lv => `微调费用 −${8 * lv}%` },
   { key: 'redteam', name: '红队演练', desc: '评测战力 ×1.25。', max: 8, cost: lv => 3 + 2 * lv, eff: lv => `战力 ×${fmtMul(Math.pow(1.25, lv))}` },
   { key: 'compound', name: '算力复利', desc: '全局产出 ×1.5，可以无限升级。', max: null, cost: lv => Math.ceil(10 * Math.pow(1.7, lv)), eff: lv => `产出 ×${fmtMul(Math.pow(1.5, lv))}` },
-  { key: 'doubleDraw', name: '双核推理', desc: '每批独立抽数翻倍，Token 费用同比增加。', max: 1, cost: () => 6000, eff: lv => `每批抽数 ×${1 + lv}` },
-  { key: 'doubleCopies', name: '镜像复制', desc: '每次命中的卡片份数翻倍，不增加抽数或保底进度。', max: 1, cost: () => 8000, eff: lv => `卡片份数 ×${1 + lv}` },
-  { key: 'doubleOdds', name: '超频采样', desc: '思考、满血、全息变体和权重泄露概率翻倍。', max: 1, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
-  { key: 'doubleSpeed', name: '瞬时推理', desc: '自动抽卡间隔减半。', max: 1, cost: () => 12000, eff: lv => `自动抽卡速度 ×${1 + lv}` },
-  { key: 'doubleNews', name: '热点增幅', desc: '所有热点的数值效果翻倍；折后价再减半。频率和时长不变。', max: 1, cost: () => 20000, eff: lv => `热点强度 ×${1 + lv}` }
+  { key: 'doubleDraw', name: '双核推理', desc: '提高每批独立抽数，Token 费用同比增加。', max: 3, cost: () => 6000, eff: lv => `每批抽数 ×${1 + lv}` },
+  { key: 'doubleCopies', name: '镜像复制', desc: '增加每次命中的卡片份数，不增加抽数或保底进度。', max: 3, cost: () => 8000, eff: lv => `卡片份数 ×${1 + lv}` },
+  { key: 'doubleOdds', name: '超频采样', desc: '提高变体与权重泄露概率，不改变卡池的固定稀有概率。', max: 3, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
+  { key: 'doubleSpeed', name: '瞬时推理', desc: '提高自动抽卡速度。', max: 3, cost: () => 12000, eff: lv => `自动抽卡速度 ×${1 + lv}` },
+  { key: 'doubleNews', name: '热点增幅', desc: '提高热点的数值效果，折后价按倍率再降低。频率和时长不变。', max: 3, cost: () => 20000, eff: lv => `热点强度 ×${1 + lv}` }
 ];
 
 const BENCHES = [
@@ -2951,7 +3000,7 @@ function sanitizeState(st) {
   st.titlePeakTps = Number.isFinite(st.titlePeakTps) && st.titlePeakTps > 0 ? Math.min(st.titlePeakTps, 1e300) : 0;
   if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
   st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
-  for (const key of DOUBLE_TECH_KEYS) st.tech[key] = Number(st.tech[key] === 1);
+  for (const key of DOUBLE_TECH_KEYS) st.tech[key] = Number.isInteger(st.tech[key]) && st.tech[key] >= 0 && st.tech[key] <= 3 ? st.tech[key] : 0;
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
   st.set.hideCompleteDex = st.set.hideCompleteDex === true;
   st.set.cardSkin = normalizeCardSkin(st.set.cardSkin);
@@ -2960,8 +3009,11 @@ function sanitizeState(st) {
   st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
   const clean = {};
   for (const [id, arr] of Object.entries(st.cards || {})) {
-    if (!Object.hasOwn(MODEL_BY_ID,id) || !Array.isArray(arr)) continue;
-    clean[id] = [0, 1, 2, 3].map(i => Math.max(0, Number(arr[i]) || 0));
+    if ((!Object.hasOwn(MODEL_BY_ID,id) && id !== VOID_CARD.id) || !Array.isArray(arr)) continue;
+    const counts = [0, 1, 2, 3].map(i => id === VOID_CARD.id
+      ? (Number.isSafeInteger(arr[i]) && arr[i] > 0 ? arr[i] : 0)
+      : Math.max(0, Number(arr[i]) || 0));
+    if (id !== VOID_CARD.id || total(counts)) clean[id] = counts;
   }
   st.cards = clean;
   for (const k of ['tokens', 'lifetime', 'gpu', 'leaks', 'rebirths', 'stage']) st[k] = Math.max(0, Number(st[k]) || 0);
@@ -2984,7 +3036,9 @@ function sanitizeState(st) {
   const hidden = st.hiddenCard;
   const copies = Array.isArray(hidden?.copies) ? [0,1,2,3].map(i => Number.isSafeInteger(hidden.copies[i]) && hidden.copies[i] > 0 ? hidden.copies[i] : 0) : null;
   st.hiddenCard = copies?.some(Boolean) ? {copies, level:Number.isInteger(hidden.level) && hidden.level >= 0 && hidden.level <= 900 ? hidden.level : 0} : null;
-  if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(isHiddenCard(st.sig) && (st.adminCardProgress || st.hiddenCard))) st.sig = null;
+  if (st.hiddenCard && Number.isSafeInteger(hidden.gifted) && hidden.gifted > 0) st.hiddenCard.gifted = Math.min(total(copies),hidden.gifted);
+  if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(st.sig === HIDDEN_CARD.id && (st.adminCardProgress || st.hiddenCard))
+    && !(st.sig === VOID_CARD.id && clean[VOID_CARD.id])) st.sig = null;
   if (typeof st.name !== 'string' || !st.name.trim()) st.name = randomLabName();
   st.name = st.name.slice(0, 16);
   return st;
@@ -3119,7 +3173,7 @@ function pityN(p) { return Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity
 function pityProgress(p, goal = pityN(p)) { return Math.min(goal, S.pity[p.id] || 0); }
 function leakChance(p = curPack(), event = activeGameplayEvent()) {
   const odds = eventMultiplier('odds',event);
-  const available = 1 - (p.hiddenChance ?? 0) - (p.special?.chance ?? 0);
+  const available = drawTables.get(p).normalCutoff;
   return Math.min(event?.effects.odds == null ? available : EVENT_LEAK_CAP, available,
     1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak') * odds);
 }
@@ -3144,7 +3198,12 @@ const drawTables = new Map(PACKS.map(p => {
   let sum = 0;
   const rates = Array(TIERS.length).fill(0), limits = [], tiers = [];
   for (const [t, pr] of p.r) { rates[t] = pr; limits.push(sum += pr); tiers.push(t); }
-  return [p, { rates, limits, tiers }];
+  let normalCutoff = 1 - (p.hiddenChance ?? 0);
+  const rare = (p.rare ?? (p.special ? [[p.special.t,p.special.chance]] : [])).slice().reverse().map(([t,chance]) => {
+    normalCutoff -= chance;
+    return {t,chance,cutoff:normalCutoff};
+  });
+  return [p, { rates, limits, tiers, rare, normalCutoff }];
 }));
 function tierRate(p, t) { return drawTables.get(p).rates[t] || 0; }
 function rollTier(p, table = drawTables.get(p)) {
@@ -3174,17 +3233,21 @@ function pickModel(t, up = S.upLab, focus = upChance()) {
   return pick(pool);
 }
 function total(c) { return c ? c[0] + c[1] + c[2] + c[3] : 0; }
-function isHiddenCard(id) { return typeof HIDDEN_CARD !== 'undefined' && id === HIDDEN_CARD.id; }
-function modelById(id) { return isHiddenCard(id) ? HIDDEN_CARD : Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : null; }
+function isHiddenCard(id) { return id === HIDDEN_CARD.id || id === VOID_CARD.id; }
+function modelById(id) { return Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : HIDDEN_MODELS.find(m => m.id === id) ?? null; }
 function modelBase(m) { return m.base ?? TIERS[m.t].base; }
 function hiddenCardInventory() {
   const pulled = S.hiddenCard?.copies;
   const grant = typeof hasAdminCard === 'function' && hasAdminCard() ? ADMIN_CARD_COPIES : null;
   return pulled && grant ? pulled.map((n, v) => n + grant[v]) : pulled || grant;
 }
-function modelInventory(m) { return isHiddenCard(m.id) ? hiddenCardInventory() : S.cards[m.id]; }
+function modelInventory(m) { return m === HIDDEN_CARD ? hiddenCardInventory() : S.cards[m.id]; }
 function owned(m) { return !!m && total(modelInventory(m)) > 0; }
-function featuredModel() { return isHiddenCard(S.sig) && !S.hiddenCard && !(typeof adminCardProgressMatches === 'function' && adminCardProgressMatches()) ? null : modelById(S.sig); }
+function featuredModel() {
+  const m = modelById(S.sig);
+  if (m === HIDDEN_CARD && !S.hiddenCard && !(typeof adminCardProgressMatches === 'function' && adminCardProgressMatches())) return null;
+  return m === VOID_CARD && !owned(m) ? null : m;
+}
 function bondRate() { return 0.03 + 0.01 * S.tech.bond; }
 function labStats() {
   if (caches.lab) return caches.lab;
@@ -3216,9 +3279,9 @@ function dexInfo() {
   return caches.dex = { n, mul: 1 + b };
 }
 function dexCount() { return dexInfo().n; }
-function hiddenDexCount() { return hiddenCardInventory()?.filter(n => n>0).length ?? 0; }
+function hiddenDexCount() { return HIDDEN_MODELS.reduce((n,m) => n + (modelInventory(m)?.filter(c => c > 0).length ?? 0),0); }
 function trainLv(id) {
-  if (!isHiddenCard(id)) return S.train[id] || 0;
+  if (id !== HIDDEN_CARD.id) return S.train[id] || 0;
   const granted = typeof adminCardProgressMatches === 'function' && adminCardProgressMatches() ? S.adminCardProgress.level : 0;
   return Math.max(S.hiddenCard?.level || 0, granted);
 }
@@ -3284,15 +3347,15 @@ function updateDuplicate(m, c) {
   p.amounts[i] = rawUnits(c) * p.units[i]; p.dirty = true;
 }
 function bestSingle() { return production().best; }
-function hiddenCardBase() {
-  const c = hiddenCardInventory();
-  return c ? rawUnits(c) * HIDDEN_CARD.base * trainMul(HIDDEN_CARD.id) : 0;
+function hiddenCardBase(m = HIDDEN_CARD) {
+  const c = modelInventory(m);
+  return c ? rawUnits(c) * m.base * trainMul(m.id) : 0;
 }
 function computeYield() {
   const { sum, best } = production();
-  return (sum + S.leaks * best + hiddenCardBase()) * globalMul();
+  return (sum + S.leaks * best + hiddenCardBase() + hiddenCardBase(VOID_CARD)) * globalMul();
 }
-function modelOut(m) { const c = modelInventory(m); return total(c) ? (isHiddenCard(m.id) ? hiddenCardBase() : rawUnits(c) * perCard(m)) * globalMul() * eventMultiplier('tokens') : 0; }
+function modelOut(m) { const c = modelInventory(m); return total(c) ? (isHiddenCard(m.id) ? hiddenCardBase(m) : rawUnits(c) * perCard(m)) * globalMul() * eventMultiplier('tokens') : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
 function rebirthCost() { return 1e10 * 12 ** Math.min(14, S.rebirths) * 5 ** Math.max(0, S.rebirths - 14); }
 function rebirthGpu() { return 3 + 2 * S.rebirths; }
@@ -3300,8 +3363,8 @@ function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
 /* =================== PULL =================== */
 // A slot is used only while settling this synchronous batch. Never retain the previous result list.
-const drawSlots = new Array((MODELS.length + 2) * 4);
-function drawSlot(m, v) { return (m.idx ?? MODELS.length + 1) * 4 + v; }
+const drawSlots = new Array((MODELS.length + 1 + HIDDEN_MODELS.length) * 4);
+function drawSlot(m, v) { return (m.idx ?? MODELS.length + 1 + HIDDEN_MODELS.indexOf(m)) * 4 + v; }
 let bulkOdds;
 function oddsForUpLab(lab, focus) {
   if (!bulkOdds || bulkOdds.lab !== lab || bulkOdds.focus !== focus) {
@@ -3318,9 +3381,8 @@ function settlePull(p, compact = false, event = activeGameplayEvent()) {
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
   const clone = cloneN(event), hiddenCopies = cloneN(null), leakCopies = techDouble('doubleCopies'), table = drawTables.get(p);
   const leak = leakChance(p,event), variants = variantProbs(event), pity = pityN(p);
-  const special = p.special, specialChance = special?.chance ?? 0;
   const hiddenChance = p.hiddenChance ?? 0, hiddenCutoff = 1 - hiddenChance;
-  const specialCutoff = hiddenCutoff - specialChance, normalChance = specialCutoff - leak;
+  const hiddenModel = p.hiddenModel ?? HIDDEN_CARD, normalChance = table.normalCutoff - leak;
   const res = [], stats = S.stats, cards = S.cards, up = S.upLab, focus = upChance();
   const odds = compact ? oddsForUpLab(up, focus) : null;
   const hits = compact ? [] : null;
@@ -3329,15 +3391,18 @@ function settlePull(p, compact = false, event = activeGameplayEvent()) {
     const ticket = Math.random();
     // The hidden ticket is separate from leaks and the pity counter.
     if (hiddenChance && ticket >= hiddenCutoff) {
-      const v = rollVariant(variants), isNew = !S.hiddenCard;
-      const hidden = S.hiddenCard ??= {copies:[0,0,0,0], level:0};
-      if (!hidden.copies[v]) structural = true;
-      hidden.copies[v] += hiddenCopies;
+      const v = rollVariant(variants);
+      const copies = hiddenModel === HIDDEN_CARD
+        ? (S.hiddenCard ??= {copies:[0,0,0,0], level:0}).copies
+        : (cards[hiddenModel.id] ??= [0,0,0,0]);
+      const isNew = !total(copies);
+      if (!copies[v]) structural = true;
+      copies[v] += hiddenCopies;
       if (v > stats.maxVar) stats.maxVar = v;
-      const slot = drawSlot(HIDDEN_CARD, v);
+      const slot = drawSlot(hiddenModel, v);
       if (compact && drawSlots[slot]) drawSlots[slot].n += hiddenCopies;
       else {
-        const r = {id:HIDDEN_CARD.id, v, t:HIDDEN_CARD.t, isNew, n:hiddenCopies};
+        const r = {id:hiddenModel.id, v, t:hiddenModel.t, isNew, n:hiddenCopies};
         res.push(r); if (compact) drawSlots[slot] = r;
       }
       continue;
@@ -3354,16 +3419,16 @@ function settlePull(p, compact = false, event = activeGameplayEvent()) {
       continue;
     }
     // Use the opposite end of the leak roll: neither branch consumes pity.
-    const specialHit = ticket >= specialCutoff;
+    const specialHit = ticket >= table.normalCutoff ? table.rare.find(entry => ticket >= entry.cutoff) : null;
     let t, viaPity = false;
-    if (specialHit) t = special.t;
+    if (specialHit) t = specialHit.t;
     else {
       const pc = (S.pity[p.id] || 0) + 1;
       if (pc >= pity) { t = p.pt; viaPity = true; } else t = rollTier(p, table);
       S.pity[p.id] = t >= p.pt ? 0 : pc;
     }
     const m = pickModel(t, up, focus), v = rollVariant(variants);
-    const prob = (specialHit ? specialChance : table.rates[t]) * variants[v];
+    const prob = (specialHit ? specialHit.chance : table.rates[t]) * variants[v];
     const hitProb = specialHit ? prob : normalChance * (viaPity ? 1 : table.rates[t]) * (odds ? odds[m.idx] : modelChance(m, up, focus)) * variants[v];
     let c = cards[m.id];
     if (!c) c = cards[m.id] = [0, 0, 0, 0];
@@ -3480,7 +3545,7 @@ function trainModel(id, limit = 1, maxCost = Infinity) {
   if (!quote.levels || quote.cost > maxCost) return false;
   const level = trainLv(id) + quote.levels;
   S.tokens = quote.remaining;
-  if (isHiddenCard(id)) {
+  if (id === HIDDEN_CARD.id) {
     if (S.hiddenCard) S.hiddenCard.level = level;
     else {
       if (!adminCardProgressMatches() && S.sig === id) S.sig = null;
@@ -3505,9 +3570,9 @@ function cardPower(m, v, count, spec) {
 }
 function bestTeam(spec, powerFactor = 1) {
   const cand = [];
-  const length = MODELS.length + (hiddenCardInventory() ? 1 : 0);
+  const length = MODELS.length + HIDDEN_MODELS.length;
   for (let index = 0; index < length; index++) {
-    const m = index === MODELS.length ? HIDDEN_CARD : MODELS[index];
+    const m = MODELS[index] ?? HIDDEN_MODELS[index - MODELS.length];
     const c = modelInventory(m); if (!total(c)) continue;
     let best = null;
     for (let v = 0; v < 4; v++) if (c[v] > 0) { const pw = cardPower(m, v, c[v], spec); if (!best || pw > best.pw) best = { m, v, pw, match: m.s === spec || m.s === 'all' }; }
@@ -3875,6 +3940,46 @@ const CARD_INSTRUMENTS = [
     <path d="m17 104 17-18-7 16Zm110-47 21-15-11 13Zm-93-2 16-6-10 8Zm78 69 14-8-10 9Z" fill="#ffbc88"/>`
 ];
 
+function creationCardArt(m, v, skin) {
+  const genesis = m === VOID_CARD, classic = skin === 'classic';
+  const [edge, hot] = (genesis
+    ? [['#f7bd79','#e6829c'],['#ffd99e','#ff826d'],['#ffd17a','#85e7e3'],['#fff4bd','#ad9eff']]
+    : [['#85e9d2','#f8c994'],['#d0fff2','#ffc382'],['#74ffd7','#f4a9ff'],['#bffdf7','#baafff']])[v] || ['#85e9d2','#f8c994'];
+  const field = genesis ? '#160d20' : '#071e24';
+  const orbit = (angle, rx, ry, opacity) => `<ellipse cx="80" cy="80" rx="${rx}" ry="${ry}" transform="rotate(${angle} 80 80)" opacity="${opacity}"/>`;
+  const star = (x,y,r) => `<path d="M${x-r} ${y}q${r} 0 ${r} ${-r} 0 ${r} ${r} ${r}-${r} 0-${r} ${r} 0-${r}-${r}-${r}Z"/>`;
+  const rng = rngFrom(genesis ? 74320 : 17728);
+  const dust = Array.from({length:36}, (_,i) => {
+    const a = rng()*Math.PI*2, radius = 42 + rng()*37;
+    const x = (80+Math.cos(a)*radius).toFixed(1), y = (80+Math.sin(a)*radius).toFixed(1);
+    return `<circle cx="${x}" cy="${y}" r="${i%9 ? .48 : 1.25}" opacity="${.29 + i%4*.17}"/>`;
+  }).join('');
+  const ticks = Array.from({length:36}, (_,i) => `<path d="M80 11v${i%3 ? 2 : 5}" transform="rotate(${i*10} 80 80)" opacity="${i%3 ? .32 : .78}"/>`).join('');
+  const arms = Array.from({length:8}, (_,i) => `<path d="M80 49C101 41 128 27 142 39 123 37 117 61 105 68L99 58C112 49 120 42 124 40 111 41 97 54 90 56Z" transform="rotate(${45*i} 80 80)" opacity="${i%2 ? .65 : .95}"/>`).join('');
+  const subject = genesis ? `<g fill="url(#metal)" stroke="${edge}" stroke-width=".45">${arms}</g>
+    <g stroke="${hot}" fill="none">${orbit(-32,76,23,.8)}${orbit(58,70,21,.56)}${orbit(-32,78,28,.29)}</g>
+    <path d="M80 37 117 59v42l-37 22-37-22V59Z" fill="url(#core)" stroke="url(#metal)" stroke-width="2"/>
+    <path d="M80 43 112 62v36l-32 19-32-19V62Z" fill="none" stroke="${hot}" stroke-dasharray="12 3 2 3" opacity=".72"/>
+    <path d="M55 101h13v-5C47 83 55 54 80 54s33 29 12 42v5h13v7H85V92c16-9 15-31-5-31s-21 22-5 31v16H55Z" fill="url(#metal)"/>
+    <g fill="#fff1c8">${star(80,78,9)}${star(33,49,6)}${star(129,112,7)}</g>`
+    : `<g stroke="url(#metal)" fill="none">${orbit(-42,72,24,.52)}${orbit(42,72,24,.52)}${orbit(-42,68,20,.9)}${orbit(42,68,20,.9)}
+      <path d="M21 80C41 42 58 43 80 80s39 38 59 0c-20-38-37-37-59 0s-39 38-59 0Z" stroke-width="3.3"/>
+      <path d="M21 80C41 42 58 43 80 80s39 38 59 0c-20-38-37-37-59 0s-39 38-59 0Z" stroke="#e4fff3" stroke-width=".8"/>
+    </g>
+    <path d="M80 46 107 62v36l-27 16-27-16V62Z" fill="url(#core)" stroke="url(#metal)" stroke-width="1.9"/>
+    <path d="M60 71q-9 22 2 27 12 5 18-11 6 16 18 11 11-5 2-27m-20 16V76" fill="none" stroke="#ddfff7" stroke-width="4" stroke-linecap="round"/>
+    <g fill="${hot}">${star(29,81,5)}${star(130,79,5)}${star(80,39,4)}${star(80,121,4)}</g>`;
+  return `<svg viewBox="0 0 160 160" data-art="${m.t}" aria-hidden="true"><defs>
+    <linearGradient id="metal" x2="100%" y2="100%"><stop stop-color="${edge}"/><stop offset=".4" stop-color="#fff3d2"/><stop offset=".62" stop-color="${hot}"/><stop offset="1" stop-color="${edge}"/></linearGradient>
+    <radialGradient id="shade"><stop stop-color="${field}"/><stop offset="1" stop-color="#06070e"/></radialGradient>
+    <radialGradient id="core"><stop stop-color="${field}"/><stop offset="1" stop-color="#080911"/></radialGradient>
+    </defs><rect width="160" height="160" fill="url(#shade)"/>
+    <path d="${classic ? 'M5 5H155V155H5Z M10 10H150V150H10Z' : 'M5 28 25 5h110l20 23v104l-20 23H25L5 132Z M10 31 28 11h104l18 20v98l-18 20H28l-18-20Z'}" fill="none" stroke="url(#metal)" opacity=".58"/>
+    <g fill="${edge}">${dust}</g><g stroke="${edge}" fill="none"><circle cx="80" cy="80" r="65" opacity=".3"/>${ticks}</g>
+    ${subject}<path d="M15 42v-9l17-17h12m72 0h12l17 17v9m0 76v9l-17 17h-12m-72 0H32l-17-17v-9" fill="none" stroke="${hot}" stroke-width="1.5"/>
+    </svg>`;
+}
+
 function tierArt(m) {
   const leak = m.id === 'leak', t = m.t, lab = LABS[m.lab];
   const [ground, edge, foil] = leak ? ['#0e1e1a','#d2fdd8','#7ad992'] : CARD_MATERIALS[t];
@@ -4027,7 +4132,8 @@ function logoSVG() {
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
 function cardArt(m, v = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
-  if (isHiddenCard(m.id)) return adminCardArt(v, skin);
+  if (m === HIDDEN_CARD) return adminCardArt(v, skin);
+  if (m === VOID_CARD || m.t === OMEGA_TIER) return creationCardArt(m, v, skin);
   return skin === 'classic' ? classicCardArt(m) : tierArt(m);
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
@@ -4043,7 +4149,7 @@ function cardArtUrl(m, v, skin) {
   return artUrls.get(key);
 }
 function sharedArt(m, v = 0) {
-  const variant = isHiddenCard(m.id) ? v : 0;
+  const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER ? v : 0;
   const src = cardArtUrl(m, variant, normalizeCardSkin(S.set.cardSkin));
   return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}" src="${src}">`;
 }
@@ -4059,7 +4165,7 @@ function applyCardSkin() {
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
   const hidden = isHiddenCard(m.id), tierId = hidden ? HIDDEN_CARD_LABEL : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
-  const cls = `card t-${hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
+  const cls = `card t-${m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
   return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
@@ -4070,7 +4176,7 @@ function ratingHTML(m) {
   return `<div class="rating">${m.a.map((v, i) => `<div class="rt"><span>${RATING_KEYS[i]}</span><span class="pips">${Array.from({ length: 10 }, (_, k) => `<i class="${k < v ? 'on' : ''}"></i>`).join('')}</span><b class="num">${v}</b></div>`).join('')}
     <div class="rt-sum">综合 <b class="num">${m.score}</b> 分，定为 ${TIERS[m.t].id}（${TIERS[m.t].name}）</div></div>`;
 }
-function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' : t === 9 ? 'var(--t-Q)' : t === EXCLAMATION_TIER ? 'var(--t-BANG)' : TIER_HEX[t]; }
+function tierColor(t) { return t === 7 ? 'var(--ink)' : t === 8 ? 'var(--t-AL)' : t === 9 ? 'var(--t-Q)' : t === EXCLAMATION_TIER ? 'var(--t-BANG)' : t === OMEGA_TIER ? 'var(--t-CAUSAL)' : TIER_HEX[t]; }
 function statusTag(st) { return STATUS[st] ? `<span class="tag st-${st}">${STATUS[st].name}</span>` : ''; }
 function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; }
 function tierTag(t) { return `<span class="tag tier-text${t === 9 ? ' tier-q' : ''}" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
@@ -4162,6 +4268,29 @@ const LEAK_CINEMATIC = ['weight-leak', .77, () => {
     + cineLayer('leak-lock','<path d="M-103-66v-43h40m126 0h40v43m0 132v43H63m-126 0h-40V66" stroke-width="3"/><path d="M-328 0h230m196 0h230" stroke="url(#cine-rail)" stroke-width="2"/>');
 }];
 
+const CAUSAL_CINEMATIC = ['causal-fold', .98, () => {
+  const loop = '<ellipse rx="278" ry="91" stroke-width="2.4"/><ellipse rx="252" ry="76" stroke-dasharray="59 14 8 9"/><path d="M-270 21q133-124 270-21T270-21" stroke="url(#cine-rail)" stroke-width="5"/>';
+  return cineLayer('creation-field', cineStars(58,14411) + '<circle r="211" opacity=".42" stroke-dasharray="1 7"/><circle r="239" opacity=".34" stroke-dasharray="38 12 3 8"/>')
+    + cineLayer('causal-left', `<g transform="rotate(-27)">${loop}</g>`)
+    + cineLayer('causal-right', `<g transform="rotate(27)" stroke="var(--cine-foil)">${loop}</g>`)
+    + cineLayer('creation-surge','<path d="M-428 0H428" stroke="url(#cine-rail)" stroke-width="7"/><path d="M-114 0 0-87 114 0 0 87Z" stroke-width="2.3"/>')
+    + cineLayer('creation-rails','<path d="M-414-121h127l35 35h54m612 207H287l-35-35h-54M-414 121h127l35-35h54m612-207H287l-35 35h-54" stroke="url(#cine-rail)" stroke-width="2.4"/>'
+      + '<path d="M-192-86v-21h34m316 0h34v21m0 172v21h-34m-316 0h-34V86" stroke-width="2.7"/>');
+}, ['#0a2c32','#7ce6d3','#ffc28f']];
+
+const GENESIS_CINEMATIC = ['genesis-collapse', 1.34, () => {
+  const hex = 'M0-1 .866-.5 .866.5 0 1-.866.5-.866-.5Z';
+  const relic = (s, a, extra = '') => `<path d="${hex}" transform="rotate(${a}) scale(${s})" vector-effect="non-scaling-stroke" ${extra}/>`;
+  const fragments = cineSpokes(12,'<path d="M0-229l-9 13 9 64 9-64Z" fill="currentColor" opacity=".55"/><path d="M0-262v-24m0 166v-19"/>',15);
+  const flares = cineSpokes(18,'<path d="M0-67 7-125 0-221-7-125Z" fill="currentColor" opacity=".56"/><path d="M0-228v-33"/>',10);
+  return cineLayer('creation-field', cineStars(105,65204) + '<ellipse rx="389" ry="162" opacity=".22"/><ellipse rx="342" ry="175" opacity=".4" stroke-dasharray="3 7"/>')
+    + cineLayer('genesis-infall', fragments + relic(205,0,'opacity=".45"') + relic(167,30,'stroke="var(--cine-foil)" opacity=".74"'))
+    + cineLayer('genesis-seed','<circle r="24" fill="var(--cine-ground)" stroke="var(--cine-foil)" stroke-width="2.2"/><path d="M0-46 8-8 66 0 8 8 0 46-8 8-66 0-8-8Z" fill="var(--cine-foil)"/>')
+    + cineLayer('genesis-birth', flares + '<ellipse rx="403" ry="74" stroke="url(#cine-rail)" stroke-width="3"/>' + relic(196,0,'stroke-width="2.1"'))
+    + cineLayer('creation-rails', relic(199,0,'opacity=".68" stroke-width="2.5" stroke-dasharray="56 11 2 7"')
+      + relic(225,0,'opacity=".38"') + '<path d="M-420 0h222m396 0h222" stroke="url(#cine-rail)" stroke-width="3"/>');
+}, ['#2b1527','#ffc994','#f4a3ab']];
+
 function tierCineSVG(scene, draw) {
   return `<svg class="tier-scene${scene === 'horizon' ? ' bang-scene' : ''}" viewBox="0 0 860 540" aria-hidden="true" focusable="false">
     <defs><linearGradient id="cine-rail" gradientUnits="userSpaceOnUse" x1="-420" x2="420" y1="0" y2="0">
@@ -4209,18 +4338,21 @@ function burstAt(el, color) {
   }
 }
 let cineOpen = false, cineCloseTimer, cineReturnFocus;
-function showCine(r, replayFrom = null) {
+function showCine(r, replayFrom = null, pack = null) {
   const c = $('#cine'), replay = !!replayFrom;
   const bang = isExclamationResult(r);
-  if ($('#adminCardReveal').open || c.matches('.open[data-replay]') || (!replay && (!S.set.fx || (cineOpen && !bang)))) return;
-  const m = r.leak ? LEAK_MODEL : MODEL_BY_ID[r.id];
+  const priority = isHorizonResult(r) && (!c.classList.contains('open') || r.t >= Number(c.dataset.tier));
+  if ($('#adminCardReveal').open || c.matches('.open[data-replay]') || (!replay && (!S.set.fx || (cineOpen && !priority)))) return;
+  const m = modelOrLeak(r.leak ? 'leak' : r.id);
   if (!m) return;
-  const scene = r.leak ? LEAK_CINEMATIC : TIER_CINEMATICS[r.t];
+  const creation = m === VOID_CARD ? GENESIS_CINEMATIC : m.t === OMEGA_TIER ? CAUSAL_CINEMATIC : null;
+  const scene = creation ?? (r.leak ? LEAK_CINEMATIC : TIER_CINEMATICS[r.t]);
   const staticScene = !S.set.fx || matchMedia('(prefers-reduced-motion: reduce)').matches;
   clearTimeout(cineCloseTimer);
+  c.dataset.tier = r.leak ? '-1' : String(r.t);
   c.style.setProperty('--cc', r.leak ? '#E6F0EA' : TIER_HEX[r.t]);
   if (scene) {
-    const [key, cue] = scene, [ground, edge, foil] = r.leak ? ['#0b2423','#8eead5','#ffc991'] : CARD_MATERIALS[r.t];
+    const [key, cue] = scene, [ground, edge, foil] = scene[3] ?? (r.leak ? ['#0b2423','#8eead5','#ffc991'] : CARD_MATERIALS[r.t]);
     c.dataset.scene = key;
     c.style.setProperty('--cine-ground', ground);
     c.style.setProperty('--cine-edge', edge);
@@ -4233,7 +4365,8 @@ function showCine(r, replayFrom = null) {
   $('#cineCard').innerHTML = (scene ? tierCineSVG(scene[0], scene[2]) : '') + cardHTML(m, r.v, { count: r.n, isNew: !replay && r.isNew });
   $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
   $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出'
-    : bang ? `${replay ? VARIANTS[r.v].name : `黑洞计算机 · ${VARIANTS[r.v].name}版约 ${fmtProb(r.hitProb)}`}\n基础产出 ${fmt(TIERS[r.t].base)} Token/s`
+    : creation ? `${LABS[m.lab].name} · ${m.c}\n基础产出 ${fmt(modelBase(m))} Token/s`
+    : bang ? `${replay ? VARIANTS[r.v].name : `${pack?.name ?? curPack().name} · ${VARIANTS[r.v].name}版约 ${fmtProb(r.hitProb)}`}\n基础产出 ${fmt(TIERS[r.t].base)} Token/s`
     : `${LABS[m.lab].name} · 代号 ${m.c}${m.st ? ' · ' + STATUS[m.st].name : ''}${replay ? '' : ` · 出现概率 ${fmtProb(r.prob)}${r.pity ? '（保底）' : ''}`}`;
   if (replay && r.preview) $('#cineSub').append(' · 未拥有');
   c.classList.add('open'); cineOpen = true;
@@ -4270,8 +4403,8 @@ function replayCardCine(m, trigger, variant) {
   const v = leak ? 3 : VARIANTS[variant] ? variant : bestVar(copies);
   const n = leak ? S.leaks : copies[v] || 0;
   const r = {id:m.id,t:m.t,v,n,leak,preview:!n};
-  const played = isHiddenCard(m.id) ? showAdminCardReveal(r,true) : showCine(r,trigger);
-  if (played && S.set.fx) playRare(m.t >= 7,isExclamationResult(r));
+  const played = m === HIDDEN_CARD ? showAdminCardReveal(r,true) : showCine(r,trigger);
+  if (played && S.set.fx) playRare(m.t >= 7,m === VOID_CARD ? 'genesis' : m.t === OMEGA_TIER ? 'causal' : isExclamationResult(r));
 }
 
 /* =================== AUDIO =================== */
@@ -4295,11 +4428,23 @@ function stopBangSound() {
   bus.gain.setTargetAtTime(0, actx.currentTime, .012);
   setTimeout(() => bus.disconnect(), 64);
 }
-function playBangSound() {
+function playBangSound(scene) {
   stopBangSound();
   const bus = bangSound = actx.createGain();
   bus.connect(actx.destination);
-  const t = actx.currentTime, impact = t + CINE_HORIZON_IMPACT;
+  const t = actx.currentTime;
+  if (scene === 'causal' || scene === 'genesis') {
+    const genesis = scene === 'genesis', cue = genesis ? GENESIS_CINEMATIC[1] : CAUSAL_CINEMATIC[1], impact = t + cue;
+    tone(genesis ? 116 : 210, t, cue-.06, 'sine', .1, bus, genesis ? 33 : 62);
+    tone(genesis ? 73 : 109, impact, .92, 'sine', .23, bus, 41);
+    const chord = genesis ? [130.8,196,261.6,392,523.2] : [164.8,246.9,329.6,493.9];
+    chord.forEach((f,i) => {
+      const note = tone(f, impact + i * .085, .74, i%2 ? 'sine' : 'triangle', .045, bus);
+      if (i === chord.length - 1) note.onended = () => { if (bangSound === bus) { bangSound = null; bus.disconnect(); } };
+    });
+    return;
+  }
+  const impact = t + CINE_HORIZON_IMPACT;
   tone(148, t, CINE_HORIZON_IMPACT - .04, 'sine', .12, bus, 48);
   tone(96, impact, .72, 'sine', .23, bus, 41);
   tone(180, impact + .012, .22, 'triangle', .09, bus, 79);
@@ -4313,7 +4458,7 @@ function playPull() { if (!S.set.sfx || !actx) return; try { const t = actx.curr
 function playTick() { if (!S.set.sfx || !actx) return; try { tone(1100, actx.currentTime, 0.06, 'triangle', 0.05); } catch (e) {} }
 function playRare(big, bang = false) {
   if (!S.set.rareSfx || !actx) return;
-  if (bang) { try { playBangSound(); } catch { stopBangSound(); } return; }
+  if (bang) { try { playBangSound(bang); } catch { stopBangSound(); } return; }
   try { const t = actx.currentTime; const f = big ? [261.6, 329.6, 392, 523.3, 659.3, 784, 1046.5] : [523.3, 659.3, 784, 1046.5]; f.forEach((x, i) => tone(x, t + i * 0.07, big ? 0.9 : 0.4, i === f.length - 1 ? 'sawtooth' : 'triangle', 0.07)); } catch (e) {}
 }
 
@@ -4346,7 +4491,8 @@ function doPull(auto, originEl, paced = false, event = activeGameplayEvent(), ba
   return true;
 }
 function isExclamationResult(r) { return !r.leak && TIERS[r.t]?.id === '!'; }
-function resultScore(r) { return isHiddenCard(r.id) ? 3e9 + r.v : isExclamationResult(r) ? 2e9 + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
+function isHorizonResult(r) { return !r.leak && r.t >= EXCLAMATION_TIER; }
+function resultScore(r) { return isHorizonResult(r) ? 2e9 + r.t * 4 + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
 function cinePick(sorted, auto) {
   if (auto && !S.set.autoCine) return;
   if (isHiddenCard(sorted[0]?.id)) return sorted[0];
@@ -4394,10 +4540,13 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   if (background) return;
   const cine = cinePick(lastResults, auto);
   if (hidden) {
-    if (cine === best && S.set.fx) { playRare(true); showAdminCardReveal(best); }
-    else toast('??!! 已入库', `${HIDDEN_CARD_LABEL} · ${VARIANTS[best.v].name} ×${fmt(best.n)}`);
+    const m = modelById(best.id);
+    if (cine === best && S.set.fx && (m === HIDDEN_CARD ? showAdminCardReveal(best) : showCine(best))) playRare(true, m === VOID_CARD ? 'genesis' : false);
+    else toast(`${m.n} 已入库`, `${HIDDEN_CARD_LABEL} · ${VARIANTS[best.v].name} ×${fmt(best.n)}`);
   }
-  else if (cine) { if (!paced || !cineOpen || isExclamationResult(cine)) { playRare(cine.t >= 7, isExclamationResult(cine)); showCine(cine); } }
+  else if (cine) { if (!paced || !cineOpen || isHorizonResult(cine)) {
+    if (showCine(cine, null, p)) playRare(cine.t >= 7, cine.t === OMEGA_TIER ? 'causal' : isExclamationResult(cine));
+  } }
   else {
     if (!auto) playPull();
     for (const r of lastResults.slice(0, 3)) {
@@ -4535,7 +4684,7 @@ function renderUpBanner() {
 function renderPull() {
   renderUpBanner();
   $('#packs').innerHTML = PACKS.map((p, pi) => {
-    const top = p.special ? [p.special.t, p.special.chance] : p.r[p.r.length - 1];
+    const top = p.rare?.at(-1) ?? (p.special ? [p.special.t, p.special.chance] : p.r.at(-1));
     const cost = pullCost(p);
     return `<button class="pack${S.tokens < cost ? ' locked' : ''}" aria-pressed="${S.pack === p.id}" data-pack="${p.id}" data-cost="${cost}">
       <span class="leds">${Array.from({ length: PACKS.length }, (_, i) => `<i class="${i <= pi ? 'on' : ''}"></i>`).join('')}</span>
@@ -4550,13 +4699,14 @@ function renderPull() {
   const maxP = Math.max(...p.r.map(x => x[1]));
   const rates = p.r.slice().reverse();
   if (p.special) rates.unshift([p.special.t, p.special.chance]);
-  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.hiddenChance && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
+  if (p.rare) rates.unshift(...p.rare.slice().reverse());
+  $('#rates').innerHTML = rates.map(([t, pr]) => `<div class="rate-row">${tierTag(t)}<div class="bar"><i style="width:${Math.max(1.5, pr / maxP * 100)}%;background:${tierColor(t)}"></i></div><span class="p">${p.rare && t <= p.pt ? `${pr * 100}%` : p.hiddenChance && pr >= 0.01 ? trim0((pr * 100).toFixed(5)) + '%' : fmtProb(pr)}</span></div>`).join('');
   if (p.hiddenChance) $('#rates').insertAdjacentHTML('beforeend', '<div class="note" style="margin-top:8px">有隐藏卡</div>');
   const vp = variantProbs();
   const pn = pityN(p), pc = pityProgress(p, pn);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 抽</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.rare ? 'ℵ 与 ? 的百分比仅适用于普通抽取；! 和 ω 为固定单抽概率，包含所有变体。泄露、!、ω 和隐藏卡不推进保底。' : p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
@@ -4695,8 +4845,7 @@ function makeVaultRow(m, v, count) {
   return {el, v, count, badge:el.querySelector('.cnt'), label:el.querySelector('.vault-stat span'), rate:el.querySelector('.vault-stat b')};
 }
 function renderModels() {
-  renderAdminCard();
-  const grid = $('#vault'), hidden = owned(HIDDEN_CARD), labs = Object.keys(LABS).filter(k => labStats()[k].own || (hidden && k === HIDDEN_CARD.lab));
+  const grid = $('#vault'), hidden = HIDDEN_MODELS.filter(owned), labs = Object.keys(LABS).filter(k => labStats()[k].own || hidden.some(m => m.lab === k));
   if (!labs.includes(vaultLab)) vaultLab = 'all';
   const key = labs.join('|') + ':' + vaultLab;
   if (filterKey !== key) {
@@ -4704,9 +4853,9 @@ function renderModels() {
     $('#labFilter').innerHTML = `<button data-lab="all" aria-pressed="${vaultLab === 'all'}">全部</button>` + labs.map(k => `<button data-lab="${k}" aria-pressed="${vaultLab === k}"><span class="sw" style="background:${LABS[k].hue}"></span>${esc(LABS[k].name)}</button>`).join('');
   }
   let list = MODELS.filter(owned).filter(m => vaultLab === 'all' || m.lab === vaultLab);
-  if (hidden && (vaultLab === 'all' || vaultLab === HIDDEN_CARD.lab)) list.push(HIDDEN_CARD);
+  list.push(...hidden.filter(m => vaultLab === 'all' || m.lab === vaultLab));
   const prod = production(), mul = globalMul();
-  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : isHiddenCard(m.id) ? hiddenCardBase() : prod.amounts[m.idx-1]) * mul;
+  const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : isHiddenCard(m.id) ? hiddenCardBase(m) : prod.amounts[m.idx-1]) * mul;
   if (vaultSort === 'out') list.sort((a, b) => output(b) - output(a));
   else if (vaultSort === 'tier') list.sort((a, b) => b.t - a.t || bestVar(modelInventory(b)) - bestVar(modelInventory(a)));
   else list.sort((a, b) => total(modelInventory(b)) - total(modelInventory(a)));
@@ -4823,7 +4972,7 @@ function openDetail(id) {
     };
     el.querySelector('[data-act=sig]').onclick = () => {
       if (!owned(m)) return;
-      if (hidden && !S.hiddenCard && !adminCardProgressMatches()) S.adminCardProgress = {uid:adminCard.uid,level:0};
+      if (m === HIDDEN_CARD && !S.hiddenCard && !adminCardProgressMatches()) S.adminCardProgress = {uid:adminCard.uid,level:0};
       S.sig = m.id;
       if (hidden) saveLocal();
       markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n);
@@ -4838,13 +4987,15 @@ function openDetail(id) {
 let dexGrid;
 const DEX_COMPLETE = (1 << VARIANTS.length) - 1;
 function syncHiddenDex() {
-  const slot = $('#dexHidden'), copies = hiddenCardInventory();
-  const mask = copies?.reduce((n, count, v) => n | (count > 0 ? 1 << v : 0), 0) || 0;
-  if (dexGrid.hiddenMask !== mask) {
-    dexGrid.hiddenMask = mask;
-    slot.innerHTML = mask ? `<div class="dex-grid"><button type="button" class="dex-row" data-model="${HIDDEN_CARD.id}"><span class="ic" aria-hidden="true">${sharedArt(HIDDEN_CARD)}</span><span><span class="t1"><span class="tag">${HIDDEN_CARD_LABEL}</span><span>${esc(HIDDEN_CARD.n)}</span></span><span class="cells">${VARIANTS.map((v,i) => `<i class="c${i}${copies[i] > 0 ? ' on' : ''}" title="${v.name}"></i>`).join('')}</span></span></button></div>` : '';
+  const slot = $('#dexHidden');
+  const rows = HIDDEN_MODELS.map(m => ({m, mask:modelInventory(m)?.reduce((n,c,v) => n | (c > 0 ? 1 << v : 0),0) || 0}))
+    .filter(({mask}) => mask && (!S.set.hideCompleteDex || mask !== DEX_COMPLETE));
+  const key = rows.map(({m,mask}) => `${m.id}:${mask}`).join('|');
+  if (dexGrid.hiddenMask !== key) {
+    dexGrid.hiddenMask = key;
+    slot.innerHTML = rows.length ? `<div class="dex-grid">${rows.map(({m,mask}) => `<button type="button" class="dex-row" data-model="${m.id}"><span class="ic" aria-hidden="true">${sharedArt(m)}</span><span><span class="t1"><span class="tag">${HIDDEN_CARD_LABEL}</span><span>${esc(m.n)}</span></span><span class="cells">${VARIANTS.map((v,i) => `<i class="c${i}${mask & (1 << i) ? ' on' : ''}" title="${v.name}"></i>`).join('')}</span></span></button>`).join('')}</div>` : '';
   }
-  slot.hidden = !mask || !!$('#dexTier').value || (S.set.hideCompleteDex && mask === DEX_COMPLETE);
+  slot.hidden = !rows.length || !!$('#dexTier').value;
 }
 function mountDex() {
   const root = $('#view-dex');
@@ -4891,7 +5042,7 @@ function syncDex() {
   syncHiddenDex();
   const hidden = hiddenDexCount(), hiddenCount = $('#dexHiddenCount');
   hiddenCount.hidden = !hidden;
-  textIfChanged(hiddenCount, hidden ? `${hidden}/${VARIANTS.length}` : '');
+  textIfChanged(hiddenCount, hidden ? `${hidden}/${VARIANTS.length * HIDDEN_MODELS.length}` : '');
   const di = dexInfo(), si = seriesInfo(), ls = labStats();
   if (dexGrid.snapshot === di) {
     if (dexGrid.hideComplete !== S.set.hideCompleteDex) filterDexTier();
@@ -5112,11 +5263,10 @@ function setCloudStatus(s) {
   markDirty('world', 'prefs');
 }
 function num(x, max) { x = Number(x); return isFinite(x) && x >= 0 ? Math.min(x, max) : 0; }
-const PULLED_HIDDEN_CARD_ID = 'hidden-nullpoint';
-function playerModelId(m) { return isHiddenCard(m?.id) && S.hiddenCard ? PULLED_HIDDEN_CARD_ID : m?.id ?? null; }
+function playerModelId(m) { return m === HIDDEN_CARD && S.hiddenCard ? PULLED_HIDDEN_CARD_ID : m?.id ?? null; }
 function publicModel(id, player) {
   if (id === PULLED_HIDDEN_CARD_ID) return HIDDEN_CARD;
-  return isHiddenCard(id) && !verifiedAdmin(player) ? null : modelById(id);
+  return id === HIDDEN_CARD.id && !verifiedAdmin(player) ? null : modelById(id);
 }
 function publicTeam(rows, player) {
   if (!Array.isArray(rows)) return null;
@@ -5664,6 +5814,7 @@ async function syncInventorySnapshot(b, uid) {
   };
   for (const m of MODELS) add(m.id, S.cards[m.id]);
   add(HIDDEN_CARD.id, hiddenCardInventory());
+  add(VOID_CARD.id, modelInventory(VOID_CARD));
   const p_epoch = S.saveEpoch || null, json = JSON.stringify([p_epoch,cards]);
   if (pending.json === json) return;
   pending.next = Date.now()+45000; pending.busy = true;
@@ -5678,7 +5829,8 @@ async function syncInventorySnapshot(b, uid) {
 function drawnTitleFlags() {
   // Draw counters exclude cards received as gifts. The hidden card's save entry excludes the admin grant.
   return (S.stats.byTier[EXCLAMATION_TIER - 1] > 0 ? 1 : 0) |
-    (S.stats.byTier[EXCLAMATION_TIER] > 0 ? 2 : 0) | (S.hiddenCard ? 4 : 0);
+    (S.stats.byTier[EXCLAMATION_TIER] > 0 ? 2 : 0) |
+    (total(S.hiddenCard?.copies) > (S.hiddenCard?.gifted ?? 0) ? 4 : 0);
 }
 
 async function syncMilestoneTitles(b, uid) {
@@ -6236,7 +6388,8 @@ function applyItemOrder(order) {
 
 function privateGiftLabel(kind, amount, model, variant) {
   if (kind === 'gpu' || kind === 'tokens') return `${Number(amount).toLocaleString('zh-CN')} ${kind === 'gpu' ? 'GPU' : 'Token'}`;
-  return `${MODEL_BY_ID[model].n} · ${VARIANTS[variant].name} × ${Number(amount).toLocaleString('zh-CN')}`;
+  const m = model === PULLED_HIDDEN_CARD_ID ? HIDDEN_CARD : modelById(model);
+  return `${m.n} · ${VARIANTS[variant].name} × ${Number(amount).toLocaleString('zh-CN')}`;
 }
 
 function storePrivateGift(order) {
@@ -6248,11 +6401,15 @@ function storePrivateGift(order) {
   if (kind === 'gpu' || kind === 'tokens') {
     next[kind] += amount;
     if (!Number.isFinite(next[kind]) || next[kind] <= S[kind]) return false;
-  } else if (kind === 'card' && Object.hasOwn(MODEL_BY_ID,order.model) && [0,1,2,3].includes(order.variant)) {
-    const counts = [...(S.cards[order.model] ?? [0,0,0,0])];
+  } else if (kind === 'card' && [0,1,2,3].includes(order.variant)) {
+    const oldHidden = order.model === PULLED_HIDDEN_CARD_ID;
+    const m = oldHidden ? HIDDEN_CARD : modelById(order.model);
+    if (!m || (!oldHidden && m === HIDDEN_CARD)) return false;
+    const counts = [...((oldHidden ? S.hiddenCard?.copies : S.cards[m.id]) ?? [0,0,0,0])];
     counts[order.variant] += amount;
     if (!Number.isSafeInteger(counts[order.variant])) return false;
-    next.cards = {...S.cards,[order.model]:counts};
+    if (oldHidden) next.hiddenCard = {copies:counts,level:S.hiddenCard?.level ?? 0,gifted:(S.hiddenCard?.gifted ?? 0)+amount};
+    else next.cards = {...S.cards,[m.id]:counts};
   } else return false;
   if (!lsSet(activeSaveKey(),JSON.stringify(next))) return false;
   S = next; invalidate(); markDirty(...VIEWS, 'hud'); cloudBump(true);
@@ -6778,7 +6935,10 @@ $('#clearLockedSave').onclick = async e => {
 
 const adminDialog = $('#adminPanel'), adminBody = $('#adminBody');
 const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力',high_gpu:'GPU 超过 10 万',high_tokens:'Token 余额超过 1e60'};
-const adminModelOptions = () => MODELS.map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join('');
+const adminModelOptions = (models = MODELS) => models.map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join('');
+const adminNewModel = MODELS_BY_TIER[OMEGA_TIER][0];
+const adminHorizonOptions = () => [adminNewModel,...HIDDEN_MODELS].map(m =>
+  `<option value="${m === HIDDEN_CARD ? PULLED_HIDDEN_CARD_ID : m.id}">${esc(m.n)} · ${esc(m.c)}</option>`).join('');
 const adminVariantOptions = () => VARIANTS.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('');
 const canOpenAdminPanel = () => !!cloud.board?.client && canGrantAllCards();
 let adminSeq = 0, adminDetailSeq = 0, adminOffset = 0, adminResults = [], adminTarget = null, adminTargetName = '';
@@ -6810,7 +6970,7 @@ function openAdminPanel(target = null) {
         <p class="note notice-status" id="adminNoticeRecipient"></p>
         <label class="admin-note-input">通知内容<textarea class="input" name="body" maxlength="500" rows="3"></textarea></label>
         <label>赠礼<select class="input" name="kind"><option value="">不附道具</option><option value="gpu">GPU</option><option value="tokens">Token</option><option value="card">模型卡</option></select></label>
-        <label class="gift-card" hidden>模型<select class="input" name="model" disabled>${adminModelOptions()}</select></label>
+        <label class="gift-card" hidden>模型<select class="input" name="model" disabled><optgroup label="新卡与隐藏卡">${adminHorizonOptions()}</optgroup><optgroup label="其他模型">${adminModelOptions(MODELS.filter(m => m !== adminNewModel))}</optgroup></select></label>
         <label class="gift-card" hidden>变体<select class="input" name="variant" disabled>${adminVariantOptions()}</select></label>
         <label id="adminGiftAmount" hidden>增加数量<input class="input" name="amount" type="number" min="1" max="9007199254740991" step="1" disabled required></label>
         <button class="btn small" type="submit">发送通知</button>
@@ -6849,16 +7009,20 @@ adminDialog.addEventListener('close', () => {
   if (adminDialog.open) return;
   adminSeq++; adminDetailSeq++; adminTarget = null;
 });
-function composePrivateNotice(id, name) {
+function composePrivateNotice(id, name, horizon = false) {
   if (privateNoticeBusy) return;
-  const form = $('#adminNoticeForm'), {player,body,kind,amount} = form.elements;
+  const form = $('#adminNoticeForm'), {player,body,kind,model,amount} = form.elements;
   if (player.value && player.value !== id && (body.value.trim() || kind.value) && !window.confirm('切换收件人并清除未发送的内容？')) return;
   if (player.value !== id) { body.value = kind.value = amount.value = ''; renderPrivateGiftFields(form); }
   player.value = id;
+  if (horizon) {
+    kind.value = 'card'; model.value = adminNewModel.id;
+    amount.value = '1'; renderPrivateGiftFields(form);
+  }
   $('#adminNoticeRecipient').textContent = `收件人：${name}`;
   $('#adminNoticeStatus').textContent = '';
   $('#adminNotice').open = true;
-  body.focus();
+  (horizon ? model : body).focus();
 }
 function renderPrivateGiftFields(form) {
   const {kind,amount,model,variant} = form.elements;
@@ -6937,6 +7101,7 @@ async function loadAdminDetail() {
       <dl class="profile-stats" id="adminOnlineTime"><div><dt>累计在线</dt><dd>${onlineTime}</dd></div>
       <div><dt>最近心跳</dt><dd>${lastSeen && Number.isFinite(+lastSeen) ? `<time datetime="${lastSeen.toISOString()}">${esc(lastSeen.toLocaleString('zh-CN'))}</time>` : '暂无记录'}</dd></div></dl>
       <button type="button" class="btn ghost small" id="adminComposeNotice">发私密通知或赠礼</button>
+      <button type="button" class="btn ghost small" id="adminGrantHorizon">发放新卡与隐藏卡</button>
       <button type="button" class="btn ghost small" id="adminComposeTitle">发放称号</button>
       <section class="admin-progress" id="adminDrawStatus" aria-label="自动抽卡速度"><p class="note" role="status"></p><button type="button" class="btn ghost small">刷新抽速</button></section>
       <details class="admin-progress"><summary>云档等级</summary><div id="adminProgress"></div></details>
@@ -6956,6 +7121,7 @@ async function loadAdminDetail() {
       ${p ? `<dl class="profile-stats">${PROFILE_STATS.map(([k,n])=>`<div><dt>${n}</dt><dd>${displayScore(p,k)}</dd></div>`).join('')}</dl>${profileTeamHTML(p)}` : '<p class="note">该玩家尚未上报成绩。</p>'}
       ${r.audit.length ? `<ul class="admin-audit">${r.audit.map(a=>`<li>${esc(new Date(a.at).toLocaleString('zh-CN'))} · ${esc(auditNames[a.action] || a.action)}${a.detail?.reason ? `：${esc(a.detail.reason)}` : ''}</li>`).join('')}</ul>` : ''}`;
     $('#adminComposeNotice').onclick = () => composePrivateNotice(id,name);
+    $('#adminGrantHorizon').onclick = () => composePrivateNotice(id,name,true);
     $('#adminComposeTitle').onclick = () => chooseTitleRecipient(id);
     mountAdminProgress($('#adminProgress'),id,current);
     mountAdminDrawStatus($('#adminDrawStatus'),id,current);
@@ -7885,8 +8051,7 @@ async function loadInventoryTotals() {
       return {m,values,sum:values.reduce((a,b)=>a+b,0n)};
     };
     inventoryRows = MODELS.map(row);
-    const hidden = row(HIDDEN_CARD);
-    if (hidden.sum > 0n) inventoryRows.push(hidden);
+    inventoryRows.push(...HIDDEN_MODELS.map(row).filter(entry => entry.sum > 0n));
     inventoryMeta = `已上报 ${Number(data.players).toLocaleString('zh-CN')} 个实验室${data.latest ? ` · 最新上报 ${new Date(data.latest).toLocaleString('zh-CN')}` : ''}`;
     renderInventoryTotals();
   } catch (error) {
@@ -7922,7 +8087,44 @@ const chatMentions = $('#chatMentions'), chatEmojis = $('#chatEmojis'), chatRepl
 const chatMentionButton = $('#chatMentionButton'), chatEmojiButton = $('#chatEmojiButton');
 const chatSendButton = chatForm.querySelector('[type=submit]');
 $('#openChat').classList.toggle('hidden', !WORLD_CONFIG);
-const chatGlyphs = ['😀','😂','🥳','🤔','😮','😭','😎','👍','👏','🙏','🤝','💚','🔥','🎉','🎲','💎','🤖','✨'];
+const chatEmojiGroups = [
+  ['表情', [
+    ['😀','开心'],['😄','大笑'],['😁','咧嘴笑'],['😂','笑哭'],['🤣','笑到打滚'],
+    ['🙂','微笑'],['🙃','倒脸'],['😉','眨眼'],['😊','害羞笑'],['😌','松口气'],
+    ['😍','爱心眼'],['😎','墨镜'],['🤔','思考'],['😮','惊讶'],['😳','脸红'],
+    ['🥺','可怜巴巴'],['😭','大哭'],['😤','气呼呼'],['😴','睡觉'],['🤯','震惊']
+  ]],
+  ['手势', [
+    ['👋','挥手'],['🤚','举手'],['🖐️','张开手掌'],['✋','击掌'],['👌','没问题'],
+    ['🤌','捏手指'],['✌️','耶'],['🤞','好运'],['🤟','爱你手势'],['🤘','摇滚'],
+    ['👍','点赞'],['👎','踩'],['✊','握拳'],['👊','碰拳'],['🤛','向左碰拳'],
+    ['🤜','向右碰拳'],['👏','鼓掌'],['🙌','欢呼'],['🤝','握手'],['🙏','感谢']
+  ]],
+  ['爱心', [
+    ['❤️','红心'],['🧡','橙心'],['💛','黄心'],['💚','绿心'],['💙','蓝心'],
+    ['💜','紫心'],['🖤','黑心'],['🤍','白心'],['🤎','棕心'],['💔','心碎'],
+    ['❤️‍🔥','燃烧的心'],['💕','两颗心'],['💖','闪亮的心'],['💗','变大的心'],['💓','跳动的心'],
+    ['💞','旋转的心'],['💝','礼物爱心'],['💘','丘比特之箭'],['💟','爱心符号'],['🫶','比心']
+  ]],
+  ['庆祝', [
+    ['🥳','派对脸'],['🎉','礼花'],['🎊','彩球'],['🎈','气球'],['🎁','礼物'],
+    ['🎂','蛋糕'],['🏆','奖杯'],['🥇','金牌'],['🎖️','奖章'],['🎯','命中'],
+    ['🎲','骰子'],['🎮','手柄'],['🔥','火焰'],['✨','闪光'],['🌟','闪亮的星'],
+    ['💫','星光'],['⚡','闪电'],['💎','钻石'],['✅','打勾'],['🚀','火箭']
+  ]],
+  ['动物', [
+    ['🐱','猫咪'],['😺','猫咪笑'],['😸','猫咪眯眼笑'],['😹','猫咪笑哭'],['😻','猫咪爱心眼'],
+    ['🙀','猫咪惊呆'],['🐶','小狗'],['🐕','狗狗'],['🦊','狐狸'],['🐼','熊猫'],
+    ['🐻','小熊'],['🐰','兔子'],['🐹','仓鼠'],['🐧','企鹅'],['🐥','小鸡'],
+    ['🦉','猫头鹰'],['🐸','青蛙'],['🐢','乌龟'],['🦄','独角兽'],['🐙','章鱼']
+  ]],
+  ['实验室', [
+    ['🤖','机器人'],['👾','像素怪'],['🖥️','显示器'],['💻','电脑'],['⌨️','键盘'],
+    ['🖱️','鼠标'],['💾','存档'],['📡','天线'],['🔋','电池'],['🔌','插头'],
+    ['💡','灵感'],['🔬','显微镜'],['🧪','试管'],['🧫','培养皿'],['🧬','DNA'],
+    ['⚗️','蒸馏瓶'],['⚛️','原子'],['🧠','大脑'],['🛰️','卫星'],['🪐','行星']
+  ]]
+];
 const chatErrors = {
   FRONTIER_CHAT_RATE:'发得太快，请稍等再试。', FRONTIER_CHAT_RESTRICTED:'封禁期间不能使用聊天室。',
   FRONTIER_CHAT_NO_LAB:'实验室尚未同步，请联网后再试。', FRONTIER_CHAT_REPLY_GONE:'原消息已不可用，取消回复后可直接发送。',
@@ -8063,13 +8265,34 @@ chatMentionButton.onclick = () => {
   if (!chatMentions.hidden) { showChatPicker(null); return; }
   renderMentionPicker(); showChatPicker('mention'); chatMentions.querySelector('button')?.focus();
 };
-chatEmojis.innerHTML = chatGlyphs.map((glyph,i) => `<button class="btn ghost small" type="button" data-emoji="${i}">${glyph}</button>`).join('');
+const chatEmojiCategories = $('#chatEmojiCategories'), chatEmojiGrid = $('#chatEmojiGrid');
+let chatEmojiGroup = 0;
+chatEmojiCategories.innerHTML = chatEmojiGroups.map(([name],i) =>
+  `<button class="btn ghost small" type="button" data-emoji-group="${i}" aria-pressed="false" aria-controls="chatEmojiGrid">${esc(name)}</button>`).join('');
+function renderChatEmojiGroup(index) {
+  const [name,glyphs] = chatEmojiGroups[index];
+  chatEmojiGroup = index;
+  for (const button of chatEmojiCategories.children) button.setAttribute('aria-pressed',String(Number(button.dataset.emojiGroup) === index));
+  chatEmojiGrid.setAttribute('aria-label',name);
+  chatEmojiGrid.innerHTML = glyphs.map(([glyph,label],i) => `<button class="btn ghost small" type="button" data-emoji="${i}" aria-label="${esc(label)}" title="${esc(label)}">${esc(glyph)}</button>`).join('');
+  chatEmojiGrid.scrollTop = 0;
+}
+renderChatEmojiGroup(chatEmojiGroup);
 chatEmojiButton.onclick = () => {
   if (!chatEmojis.hidden) { showChatPicker(null); return; }
-  showChatPicker('emoji'); chatEmojis.querySelector('button').focus();
+  showChatPicker('emoji');
+  chatEmojiCategories.children[chatEmojiGroup].focus({preventScroll:true});
+  chatEmojiButton.form.scrollIntoView({block:'nearest'});
 };
 chatMentions.onclick = e => insertMention([...chatMessages].reverse().find(m => m.player_id === e.target.closest('[data-mention]')?.dataset.mention));
-chatEmojis.onclick = e => { const glyph = chatGlyphs[e.target.closest('[data-emoji]')?.dataset.emoji]; if (glyph) insertChatText(glyph); };
+chatEmojiCategories.onclick = e => {
+  const button = e.target.closest('[data-emoji-group]');
+  if (button && Number(button.dataset.emojiGroup) !== chatEmojiGroup) renderChatEmojiGroup(Number(button.dataset.emojiGroup));
+};
+chatEmojiGrid.onclick = e => {
+  const glyph = chatEmojiGroups[chatEmojiGroup][1][e.target.closest('[data-emoji]')?.dataset.emoji]?.[0];
+  if (glyph) insertChatText(glyph);
+};
 $('#view-chat').addEventListener('keydown', e => {
   if (e.key === 'ArrowDown' && e.target === chatText && !chatMentions.hidden && chatMentions.querySelector('button')) {
     e.preventDefault(); chatMentions.querySelector('button').focus();
@@ -8380,14 +8603,11 @@ function bindWorldEventAdmin(personal = false) {
 const ADMIN_CARD_COPIES = Object.freeze([1,1,1,1]);
 const isAdminCardUID = id => typeof id === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
 const adminCardKey = uid => `frontier:admin-card:${WORLD_CONFIG.url}:${uid}`;
-const adminCardState = (uid, owned = false) => ({uid, owned, role:null, ready:false, busy:false, error:''});
+const adminCardState = (uid, owned = false) => ({uid, owned, role:null, busy:false});
 let adminCard = adminCardState(null);
 
 function adminCardEligible() {
   return adminCard.role === true && adminCard.uid === cloud.uid && !moderation.level && !accountPaused() && navigator.onLine;
-}
-function adminCardValid() {
-  return adminCardEligible() && adminCard.ready;
 }
 function hasAdminCard() { return adminCard.owned; }
 function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === adminCard.uid; }
@@ -8396,7 +8616,6 @@ function adminCardChanged() {
     if (owned(HIDDEN_CARD)) openDetail(HIDDEN_CARD.id);
     else closeModal();
   }
-  renderAdminCard();
   markDirty('models','dex','bench','world','hud');
   cloudBump(true);
 }
@@ -8424,37 +8643,28 @@ function observeAdminCardRole(uid, adminId) {
   if (dialog.open && !S.hiddenCard) dialog.close();
   adminCardChanged();
 }
-async function refreshAdminCard(claim = false) {
+async function refreshAdminCard() {
   if (!adminCardEligible() || adminCard.owned) return;
   const client = cloud.board?.client, uid = cloud.uid;
   if (!client) return;
-  if (adminCard.busy || (claim && !adminCardValid())) return;
+  if (adminCard.busy) return;
   const check = adminCard;
   const wasOwned = hasAdminCard();
-  check.busy = claim ? 'claim' : 'status'; check.error = '';
-  if (claim) renderAdminCard();
+  check.busy = true;
   try {
-    const reply = await client.rpc('frontier_admin_card', {p_claim:claim}).abortSignal(AbortSignal.timeout(8000));
+    const reply = await client.rpc('frontier_admin_card', {p_claim:false}).abortSignal(AbortSignal.timeout(8000));
     if (check !== adminCard || uid !== cloud.uid || check.role !== true) return;
     if (accountStale(reply.error)) { accountFault(reply.error); return; }
     const data = unwrap(reply);
-    if (data?.player_id !== uid || typeof data.owned !== 'boolean' || (claim && !data.owned)) throw Error('Unverified card response');
+    if (data?.player_id !== uid || typeof data.owned !== 'boolean') return;
     check.owned = data.owned;
-    check.ready = true;
     if (check.owned) lsSet(adminCardKey(uid), '1');
-    if (claim) {
-      if (S.set.fx) showAdminCardReveal();
-      else toast('??!! 已入库', '四种变体各 1 张');
-    }
   } catch {
-    if (check !== adminCard || uid !== cloud.uid) return;
-    check.ready = false;
-    check.error = claim ? '未能确认领取，可重试查询。' : '暂时无法验证专属档案。';
+    // Retain existing ownership while the service is unavailable.
   } finally {
     if (check === adminCard) {
       check.busy = false;
       if (wasOwned !== hasAdminCard()) adminCardChanged();
-      else renderAdminCard();
     }
   }
 }
@@ -8505,15 +8715,6 @@ function adminCardArt(variant = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
   </svg>`;
 }
 
-function renderAdminCard() {
-  const panel = $('#adminCardSlot'), valid = adminCardValid();
-  panel.hidden = !adminCardEligible() || adminCard.uid !== cloud.uid || hasAdminCard() || (!adminCard.ready && !adminCard.error);
-  if (panel.hidden) return;
-  const button = $('[data-admin-card-action]',panel);
-  textIfChanged(button, adminCard.busy === 'claim' ? '领取中…' : !valid ? '重试查询' : '领取 ??!!');
-  button.disabled = adminCard.busy === 'claim';
-  textIfChanged($('[data-admin-card-error]',panel), adminCard.error);
-}
 function showAdminCardReveal(pull, replay = false) {
   if (!pull && !hasAdminCard()) return;
   const dialog = $('#adminCardReveal');
@@ -8533,17 +8734,11 @@ function showAdminCardReveal(pull, replay = false) {
   return true;
 }
 function initAdminCard() {
-  const slot = $('#adminCardSlot'), dialog = $('#adminCardReveal');
-  const action = $('[data-admin-card-action]',slot);
-  action.addEventListener('click', () => {
-    if (!hasAdminCard()) refreshAdminCard(adminCardValid());
-  });
+  const dialog = $('#adminCardReveal');
   dialog.addEventListener('close', () => {
     if (dialog.hasAttribute('data-replay') || currentView !== 'models') return;
-    if (!slot.hidden) action.focus();
-    else { renderModels(); $('#vault [data-model="admin-nullpoint"]')?.focus(); }
+    renderModels(); $('#vault [data-model="admin-nullpoint"]')?.focus();
   });
-  window.addEventListener('offline',renderAdminCard);
 }
 
 /* =================== ROUTER =================== */
