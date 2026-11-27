@@ -165,9 +165,9 @@ button { cursor: pointer; }
 button.hud-chip:hover { border-color: var(--line-2); }
 .hud-event { display:inline-flex; gap:6px; align-items:center; min-width:0; max-width:100%; color:var(--copper); }
 .hud-event[hidden] { display:none; }
-.hud-event > b, #worldEventBadgeTime { flex:none; }
-#worldEventBadgeTitle { text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
-#worldEventBadgeTime { min-inline-size:7ch; text-align:end; }
+.hud-event > b, .hud-event > .num { flex:none; }
+.hud-event > span:nth-child(2) { text-overflow:ellipsis; overflow:hidden; white-space:nowrap; }
+.hud-event > .num { min-inline-size:7ch; text-align:end; }
 #worldEventDetailsTitle { overflow-wrap:anywhere; }
 .gpu-ico { width: 16px; height: 16px; }
 .hud-spacer { flex: 1; }
@@ -1377,6 +1377,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
       <button class="hud-chip" id="hudMulBtn" title="查看全部倍率">倍率 <b id="hudMul">×1</b></button>
       <div class="buffs" id="hudBuffs"></div>
       <button class="hud-chip hud-event" id="worldEventBadge" type="button" aria-haspopup="dialog" hidden><b>全服活动</b><span id="worldEventBadgeTitle"></span><span class="num" id="worldEventBadgeTime"></span></button>
+      <button class="hud-chip hud-event" id="personalHotspotBadge" type="button" aria-haspopup="dialog" hidden><b>个人热点</b><span></span><span class="num"></span></button>
       <span class="hud-spacer"></span>
       <div class="news-slot hidden" id="newsSlot">
         <button class="news-pill" id="newsPill" aria-describedby="newsTip"><span class="tag">热点</span><span id="newsText"></span></button>
@@ -3017,46 +3018,77 @@ const WORLD_EVENT_EFFECTS = Object.freeze({
   copies:{label:'每次命中的模型卡份数',min:1,max:10,step:1,example:2}
 });
 const EVENT_LEAK_CAP = .1;
+const PERSONAL_HOTSPOT_EFFECTS = Object.freeze({
+  speed:WORLD_EVENT_EFFECTS.speed,
+  batch:{label:'每批固定张数',min:1,max:1000,step:1,example:10,unit:'张'},
+  price:WORLD_EVENT_EFFECTS.price, tokens:WORLD_EVENT_EFFECTS.tokens,
+  power:WORLD_EVENT_EFFECTS.power, odds:WORLD_EVENT_EFFECTS.odds
+});
+const PERSONAL_HOTSPOT_MINUTES = 1440;
 const worldEventClock = performance.now.bind(performance);
 const WORLD_EVENT_POLL_MS = 8000, WORLD_EVENT_LEASE_MS = 25000;
-let worldEvent = null, displayedWorldEventId = null;
+let worldEvent = null, personalHotspot = null, displayedWorldEventId = null;
+let gameplayWorld = null, gameplayPersonal = null, gameplayCombined = null;
 
-function validWorldEventEffect(key, value) {
-  if (!Object.hasOwn(WORLD_EVENT_EFFECTS,key)) return false;
-  const spec = WORLD_EVENT_EFFECTS[key];
-  return Number.isFinite(value) && value >= spec.min && value <= spec.max && value !== 1 &&
+function validWorldEventEffect(key, value, specs = WORLD_EVENT_EFFECTS) {
+  if (!Object.hasOwn(specs,key)) return false;
+  const spec = specs[key];
+  return Number.isFinite(value) && value >= spec.min && value <= spec.max && (spec.unit || value !== 1) &&
     (spec.step === 1 ? Number.isInteger(value) : Number(value.toFixed(2)) === value);
 }
 function activeWorldEvent(at = null) {
   return worldEvent && (at ?? worldEventClock()) < worldEvent.until ? worldEvent : null;
 }
-function eventMultiplier(key, event = activeWorldEvent()) { return event?.effects[key] ?? 1; }
+function activePersonalHotspot(at = worldEventClock()) {
+  return personalHotspot && at < personalHotspot.until ? personalHotspot : null;
+}
+function activeGameplayEvent(at = worldEventClock()) {
+  const world = activeWorldEvent(at), personal = activePersonalHotspot(at);
+  if (!world || !personal) return world || personal;
+  if (world !== gameplayWorld || personal !== gameplayPersonal) {
+    gameplayWorld = world; gameplayPersonal = personal;
+    const effects = {...world.effects};
+    for (const [key,value] of Object.entries(personal.effects)) effects[key] = (effects[key] ?? 1)*value;
+    gameplayCombined = {id:`${world.id}:${personal.id}`,since:Math.max(world.since,personal.since),effects};
+  }
+  return gameplayCombined;
+}
+function eventMultiplier(key, event = activeGameplayEvent()) { return event?.effects[key] ?? 1; }
 
 function eventTokenCredit(base, dt, at = worldEventClock()) {
-  if (!worldEvent?.effects.tokens) return base*dt;
-  const online = Math.max(0, Math.min(at,worldEvent.until)-Math.max(at-dt*1000,worldEvent.since))/1000;
-  return base*(dt+online*(worldEvent.effects.tokens-1));
+  const world = worldEvent?.effects.tokens ? worldEvent : null;
+  const personal = personalHotspot?.effects.tokens ? personalHotspot : null;
+  if (!world && !personal) return base*dt;
+  const from = at-dt*1000;
+  const seconds = (since,until) => Math.max(0,Math.min(at,until)-Math.max(from,since))/1000;
+  const w = world ? world.effects.tokens-1 : 0, p = personal ? personal.effects.tokens-1 : 0;
+  const overlap = world && personal ? seconds(Math.max(world.since,personal.since),Math.min(world.until,personal.until)) : 0;
+  return base*(dt+(world ? seconds(world.since,world.until)*w : 0)+(personal ? seconds(personal.since,personal.until)*p : 0)+overlap*w*p);
 }
 function refreshWorldEvent() {
-  const id = activeWorldEvent()?.id ?? null;
+  const id = activeGameplayEvent()?.id ?? null;
   if (id === displayedWorldEventId) return;
   displayedWorldEventId = id;
   // Don't spend queued accelerated batches under a different price or count.
   resetAutoPull();
   markDirty('pull','models','research','bench','world','hud');
 }
-function applyWorldEventReply(payload, sentAt, at = worldEventClock()) {
+function applyWorldEventReply(payload, sentAt, at = worldEventClock(), personal = false) {
   const e = payload?.event;
-  if (e === null) worldEvent = null;
-  else {
+  let next = null;
+  if (e !== null) {
+    const specs = personal ? PERSONAL_HOTSPOT_EFFECTS : WORLD_EVENT_EFFECTS;
+    const previous = personal ? personalHotspot : worldEvent;
     if (!e || typeof e.id !== 'string' || typeof e.title !== 'string' || !e.effects || typeof e.effects !== 'object' || Array.isArray(e.effects) ||
-        !Number.isFinite(e.remaining_ms) || e.remaining_ms < 0 || e.remaining_ms > 604800000) return false;
+        !Number.isFinite(e.remaining_ms) || e.remaining_ms < 0 || e.remaining_ms > (personal ? PERSONAL_HOTSPOT_MINUTES*60000 : 604800000)) return false;
     const pairs = Object.entries(e.effects);
-    if (!pairs.length || !pairs.every(([key,value]) => validWorldEventEffect(key,value))) return false;
+    if (!pairs.length || !pairs.every(([key,value]) => validWorldEventEffect(key,value,specs))) return false;
     const expires = sentAt + e.remaining_ms;
-    const since = worldEvent?.id === e.id && at <= worldEvent.until ? worldEvent.since : at;
-    worldEvent = {id:e.id,title:e.title,effects:Object.fromEntries(pairs),expires,since,until:Math.min(expires,sentAt+WORLD_EVENT_LEASE_MS)};
+    const since = previous?.id === e.id && at <= previous.until ? previous.since : at;
+    next = {id:e.id,title:e.title,effects:Object.fromEntries(pairs),expires,since,until:Math.min(expires,sentAt+WORLD_EVENT_LEASE_MS)};
   }
+  if (personal) personalHotspot = next;
+  else worldEvent = next;
   refreshWorldEvent();
   return true;
 }
@@ -3077,23 +3109,23 @@ function addBuff(b) {
   markDirty('hud');
 }
 function techDouble(key) { return 1 + S.tech[key]; }
-function multi(event = activeWorldEvent()) { return pullTest.count() ?? (1 + S.up.multi)*techDouble('doubleDraw')*eventMultiplier('count',event); }
-function cloneN(event = activeWorldEvent()) { return (1 + S.up.clone) * techDouble('doubleCopies') * eventMultiplier('copies',event); }
+function multi(event = activeGameplayEvent()) { return pullTest.count() ?? event?.effects.batch ?? (1 + S.up.multi)*techDouble('doubleDraw')*eventMultiplier('count',event); }
+function cloneN(event = activeGameplayEvent()) { return (1 + S.up.clone) * techDouble('doubleCopies') * eventMultiplier('copies',event); }
 function basePullInterval(lv = S.up.speed) { return Math.max(0.05, Math.pow(0.95, lv)) / techDouble('doubleSpeed'); }
 function interval() { return basePullInterval() / buffMul('rush'); }
-function packCost(p,event = activeWorldEvent()) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale') * eventMultiplier('price',event); }
-function pullCost(p,event = activeWorldEvent()) { return packCost(p,event) * multi(event); }
+function packCost(p,event = activeGameplayEvent()) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale') * eventMultiplier('price',event); }
+function pullCost(p,event = activeGameplayEvent()) { return packCost(p,event) * multi(event); }
 function pityN(p) { return Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity))); }
 function pityProgress(p, goal = pityN(p)) { return Math.min(goal, S.pity[p.id] || 0); }
-function leakChance(p = curPack(), event = activeWorldEvent()) {
+function leakChance(p = curPack(), event = activeGameplayEvent()) {
   const odds = eventMultiplier('odds',event);
   const available = 1 - (p.hiddenChance ?? 0) - (p.special?.chance ?? 0);
-  return Math.min(odds === 1 ? available : EVENT_LEAK_CAP, available,
+  return Math.min(event?.effects.odds == null ? available : EVENT_LEAK_CAP, available,
     1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak') * odds);
 }
-function varLuck(event = activeWorldEvent()) { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck') * eventMultiplier('odds',event); }
+function varLuck(event = activeGameplayEvent()) { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck') * eventMultiplier('odds',event); }
 const VARIANT_CAPS = Object.freeze({thinking:0.5, fullPower:0.3});
-function variantProbs(event = activeWorldEvent()) {
+function variantProbs(event = activeGameplayEvent()) {
   const L = varLuck(event);
   const h = Math.min(1, 0.001 * L);
   const mx = Math.min(VARIANT_CAPS.fullPower, 0.01 * L), th = Math.min(VARIANT_CAPS.thinking, 0.1 * L);
@@ -3279,7 +3311,7 @@ function oddsForUpLab(lab, focus) {
   }
   return bulkOdds.odds;
 }
-function settlePull(p, compact = false, event = activeWorldEvent()) {
+function settlePull(p, compact = false, event = activeGameplayEvent()) {
   const n = multi(event), cost = packCost(p,event)*n;
   if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
@@ -3618,7 +3650,7 @@ function resetAutoPull() {
   pullFrame = null; autoAcc = 0; pullShort = false; pullSample = null;
   meterSeconds = meterBase = meterBatches = meterCards = 0;
 }
-function autoPullSpeed(event = activeWorldEvent()) { return pullTest.speed()*eventMultiplier('speed',event); }
+function autoPullSpeed(event = activeGameplayEvent()) { return pullTest.speed()*eventMultiplier('speed',event); }
 function drainAutoPull(background = document.hidden) {
   if (!S.auto || (typeof accountPaused === 'function' && accountPaused()) ||
       (typeof moderation !== 'undefined' && (moderation.booting || moderation.level === 2))) {
@@ -3628,12 +3660,12 @@ function drainAutoPull(background = document.hidden) {
   background ||= document.hidden;
   refreshWorldEvent();
   pullTest.refresh();
-  const event = activeWorldEvent();
-  const accelerated = background || autoPullSpeed(event) > 1 || eventMultiplier('count',event) > 1;
+  const event = activeGameplayEvent();
+  const accelerated = background || autoPullSpeed(event) > 1 || eventMultiplier('count',event) > 1 || (event?.effects.batch ?? 0) >= 64;
   const deadline = autoNow() + (background ? 10 : 4);
   const before = S.stats.pulls;
   for (let batches = 0; autoAcc >= 1 && batches < (background ? 240 : Infinity); batches++) {
-    if (event !== activeWorldEvent()) { refreshWorldEvent(); return; }
+    if (event !== activeGameplayEvent()) { refreshWorldEvent(); return; }
     if (!doPull(true, null, accelerated,event,background)) { autoAcc = 0; pullShort = true; break; }
     autoAcc--; meterBatches++; pullShort = false;
     if (autoNow() >= deadline) break;
@@ -3649,7 +3681,7 @@ function drainAutoPull(background = document.hidden) {
 function advanceAutoPull(dt, background = document.hidden) {
   refreshWorldEvent();
   pullTest.refresh();
-  const event = activeWorldEvent();
+  const event = activeGameplayEvent();
   if (event) dt = Math.min(dt,Math.max(0,(autoNow()-event.since)/1000));
   if (!S.auto || !(dt > 0)) return;
   const iv = interval();
@@ -4291,7 +4323,7 @@ let nextFastNotice = 0;
 const manualPullTimes = new Float64Array(100).fill(-Infinity);
 let manualPullSlot = 0, nextManualLimitNotice = 0;
 function isBroadcastHit(p) { return Number.isFinite(p) && p > 0 && p <= 1e-5; }
-function doPull(auto, originEl, paced = false, event = activeWorldEvent(), background = false) {
+function doPull(auto, originEl, paced = false, event = activeGameplayEvent(), background = false) {
   const at = auto ? 0 : performance.now();
   if (!auto && at - manualPullTimes[manualPullSlot] < 1000) {
     if (at >= nextManualLimitNotice) {
@@ -4556,7 +4588,7 @@ let resultNodes = new Map();
 const pullPanels = new Map();
 let pullObserver;
 function deferBulkPanel(el, render) {
-  if (!lastResultMeta?.auto || lastResultMeta.count < 64 || pullTest.speed() <= 1 || typeof IntersectionObserver !== 'function') return false;
+  if (!lastResultMeta?.auto || lastResultMeta.count < 64 || (autoPullSpeed() <= 1 && !activePersonalHotspot()?.effects.batch) || typeof IntersectionObserver !== 'function') return false;
   if (!pullPanels.has(el)) {
     pullPanels.set(el, {visible:false, pending:false, render});
     pullObserver ??= new IntersectionObserver(entries => {
@@ -5687,6 +5719,7 @@ function accountMark() { markDirty('prefs'); renderAccountPanel(); }
 
 function accountLock(message, canReload = false) {
   account.blocked = message; account.pending = false;
+  checkWorldEventContext();
   pullTest.reset();
   resetAutoPull(); cloud.board?.presence?.disconnect();
   showAccountLock(message,canReload);
@@ -6067,6 +6100,7 @@ function applyModerationStatus(data) {
   if (before !== level && cloud.board) { cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
   renderModerationLock(); renderModerationNotice(); renderBulkCardAccess(); renderCommunityNotice(); renderProfileAdminAccess();
   pullTest.refresh();
+  checkWorldEventContext();
   if (adminDialog.open && !canOpenAdminPanel()) adminDialog.close();
   if (beforeAdmin !== moderation.adminId && $('#labProfile').open && profileOrigin) void loadLabProfile(profileOrigin.id);
   markDirty('world');
@@ -6144,6 +6178,7 @@ function startInbox(b) {
     if (!cloud.uid || !navigator.onLine || accountPaused()) return;
     pulseOnlineGPU(b);
     syncWorldEvent(b,force);
+    void requestPersonalHotspot('status',{},force);
     if (document.hidden) return;
     syncModeration(b, force).catch(() => {});
     syncCommunityInbox(b, force).catch(() => {});
@@ -6252,7 +6287,7 @@ async function pulseOnlineGPU(b) {
 async function reportDrawStatus(b,pulse) {
   if (SELF_HOST_TEST || Date.now() < (pulse.drawNext || 0)) return;
   pulse.drawNext = Date.now()+30000;
-  const event = activeWorldEvent(), measured = pullSample && performance.now()-pullSample.at < 6000 ? pullSample.cards : null;
+  const event = activeGameplayEvent(), measured = pullSample && performance.now()-pullSample.at < 6000 ? pullSample.cards : null;
   try {
     const {error} = await b.client.rpc('frontier_draw_status',{
       p_batch:multi(event),p_interval_ms:interval()*1000/autoPullSpeed(event),p_auto:!!S.auto,
@@ -6274,6 +6309,7 @@ function renderOnlineGPU() {
 }
 
 let eventRetry = 0, eventPoll = null, eventMutation = null, eventRevision = 0, eventOwner = null, eventConnection = 'idle';
+const personalEventState = {owner:null, revision:0, retry:0, poll:null, mutation:null, connection:'idle'};
 
 function checkWorldEventContext() {
   const owner = cloud.uid && navigator.onLine && !accountPaused() && moderation.level !== 2
@@ -6286,6 +6322,7 @@ function checkWorldEventContext() {
     eventConnection = 'idle';
     refreshWorldEvent();
   }
+  checkPersonalEventContext(owner);
   return owner;
 }
 
@@ -6331,6 +6368,48 @@ async function changeWorldEvent(action,args) {
   } finally {
     if (eventMutation === version) { eventMutation = null; eventRetry = 0; }
   }
+}
+
+function checkPersonalEventContext(owner) {
+  const next = owner && canOpenAdminPanel() ? owner : null;
+  const state = personalEventState;
+  if (next !== state.owner) {
+    Object.assign(state,{owner:next,revision:state.revision+1,retry:0,poll:null,mutation:null,connection:'idle'});
+    personalHotspot = null;
+    refreshWorldEvent();
+  }
+}
+
+async function requestPersonalHotspot(action = 'status', args = {}, force = false) {
+  checkWorldEventContext();
+  const state = personalEventState, read = action === 'status', clock = worldEventClock();
+  if (!state.owner || state.mutation || (read && (state.poll || (!force && clock < state.retry)))) {
+    if (!read) throw Error('FRONTIER_PERSONAL_HOTSPOT_UNAVAILABLE');
+    return;
+  }
+  const slot = read ? 'poll' : 'mutation', revision = ++state.revision;
+  if (!read) state.poll = null;
+  state[slot] = revision; state.retry = clock+WORLD_EVENT_POLL_MS;
+  const current = () => { checkWorldEventContext(); return state.revision === revision; };
+  try {
+    const data = unwrap(await cloud.board.client.rpc('frontier_personal_hotspot',read ? undefined : {p_action:action,...args}));
+    if (!current()) {
+      if (!read) throw Error('FRONTIER_PERSONAL_HOTSPOT_UNAVAILABLE');
+      return;
+    }
+    if (!applyWorldEventReply(data,clock,worldEventClock(),true)) throw Error('FRONTIER_PERSONAL_HOTSPOT_RESPONSE');
+    state.connection = 'ready';
+  } catch (error) {
+    if (current()) {
+      state.connection = missingWorldRPC(error) ? 'missing' : error?.code === '42501' ? 'denied' : 'error';
+      if (state.connection === 'missing' || state.connection === 'denied') {
+        state.retry = worldEventClock()+120000;
+        applyWorldEventReply({event:null},clock,worldEventClock(),true);
+      } else if (!read) state.retry = 0;
+      accountFault(error);
+    }
+    if (!read) throw error;
+  } finally { if (state[slot] === revision) state[slot] = null; }
 }
 
 window.addEventListener('offline',checkWorldEventContext);
@@ -6636,7 +6715,7 @@ function openAdminPanel(target = null) {
     <label class="admin-check"><input type="checkbox" name="flagged">仅疑似异常</label><button class="btn small" type="submit">查询</button>
     </form>
     <div class="world-tools"><button class="btn ghost small" id="openWorldNoticeComposer" type="button">发布全服通知</button><button class="btn ghost small" id="openInventory" type="button">全服卡牌库存</button></div>
-    ${target ? '' : worldEventAdminHTML()}
+    ${target ? '' : worldEventAdminHTML(true) + worldEventAdminHTML()}
     <details class="admin-notice" id="adminNotice">
       <summary>发送私密通知或赠礼</summary>
       <form class="admin-tools" id="adminNoticeForm">
@@ -6673,7 +6752,7 @@ function openAdminPanel(target = null) {
     $('#adminNoticeRecipient').textContent = `收件人：${target.name}`;
     $('#adminTitleForm').elements.player.value = target.id;
   }
-  if (!target) { bindWorldEventAdmin(); pullTest.mount(adminBody); }
+  if (!target) { bindWorldEventAdmin(true); bindWorldEventAdmin(); pullTest.mount(adminBody); }
   adminDialog.showModal(); adminBody.scrollTop = 0;
   loadAdminList();
   if (target) loadAdminDetail();
@@ -8068,55 +8147,62 @@ for (const [button, target] of [['#accountLogout','#accountSummary'],['#accountG
 }
 renderAccountPanel();
 
-const eventBadge = $('#worldEventBadge'), eventDetails = $('#worldEventDetails');
-const eventEffectsLabel = effects => Object.entries(WORLD_EVENT_EFFECTS).filter(([key]) => Object.hasOwn(effects,key))
-  .map(([key,spec]) => [spec.label,'×'+effects[key]+(key==='odds' ? '（泄露 ≤ 10%）' : '')]);
+const eventBadge = $('#worldEventBadge'), personalEventBadge = $('#personalHotspotBadge'), eventDetails = $('#worldEventDetails');
+let eventDetailsPersonal = false;
+const eventSpecs = personal => personal ? PERSONAL_HOTSPOT_EFFECTS : WORLD_EVENT_EFFECTS;
+const eventEffectsLabel = (effects,personal) => Object.entries(eventSpecs(personal)).filter(([key]) => Object.hasOwn(effects,key))
+  .map(([key,spec]) => [spec.label,spec.unit ? `${effects[key]} ${spec.unit}` : '×'+effects[key]+(key==='odds' ? '（泄露 ≤ 10%）' : '')]);
 
-function worldEventAdminHTML() {
-  return `<details class="admin-notice" id="adminWorldEvent">
-    <summary>全服活动</summary>
+function worldEventAdminHTML(personal = false) {
+  return `<details class="admin-notice" id="${personal ? 'adminPersonalHotspot' : 'adminWorldEvent'}">
+    <summary>${personal ? '个人热点与抽卡设置' : '全服活动'}</summary>
     <div class="event-current">
       <p class="note" data-event-current></p>
       <ul class="event-effect-list" data-event-effects hidden></ul>
       <button class="btn ghost small" type="button" data-event-stop hidden>提前结束</button>
     </div>
     <form class="admin-tools event-form">
-      <label>活动名称<input class="input" name="title" maxlength="40" required></label>
-      <label>持续时间（分钟）<input class="input" name="minutes" type="number" min="1" max="10080" step="1" value="30" required></label>
-      <fieldset class="event-options"><legend>活动效果</legend>
-        ${Object.entries(WORLD_EVENT_EFFECTS).map(([key,spec]) => `<div class="event-option">
+      <label>${personal ? '热点名称' : '活动名称'}<input class="input" name="title" maxlength="40" ${personal ? 'value="个人热点"' : ''} required></label>
+      <label>持续时间（分钟）<input class="input" name="minutes" type="number" min="1" max="${personal ? PERSONAL_HOTSPOT_MINUTES : 10080}" step="1" value="${personal ? 15 : 30}" required></label>
+      <fieldset class="event-options"><legend>${personal ? '仅自己生效' : '活动效果'}</legend>
+        ${Object.entries(eventSpecs(personal)).map(([key,spec]) => `<div class="event-option">
           <label class="event-toggle"><input type="checkbox" data-effect="${key}">${spec.label}</label>
-          <input class="input num" aria-label="${spec.label}倍率" name="${key}" type="number" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${spec.example}" required disabled>
-          <span aria-hidden="true">×</span></div>`).join('')}
+          <input class="input num" aria-label="${spec.label}${spec.unit ? '' : '倍率'}" name="${key}" type="number" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${spec.example}" required disabled>
+          <span aria-hidden="true">${spec.unit || '×'}</span></div>`).join('')}
       </fieldset>
-      <button class="btn small" type="submit">发布全服活动</button>
+      <button class="btn small" type="submit">${personal ? '开启个人热点' : '发布全服活动'}</button>
     </form>
     <p class="note notice-status" data-event-status role="status"></p>
   </details>`;
 }
 
-function paintEventEffectList(list,event) {
-  if (list.dataset.event === (event?.id ?? '')) return;
-  list.dataset.event = event?.id ?? '';
-  list.innerHTML = event ? eventEffectsLabel(event.effects).map(([label,factor]) =>
+function paintEventEffectList(list,event,personal = false) {
+  const key = event ? `${personal}:${event.id}` : '';
+  if (list.dataset.event === key) return;
+  list.dataset.event = key;
+  list.innerHTML = event ? eventEffectsLabel(event.effects,personal).map(([label,factor]) =>
     `<li><span>${esc(label)}</span><b class="num">${esc(factor)}</b></li>`).join('') : '';
 }
 
 const eventCountdown = event => fmtDur(Math.ceil((event.expires-worldEventClock())/1000));
 
-function renderWorldEventAdmin(panel,event) {
+function renderWorldEventAdmin(panel,event,personal = false) {
   const offline = !navigator.onLine;
   const form = panel.querySelector('form'), stop = panel.querySelector('[data-event-stop]');
-  const ready = !offline && eventConnection === 'ready';
+  const connection = personal ? personalEventState.connection : eventConnection;
+  const mutation = personal ? personalEventState.mutation : eventMutation;
+  const name = personal ? '个人热点' : '全服活动';
+  const ready = !offline && connection === 'ready';
   const state = event ? `进行中：${event.title} · 剩余 ${eventCountdown(event)}` :
-    offline ? '未联网' : eventConnection === 'missing' ? '当前服务器尚未启用全服活动。' :
-    eventConnection === 'error' ? '暂时无法读取活动，正在重试。' : ready ? '当前没有全服活动' : '正在读取活动…';
+    offline ? '未联网' : connection === 'missing' ? `当前服务器尚未启用${name}。` :
+    connection === 'denied' ? '当前账号没有管理员权限。' : connection === 'error' ? `暂时无法读取${name}，正在重试。` :
+    ready ? `当前没有${name}` : `正在读取${name}…`;
   textIfChanged(panel.querySelector('[data-event-current]'),state);
   const list = panel.querySelector('[data-event-effects]');
   list.hidden = stop.hidden = !event;
-  paintEventEffectList(list,event);
-  stop.disabled = !ready || !!eventMutation;
-  const disabled = !ready || !!eventMutation || !!event;
+  paintEventEffectList(list,event,personal);
+  stop.disabled = !ready || !!mutation;
+  const disabled = !ready || !!mutation || !!event;
   form.elements.title.disabled = form.elements.minutes.disabled = form.querySelector('[type=submit]').disabled = disabled;
   for (const toggle of form.querySelectorAll('[data-effect]')) {
     toggle.disabled = disabled;
@@ -8125,66 +8211,80 @@ function renderWorldEventAdmin(panel,event) {
 }
 
 function renderWorldEvent() {
-  const event = activeWorldEvent(), admin = adminDialog.open && $('#adminWorldEvent');
-  if (admin?.open) renderWorldEventAdmin(admin,event);
-  eventBadge.hidden = !event;
-  if (event) {
-    const time = eventCountdown(event);
-    textIfChanged($('#worldEventBadgeTitle'),event.title);
-    textIfChanged($('#worldEventBadgeTime'),time);
-    if (eventDetails.open) {
-      textIfChanged($('#worldEventDetailsTitle'),event.title);
-      textIfChanged($('#worldEventDetailsTime'),'全服活动 · 剩余 '+time);
-      paintEventEffectList($('#worldEventDetailsEffects'),event);
-    }
-  } else if (eventDetails.open) eventDetails.close();
+  const world = activeWorldEvent(), personal = activePersonalHotspot();
+  const admin = adminDialog.open && $('#adminWorldEvent'), ownAdmin = adminDialog.open && $('#adminPersonalHotspot');
+  if (admin?.open) renderWorldEventAdmin(admin,world);
+  if (ownAdmin?.open) renderWorldEventAdmin(ownAdmin,personal,true);
+  for (const [badge,event] of [[eventBadge,world],[personalEventBadge,personal]]) {
+    badge.hidden = !event;
+    if (!event) continue;
+    textIfChanged(badge.children[1],event.title);
+    textIfChanged(badge.children[2],eventCountdown(event));
+  }
+  if (!eventDetails.open) return;
+  const event = eventDetailsPersonal ? personal : world;
+  if (!event) { eventDetails.close(); return; }
+  textIfChanged($('#worldEventDetailsTitle'),event.title);
+  textIfChanged($('#worldEventDetailsTime'),`${eventDetailsPersonal ? '个人热点' : '全服活动'} · 剩余 ${eventCountdown(event)}`);
+  paintEventEffectList($('#worldEventDetailsEffects'),event,eventDetailsPersonal);
 }
-eventBadge.onclick = () => {
-  if (!activeWorldEvent() || eventDetails.open) return;
+function showEventDetails(personal) {
+  if (!(personal ? activePersonalHotspot() : activeWorldEvent()) || eventDetails.open) return;
+  eventDetailsPersonal = personal;
   eventDetails.showModal(); renderWorldEvent();
-};
+}
+eventBadge.onclick = () => showEventDetails(false);
+personalEventBadge.onclick = () => showEventDetails(true);
 
-function bindWorldEventAdmin() {
-  const panel = $('#adminWorldEvent'), form = panel.querySelector('form');
+function bindWorldEventAdmin(personal = false) {
+  const panel = $(personal ? '#adminPersonalHotspot' : '#adminWorldEvent'), form = panel.querySelector('form');
   const status = panel.querySelector('[data-event-status]');
+  const active = personal ? activePersonalHotspot : activeWorldEvent;
+  const mutation = () => personal ? personalEventState.mutation : eventMutation;
+  const specs = eventSpecs(personal), scope = personal ? '个人热点' : '全服活动';
   let draft = null;
-  const paint = () => renderWorldEventAdmin(panel,activeWorldEvent());
-  panel.ontoggle = () => { if (panel.open) { paint(); syncWorldEvent(cloud.board,true); } };
+  const paint = () => renderWorldEventAdmin(panel,active(),personal);
+  panel.ontoggle = () => {
+    if (!panel.open) return;
+    paint();
+    const pending = personal ? requestPersonalHotspot('status',{},true) : syncWorldEvent(cloud.board,true);
+    void pending.then(paint);
+  };
   form.oninput = () => { status.textContent = ''; paint(); };
   async function submit(action,args) {
-    const pending = changeWorldEvent(action,args);
+    const pending = personal ? requestPersonalHotspot(action,args) : changeWorldEvent(action,args);
     status.textContent = '正在提交…'; paint();
     try {
       await pending;
-      status.textContent = action === 'start' ? '已发布全服活动。' : '已结束全服活动。';
+      status.textContent = action === 'start' ? (personal ? '已开启个人热点。' : '已发布全服活动。') : `已结束${scope}。`;
       return true;
     } catch (error) {
-      status.textContent = missingWorldRPC(error) ? '请先安装全服活动的数据库更新。' :
-        error?.message === 'FRONTIER_EVENT_ACTIVE' ? '已有活动在进行，请先结束该活动。' :
+      status.textContent = missingWorldRPC(error) ? `请先安装${scope}的数据库更新。` :
+        error?.message === 'FRONTIER_EVENT_ACTIVE' ? `已有${scope}在进行，请先结束。` :
         '未确认提交成功。请检查网络与权限，再重试。';
       return false;
     } finally { paint(); }
   }
   form.onsubmit = async e => {
     e.preventDefault();
-    if (eventMutation || activeWorldEvent() || !form.reportValidity()) return;
+    if (mutation() || active() || !form.reportValidity()) return;
     const title = form.elements.title.value.trim(), minutes = form.elements.minutes.valueAsNumber;
     if (!title || /[\x00-\x1f\x7f]/.test(title)) { status.textContent = '请输入有效的活动名称。'; return; }
     const effects = {};
     for (const toggle of form.querySelectorAll('[data-effect]:checked')) {
       const key = toggle.dataset.effect, factor = form.elements[key].valueAsNumber;
-      if (!validWorldEventEffect(key,factor)) { status.textContent = `请为「${WORLD_EVENT_EFFECTS[key].label}」设定有效的非 1× 倍率。`; return; }
+      if (!validWorldEventEffect(key,factor,specs)) { status.textContent = `请为「${specs[key].label}」设定${specs[key].unit ? '有效的张数' : '有效的非 1× 倍率'}。`; return; }
       effects[key] = factor;
     }
     if (!Object.keys(effects).length) { status.textContent = '请选择至少一项活动效果。'; return; }
-    if (!window.confirm(`立即向全服发布「${title}」？\n持续 ${minutes} 分钟\n${eventEffectsLabel(effects).map(([label,factor]) => label+' '+factor).join('、')}`)) return;
+    if (!window.confirm(`立即${personal ? '仅为自己开启' : '向全服发布'}「${title}」？\n持续 ${minutes} 分钟\n${eventEffectsLabel(effects,personal).map(([label,factor]) => label+' '+factor).join('、')}`)) return;
     const args = {p_title:title,p_minutes:minutes,p_effects:effects}, key = JSON.stringify(args);
     if (draft?.key !== key) draft = {key,id:newEventId()};
     if (await submit('start',{p_id:draft.id,...args})) { draft = null; form.reset(); paint(); }
   };
   panel.querySelector('[data-event-stop]').onclick = async () => {
-    const event = activeWorldEvent();
-    if (!event || eventMutation || !window.confirm(`现在结束「${event.title}」？`)) return;
+    const event = active();
+    if (!event || mutation() || !window.confirm(`现在结束「${event.title}」？`)) return;
     await submit('stop',{p_id:event.id});
   };
   paint();
