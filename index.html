@@ -1914,7 +1914,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 const SELF_HOST_TEST = false;
 const DEV_BUILD = false;
 const LOCAL_SAVE_SOURCE_URL = "https://oovwnjjuzdelajikfodr.supabase.co";
-const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://individuals-reads-stamp-examinations.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token","apiAlternates":["https://publicly-coffee-threatened-identification.trycloudflare.com","https://desktop-srb9skv.tail232143.ts.net"]};
+const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://tests-satisfied-gulf-mandate.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token","apiAlternates":["https://individuals-reads-stamp-examinations.trycloudflare.com"],"apiLoopback":true};
 const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, reset() {}, refresh() {} });
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
@@ -5300,6 +5300,7 @@ const BOARD_GATEWAY_PROBE_MS = 8000;
 const BOARD_GATEWAY_RECHECK_MS = 20000;
 const BOARD_GATEWAY_MEMORY_MS = 10 * 60000;
 const BOARD_GATEWAY_ERRORS = new Set([502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527, 530]);
+const BOARD_LOOPBACK_ORIGIN = 'http://127.0.0.1:8787';
 const BOARD_OFFLINE_AFTER = 3;
 const BOARD_ISSUE_AFTER = 2;
 const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
@@ -5334,10 +5335,13 @@ function persistHits(b) {
   try { sessionStorage.setItem(`${b.store}:${cloud.uid}`, JSON.stringify(b.pending)); b.changed = false; } catch {}
 }
 function createBoardGateway(config) {
-  if (!config.apiAlternates?.length) return null;
+  const direct = config.apiLoopback === true && location.protocol === 'https:' &&
+    new URLSearchParams(location.search).get('direct') === '1';
+  if (!direct && !config.apiAlternates?.length) return null;
   const origin = new URL(config.apiUrl || config.url).origin;
-  const origins = [...new Set([origin, ...config.apiAlternates.map(value => new URL(value).origin)])];
-  const memoryKey = `frontier:gateway:${config.url}`;
+  const origins = direct ? [origin, BOARD_LOOPBACK_ORIGIN] :
+    [...new Set([origin, ...config.apiAlternates.map(value => new URL(value).origin)])];
+  const memoryKey = `frontier:gateway:${config.url}${direct ? ':direct' : ''}`;
   let memory = null;
   try { memory = JSON.parse(lsGet(memoryKey) || 'null'); } catch {}
   if (!origins.includes(memory?.host) || !Number.isFinite(memory?.at) ||
@@ -5398,7 +5402,7 @@ function createBoardGateway(config) {
     const url = new URL(address);
     if ('https://' + url.host !== origin || url.protocol !== 'wss:') return url;
     const target = moveURL(url, active);
-    target.protocol = 'wss:';
+    target.protocol = target.protocol === 'http:' ? 'ws:' : 'wss:';
     return target;
   }
   return {select, pending:() => pending, fetch:routedFetch, socketURL};
