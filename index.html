@@ -1914,7 +1914,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 const SELF_HOST_TEST = false;
 const DEV_BUILD = false;
 const LOCAL_SAVE_SOURCE_URL = "https://oovwnjjuzdelajikfodr.supabase.co";
-const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://publicly-coffee-threatened-identification.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token","apiAlternates":["https://individuals-reads-stamp-examinations.trycloudflare.com","https://desktop-srb9skv.tail232143.ts.net"]};
+const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://individuals-reads-stamp-examinations.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token","apiAlternates":["https://publicly-coffee-threatened-identification.trycloudflare.com","https://desktop-srb9skv.tail232143.ts.net"]};
 const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, reset() {}, refresh() {} });
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
@@ -5298,6 +5298,7 @@ const BOARD_REFRESH_MS = 15000;
 const BOARD_REQUEST_TIMEOUT_MS = 25000;
 const BOARD_GATEWAY_PROBE_MS = 8000;
 const BOARD_GATEWAY_RECHECK_MS = 20000;
+const BOARD_GATEWAY_MEMORY_MS = 10 * 60000;
 const BOARD_GATEWAY_ERRORS = new Set([502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527, 530]);
 const BOARD_OFFLINE_AFTER = 3;
 const BOARD_ISSUE_AFTER = 2;
@@ -5336,7 +5337,12 @@ function createBoardGateway(config) {
   if (!config.apiAlternates?.length) return null;
   const origin = new URL(config.apiUrl || config.url).origin;
   const origins = [...new Set([origin, ...config.apiAlternates.map(value => new URL(value).origin)])];
-  let active = origin, pending = null, checkedAt = -Infinity, suspect = false;
+  const memoryKey = `frontier:gateway:${config.url}`;
+  let memory = null;
+  try { memory = JSON.parse(lsGet(memoryKey) || 'null'); } catch {}
+  if (!origins.includes(memory?.host) || !Number.isFinite(memory?.at) ||
+      memory.at > Date.now() || Date.now() - memory.at >= BOARD_GATEWAY_MEMORY_MS) memory = null;
+  let active = memory?.host || origin, pending = null, checkedAt = -Infinity, suspect = false;
   function select() {
     if (pending || navigator.onLine === false) return pending;
     const stop = new AbortController();
@@ -5356,6 +5362,13 @@ function createBoardGateway(config) {
     target.pathname = url.pathname; target.search = url.search;
     return target;
   }
+  function flagGatewayFault(host) {
+    if (host === active) suspect = true;
+    if (host === memory?.host) {
+      memory = null;
+      lsSet(memoryKey, 'null');
+    }
+  }
   async function routedFetch(input, init = {}) {
     const url = new URL(input instanceof Request ? input.url : input);
     if (url.origin !== origin) return fetch(input, init);
@@ -5368,11 +5381,16 @@ function createBoardGateway(config) {
     try {
       const response = await fetch(input instanceof Request ? new Request(target,input) : target,
         {...init, signal, credentials:'omit', redirect:'error'});
-      if (host === active && BOARD_GATEWAY_ERRORS.has(response.status)) suspect = true;
+      if (BOARD_GATEWAY_ERRORS.has(response.status)) flagGatewayFault(host);
+      else if (host === active && response.ok && url.pathname.startsWith('/rest/v1/') &&
+          (host !== memory?.host || Date.now() - memory.at >= 60000)) {
+        memory = {host, at:Date.now()};
+        lsSet(memoryKey, JSON.stringify(memory));
+      }
       return response;
     } catch (error) {
-      if (host === active && navigator.onLine !== false &&
-          (error?.name === 'TypeError' || error?.name === 'TimeoutError')) suspect = true;
+      if (navigator.onLine !== false &&
+          (error?.name === 'TypeError' || error?.name === 'TimeoutError')) flagGatewayFault(host);
       throw error;
     }
   }
