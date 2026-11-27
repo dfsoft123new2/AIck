@@ -2653,6 +2653,8 @@ const ACH = [
   { id: 'alephAll', n: '宇宙尽头', d: '集齐全部 ℵ 超限级卡', r: 50, ok: () => MODELS_BY_TIER[8].every(owned) },
   { id: 'tQ', n: '?', d: '抽到任意未知档卡', r: 50, ok: () => S.stats.maxTier >= 9 },
   { id: 'tBang', n: '视界回波', d: '获得「！」模型的任意变体', r: 10000, ok: () => ownedId('exclamation') },
+  { id: 'tCausalOmega', n: '改写因果', d: '获得「ω · 因果主宰」的任意变体', r: 10000, ok: () => ownedId('causal-omega') },
+  { id: 'tVoidGenesis', n: '无中生界', d: '获得「Ω · 虚空创世」的任意变体', r: 10000, secret: true, ok: () => owned(VOID_CARD) },
   { id: 'legends', n: '传奇收藏家', d: '集齐全部 LR 模型', r: 10, ok: () => MODELS_BY_TIER[5].every(owned) },
   { id: 'mr20', n: '解封进行时', d: '集齐 20 张 MR 封印卡', r: 10, ok: () => MODELS_BY_TIER[6].filter(owned).length >= 20 },
   { id: 'mrAll', n: '封印全解', d: '集齐全部 MR 封印卡', r: 25, ok: () => MODELS_BY_TIER[6].every(owned) },
@@ -2906,7 +2908,10 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 function textIfChanged(el, value) { if (el.textContent !== value) el.textContent = value; }
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const UNITS = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极'];
+const UNITS = ['', '万', '亿', '兆', '京', '垓', '秭', '穰', '沟', '涧', '正', '载', '极',
+  '恒河沙', '阿僧祇', '那由他', '不可思议', '无量大数'];
+const UNIT_SCALES = UNITS.map((_, i) => Number(`1e${i * 4}`));
+const SCIENTIFIC_FROM = Number(`1e${UNITS.length * 4}`);
 function trim0(s) { return s.indexOf('.') >= 0 ? s.replace(/0+$/, '').replace(/\.$/, '') : s; }
 function fmt(n) {
   n = Number(n);
@@ -2914,9 +2919,10 @@ function fmt(n) {
   if (n < 0) return '-' + fmt(-n);
   if (n < 10) return trim0(n.toFixed(n < 1 && n > 0 ? 2 : 1));
   if (n < 1e4) return Math.floor(n).toLocaleString('en-US');
-  let e = 0, v = n;
-  while (v >= 1e4 && e < UNITS.length - 1) { v /= 1e4; e++; }
-  if (v >= 1e4) { const ex = Math.floor(Math.log10(n)); return trim0((n / Math.pow(10, ex)).toFixed(2)) + 'e' + ex; }
+  if (n >= SCIENTIFIC_FROM) { const [mantissa, exponent] = n.toExponential(2).split('e+'); return trim0(mantissa) + 'e' + exponent; }
+  let e = 1;
+  while (e + 1 < UNIT_SCALES.length && n >= UNIT_SCALES[e + 1]) e++;
+  const v = n / UNIT_SCALES[e];
   const s = v >= 1000 ? Math.floor(v).toString() : v >= 100 ? v.toFixed(1) : v.toFixed(2);
   return trim0(s) + UNITS[e];
 }
@@ -5197,7 +5203,10 @@ function renderFeats() {
     <button class="btn" id="dailyBtn" ${avail ? '' : 'disabled'}>${avail ? '领取补给' : '已领取'}</button>`;
   const done = ACH.filter(a => S.ach[a.id]).length;
   $('#achSide').textContent = `${done}/${ACH.length}`;
-  $('#achGrid').innerHTML = ACH.map(a => `<div class="ach${S.ach[a.id] ? ' done' : ''}"><span class="medal">${S.ach[a.id] ? '✓' : '?'}</span><span><div class="n">${esc(a.n)}</div><div class="d">${esc(a.d)}</div></span><span class="rw">+${a.r} GPU</span></div>`).join('');
+  $('#achGrid').innerHTML = ACH.map(a => {
+    const unlocked = !!S.ach[a.id], secret = a.secret && !unlocked;
+    return `<div class="ach${unlocked ? ' done' : ''}"><span class="medal">${unlocked ? '✓' : '?'}</span><span><div class="n">${esc(secret ? '隐藏成就' : a.n)}</div><div class="d">${esc(secret ? '达成后揭晓' : a.d)}</div></span><span class="rw">${secret ? '' : `+${a.r} GPU`}</span></div>`;
+  }).join('');
 }
 const PREFS = [
   ['sfx', '抽卡音效', '每次手动抽卡和升级时播放'],
@@ -7767,18 +7776,30 @@ const TITLE_MARKS = Object.freeze({
   cosmos:'<path d="M2.5 7.5v-3c2-.5 4-.3 5.5 1 1.5-1.3 3.5-1.5 5.5-1v3m-11 2v2.2c2-.5 4-.3 5.5 1 1.5-1.3 3.5-1.5 5.5-1V9.5M8 6v6.5M8 1.5v2M5 2l.8 1M11 2l-.8 1"/>'
 });
 
+const MILESTONE_CRESTS = Object.freeze({
+  causality:'<path d="M2 3h12M2 13h12M4 3v1.4L8 8l4-3.6V3M4 13v-1.4L8 8l4 3.6V13M6.5 12h3"/>',
+  genesis:'<path d="M2 8 8 2l6 6-6 6Zm3 0 3-3 3 3-3 3Z"/><circle cx="8" cy="8" r=".7" fill="currentColor" stroke="none"/>',
+  reactorCrown:'<path d="M4 4h8l2 4-2 4H4L2 8Zm0 0L2.8 2M12 4l1.2-2M4 12l-1.2 2m9.2-2 1.2 2M9 5.5 6.5 8h3L7 10.5"/>',
+  zenith:'<path d="m2 9 6-6 6 6v4H2Zm3 4V9l3-3 3 3v4M8 9v4"/>',
+  sands:'<path d="M4 2.5h8M4 13.5h8M5 2.5V5l3 3-3 3v2.5m6-11V5L8 8l3 3v2.5M6.4 12 8 10.5 9.6 12Z"/><path d="M8 5.2v.1"/>',
+  codexCapstone:'<path d="M8 6c-1.6-1.2-3.5-1.6-5.5-1v7.5C4.7 12 6.5 12.4 8 13.5c1.5-1.1 3.3-1.5 5.5-1V5c-2-.6-3.9-.2-5.5 1Zm0 0v7.5M8 1.5v2M4.5 2.4l1 .9m6-0.9-1 .9"/>',
+  archiveCapstone:'<path d="m8 2 2 1.5 2.5.5.5 2.5L14.5 8 13 10l-.5 2.5-2.5.5L8 14.5 6 13l-2.5-.5L3 10 1.5 8 3 6.5 3.5 4 6 3.5Zm-2.5 6L7 9.5l3.5-3.5"/>'
+});
 const MILESTONE_BADGES = Object.freeze({
   '零点见证者':['eclipse','eclipse',3], '叹号观测者':['signal','signal'], '未知访客':['anomaly','aperture'],
+  '因果裁决者':['relay','causality',3], '虚空创世者':['nova','genesis',3],
   '沟级引擎师':['reactor','engine',1], '涧级供能者':['reactor','cell',2], '正级工程师':['reactor','node',3],
-  '载级铸造师':['reactor','forge',3],
+  '载级铸造师':['reactor','forge',4], '极级引擎主宰':['reactor','reactorCrown',5],
   '涧级蓄能者':['treasury','reserve',1], '正级储备官':['treasury','treasury',2], '载级永恒金库':['treasury','vault',3],
+  '极境金库':['treasury','zenith',4], '恒沙藏主':['treasury','sands',5],
   '京级锋刃':['force','blade',1], '垓级镇域者':['force','bastion',2], '秭级破界者':['force','rupture',3],
   '图鉴巡录者':['codex','folio',1], '深空编目师':['codex','index',2], '模型谱系师':['codex','lineage',3],
-  '全域校勘者':['codex','collation',4], '万象典藏官':['codex','cosmos',5],
+  '全域校勘者':['codex','collation',4], '万象典藏官':['codex','cosmos',5], '全谱典藏者':['codex','codexCapstone',6],
   '百万次迭代':['vector','loop',1], '千万次推理':['vector','trace',2], '一亿次祈愿':['vector','star',3],
   '八十关先驱':['trial','flag',1], '百关制霸':['trial','tower',2], '评测终局':['trial','gate',3],
-  '成就收藏家':['archive','archive']
+  '成就收藏家':['archive','archive'], '功勋编年官':['archive','archiveCapstone',3]
 });
+const TITLE_PRIME_RANKS = Object.freeze({reactor:5,treasury:5,codex:6});
 const AUTO_TITLE_STYLES = ['circuit','foil','seal'];
 const TITLE_STYLE_MARKS = Object.freeze({
   anomaly:'aperture', reactor:'engine', vector:'trace', trial:'gate', force:'rupture', codex:'folio',
@@ -7816,8 +7837,8 @@ function labTitleBadge(title, inline = false) {
   const suffix = validTitleSuffix(title.suffix) ? title.suffix : null;
   const tail = suffix === null ? (rank ? `<span class="lab-title-rank" aria-hidden="true">${'<i></i>'.repeat(rank)}</span>` : '') :
     (suffix ? `<bdi class="lab-title-suffix">${esc(suffix)}</bdi>` : '');
-  const crest = mark === 'none' ? '' : `<span class="lab-title-crest"><svg class="lab-title-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">${TITLE_MARKS[mark]}</svg></span>`;
-  const prime = rank === (style === 'codex' ? 5 : 3);
+  const crest = mark === 'none' ? '' : `<span class="lab-title-crest"><svg class="lab-title-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">${MILESTONE_CRESTS[mark] ?? TITLE_MARKS[mark]}</svg></span>`;
+  const prime = rank === (TITLE_PRIME_RANKS[style] ?? 3);
   return `<bdi class="lab-title${inline ? ' lab-title-inline' : ''}" data-style="${style}"${prime ? ' data-prime' : ''}${crest ? '' : ' data-no-crest'} style="--title-color:${title.color}" title="${esc(suffix ? `${title.name} ${suffix}` : title.name)}">${crest}<span class="lab-title-name">${esc(title.name)}</span>${tail}</bdi>`;
 }
 
