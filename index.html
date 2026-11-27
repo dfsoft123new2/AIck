@@ -211,6 +211,8 @@ button.hud-chip:hover { border-color: var(--line-2); }
 .panel-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 12px; }
 .panel-h h3 { margin: 0; font-size: 16px; font-weight: 700; }
 .panel-h .side { font-size: 12.5px; color: var(--ink-3); }
+.research-head, .research-actions { flex-wrap: wrap; }
+.research-actions { display: flex; align-items: center; gap: 8px 12px; }
 .grid-2 { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); gap: 14px; }
 .stack > * + * { margin-top: 14px; }
 
@@ -1514,12 +1516,12 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
           </div>
         </div>
         <div class="panel">
-          <div class="panel-h"><h3>基础设施</h3><span class="side">消耗 Token</span></div>
+          <div class="panel-h research-head"><h3>基础设施</h3><div class="research-actions"><span class="side">消耗 Token</span><button class="btn small ghost" id="bulkUpgradeBtn" type="button" disabled>一键升级</button></div></div>
           <div class="upg-list" id="upgList"></div>
         </div>
         <div class="panel" id="rebirthPanel"></div>
         <div class="panel">
-          <div class="panel-h"><h3>GPU 科技树</h3><span class="side">消耗 GPU 芯片，永久保留</span></div>
+          <div class="panel-h research-head"><h3>GPU 科技树</h3><div class="research-actions"><span class="side">消耗 GPU 芯片</span><button class="btn small ghost" id="bulkTechBtn" type="button" disabled>一键研发</button></div></div>
           <div class="tech-grid" id="techGrid"></div>
         </div>
       </section>
@@ -3370,6 +3372,52 @@ function buyTech(key) {
   toast('科技已研发', `${t.name} → ${t.eff(S.tech[key])}`);
   markDirty('research', 'pull', 'bench', 'hud');
 }
+const researchBulk = gpu => gpu
+  ? {items:TECH, key:'tech', currency:'gpu', price:(item,level) => item.cost(level)}
+  : {items:UPGRADES, key:'up', currency:'tokens', price:(item,level) => item.base * item.g ** level};
+function nextResearchUpgrade(group, levels) {
+  let best = null;
+  for (const item of group.items) {
+    const level = levels[item.key];
+    if (!Number.isSafeInteger(level) || level < 0 || (item.max !== null && level >= item.max)) continue;
+    const cost = group.price(item,level);
+    if (cost > 0 && Number.isFinite(cost) && (!best || cost < best.cost)) best = {item,cost};
+  }
+  return best;
+}
+function quoteResearchBulk(group, levels, balance) {
+  const next = {...levels};
+  let cost = 0;
+  if (Number.isFinite(balance)) for (;;) {
+    const offer = nextResearchUpgrade(group,next);
+    if (!offer || offer.cost > balance-cost) break;
+    const total = cost + offer.cost;
+    if (!Number.isFinite(total) || total > balance) break;
+    cost = total; next[offer.item.key]++;
+  }
+  return {cost, changes:group.items.filter(i => next[i.key] !== levels[i.key])
+    .map(i => ({item:i, from:levels[i.key], to:next[i.key]}))};
+}
+function openResearchBulk(gpu) {
+  const group = researchBulk(gpu), levels = S[group.key], balance = S[group.currency];
+  const quote = quoteResearchBulk(group, levels, balance);
+  if (!quote.changes.length) return;
+  const label = gpu ? '一键研发' : '一键升级';
+  const cost = `${fmt(quote.cost)} ${gpu ? 'GPU' : 'Token'}`;
+  confirmModal(label, `合计 ${cost}`, quote.changes.map(({item,from,to}) => `${esc(item.name)}：Lv.${from} → Lv.${to}`), '确认', () => {
+    if (accountPaused() || moderation.level === 2 || S[group.key] !== levels || !Number.isFinite(S[group.currency]) ||
+        S[group.currency] < quote.cost || quote.changes.some(({item,from}) => levels[item.key] !== from)) {
+      toast('未执行', '余额或研发进度已变化，请重新确认。'); return;
+    }
+    S[group.currency] -= quote.cost;
+    for (const {item,to} of quote.changes) levels[item.key] = to;
+    if (gpu) invalidate();
+    resetAutoPull(); playTick();
+    markDirty('research','pull','bench','hud');
+    saveLocal(); renderActive(true);
+    toast(`${label}完成`, `已升级 ${quote.changes.length} 项，合计 ${cost}`);
+  });
+}
 function doRebirth(auto) {
   const cost = rebirthCost();
   if (S.tokens < cost) return;
@@ -3457,14 +3505,14 @@ function runBench(auto) {
 let news = null;
 let nextNewsAt = Date.now() + 40e3;
 function scheduleNews() { nextNewsAt = Date.now() + (90 + Math.random() * 110) * 1000 * (1 - 0.12 * S.tech.news); }
-function spawnNews() {
+function spawnNews(render = true) {
   const tot = NEWS.reduce((a, n) => a + n.w, 0);
   let r = Math.random() * tot, def = NEWS[0];
   for (const n of NEWS) { r -= n.w; if (r <= 0) { def = n; break; } }
   const labKeys = Object.keys(LABS).filter(k => k !== 'humanity' && LAB_MODELS[k].some(owned));
   const lab = labKeys.length ? pick(labKeys) : 'openai';
   news = { def, lab, expires: Date.now() + 20000 * eventDurationMul() };
-  renderNews();
+  if (render) renderNews();
 }
 function newsText(s, lab) { return s.replace(/\{lab\}/g, LABS[lab].name); }
 function newsCash() { return Math.max(1000, lastYield * 180) * techDouble('doubleNews'); }
@@ -3551,6 +3599,7 @@ let autoAcc = 0, pullFrame = null, pullShort = false;
 let pullTimer = null;
 let meterSeconds = 0, meterBase = 0, meterBatches = 0, meterCards = 0, pullSample = null;
 const autoNow = performance.now.bind(performance);
+const BACKGROUND_DRAW_WINDOW = 60;
 
 function resetAutoPull() {
   if (pullFrame !== null) cancelAnimationFrame(pullFrame);
@@ -3560,53 +3609,47 @@ function resetAutoPull() {
   meterSeconds = meterBase = meterBatches = meterCards = 0;
 }
 function autoPullSpeed(event = activeWorldEvent()) { return pullTest.speed()*eventMultiplier('speed',event); }
-function drainAutoPull() {
-  if (!S.auto || document.hidden) return;
+function drainAutoPull(background = document.hidden) {
+  if (!S.auto || (typeof accountPaused === 'function' && accountPaused()) ||
+      (typeof moderation !== 'undefined' && (moderation.booting || moderation.level === 2))) {
+    resetAutoPull();
+    return;
+  }
+  background ||= document.hidden;
   refreshWorldEvent();
   pullTest.refresh();
   const event = activeWorldEvent();
-  const accelerated = autoPullSpeed(event) > 1 || eventMultiplier('count',event) > 1;
-  const deadline = autoNow() + 4;
+  const accelerated = background || autoPullSpeed(event) > 1 || eventMultiplier('count',event) > 1;
+  const deadline = autoNow() + (background ? 10 : 4);
   const before = S.stats.pulls;
-  while (autoAcc >= 1) {
+  for (let batches = 0; autoAcc >= 1 && batches < (background ? 240 : Infinity); batches++) {
     if (event !== activeWorldEvent()) { refreshWorldEvent(); return; }
-    if (!doPull(true, null, accelerated,event)) { autoAcc = 0; pullShort = true; break; }
+    if (!doPull(true, null, accelerated,event,background)) { autoAcc = 0; pullShort = true; break; }
     autoAcc--; meterBatches++; pullShort = false;
     if (autoNow() >= deadline) break;
   }
   meterCards += S.stats.pulls - before;
   if (autoAcc >= 1 && pullFrame === null && pullTimer === null) {
     // Slow paints must not gate every 4 ms of bulk work. Yield between slices.
-    if (accelerated && multi(event) >= 64) {
-      pullTimer = setTimeout(() => { pullTimer = null; drainAutoPull(); }, 1);
+    if (background || (accelerated && multi(event) >= 64)) {
+      pullTimer = setTimeout(() => { pullTimer = null; drainAutoPull(background); }, background ? 16 : 1);
     } else pullFrame = requestAnimationFrame(() => { pullFrame = null; drainAutoPull(); });
   }
 }
-function advanceAutoPull(dt) {
+function advanceAutoPull(dt, background = document.hidden) {
   refreshWorldEvent();
   pullTest.refresh();
-  const event = activeWorldEvent(), speed = eventMultiplier('speed',event);
+  const event = activeWorldEvent();
   if (event) dt = Math.min(dt,Math.max(0,(autoNow()-event.since)/1000));
   if (!S.auto || !(dt > 0)) return;
   const iv = interval();
-  if (document.hidden) {
-    // Global effects still apply; the private test never runs in a hidden tab.
-    autoAcc += dt * speed / iv;
-    let n = 0;
-    while (autoAcc >= 1 && n < 40) {
-      if (event !== activeWorldEvent()) { refreshWorldEvent(); return; }
-      if (!doPull(true,null,eventMultiplier('count',event) > 1 || speed > 1,event)) { autoAcc = 0; break; }
-      autoAcc--; n++;
-    }
-    if (n === 40) autoAcc = 0;
-    return;
-  }
-  const pullSpeed = autoPullSpeed(event);
+  const pullSpeed = background ? eventMultiplier('speed',event) : autoPullSpeed(event);
   const base = dt / iv, rate = pullSpeed / iv;
-  // Keep fractional credit at low speeds, but do not replay a long stall in a burst.
-  const maxPending = pullSpeed === 1 ? 40 : Math.max(2, Math.ceil(rate));
-  autoAcc = Math.min(maxPending, autoAcc + base * pullSpeed);
-  drainAutoPull();
+  const maxPending = background ? Math.ceil(rate * BACKGROUND_DRAW_WINDOW) : pullSpeed === 1 ? 40 : Math.max(2, Math.ceil(rate));
+  // Keep credit already earned in the background when returning to the foreground.
+  autoAcc = Math.min(Math.max(maxPending,autoAcc), autoAcc + base * pullSpeed);
+  drainAutoPull(background);
+  if (background) { meterSeconds = meterBase = meterBatches = meterCards = 0; pullSample = null; return; }
   meterSeconds += dt; meterBase += base;
   if (meterSeconds >= 2) {
     pullSample = { speed: meterBatches / meterBase, cards: meterCards / meterSeconds };
@@ -4236,14 +4279,14 @@ let lastResults = [];
 let lastResultMeta = null;
 let nextFastNotice = 0;
 function isBroadcastHit(p) { return Number.isFinite(p) && p > 0 && p <= 1e-5; }
-function doPull(auto, originEl, paced = false, event = activeWorldEvent()) {
+function doPull(auto, originEl, paced = false, event = activeWorldEvent(), background = false) {
   const p = curPack(), draw = settlePull(p, auto && paced && multi(event) >= 64,event);
   if (!draw) {
     if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(pullCost(p))} Token`);
     return false;
   }
   if (draw.structural) markDirty('dex');
-  afterPull(draw.res, auto, p, originEl, paced, draw.hits, draw.count);
+  afterPull(draw.res, auto, p, originEl, paced, draw.hits, draw.count, background);
   return true;
 }
 function isExclamationResult(r) { return !r.leak && TIERS[r.t]?.id === '!'; }
@@ -4256,7 +4299,7 @@ function cinePick(sorted, auto) {
   const r = sorted[0];
   if (r && (r.leak || r.t >= 6 || ((r.isNew || r.v === 3) && r.t >= 4) || r.prob <= 1e-4)) return r;
 }
-function afterPull(res, auto, p, originEl, paced = false, hits = null, count = res.length) {
+function afterPull(res, auto, p, originEl, paced = false, hits = null, count = res.length, background = false) {
   const now = Date.now();
   // aggregate for display
   if (!hits) {
@@ -4288,12 +4331,13 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
     S.rare = rareBatch.reverse().concat(S.rare).slice(0, 8);
     cloudBump(true);
   }
-  // reveal decision
   const best = lastResults[0];
-  const cine = cinePick(lastResults, auto);
   const hidden = isHiddenCard(best?.id);
+  if (hidden) { saveLocal(); cloudBump(true); }
+  markDirty('pullLite', 'models', 'bench', 'hud');
+  if (background) return;
+  const cine = cinePick(lastResults, auto);
   if (hidden) {
-    saveLocal(); cloudBump(true);
     if (cine === best && S.set.fx) { playRare(true); showAdminCardReveal(best); }
     else toast('??!! 已入库', `${HIDDEN_CARD_LABEL} · ${VARIANTS[best.v].name} ×${fmt(best.n)}`);
   }
@@ -4311,7 +4355,6 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
     }
   }
   if (!auto && originEl && S.set.fx) burstAt(originEl, (best && TIER_HEX[best.t]) || '#fff');
-  markDirty('pullLite', 'models', 'bench', 'hud');
 }
 
 
@@ -4908,6 +4951,12 @@ function renderBench() {
 
 /* =================== RENDER: RESEARCH =================== */
 function renderResearch() {
+  for (const [id,gpu] of [['#bulkUpgradeBtn',false],['#bulkTechBtn',true]]) {
+    const group = researchBulk(gpu), cost = nextResearchUpgrade(group,S[group.key])?.cost ?? Infinity;
+    const button = $(id);
+    button.dataset[gpu ? 'gpu' : 'cost'] = cost;
+    button.disabled = S[group.currency] < cost;
+  }
   $('#upgList').innerHTML = UPGRADES.map(u => {
     const lv = S.up[u.key], maxed = u.max !== null && lv >= u.max, c = upCost(u);
     return `<div class="upg${maxed ? ' maxed' : ''}"><div class="upg-top"><span class="n">${esc(u.name)}</span><span class="lv">Lv.${lv}${u.max !== null ? '/' + u.max : ''}</span></div>
@@ -5613,6 +5662,10 @@ function accountLock(message) {
 function accountFault(error) {
   if (accountStale(error) || authSessionLost(error)) accountLock(error.message === 'FRONTIER_ACCOUNT_REPLACED' ? '此账号已在另一台设备登录，当前设备已停止游玩和同步。' : '账号会话已失效，请重新登录。');
   else if (error?.message === 'FRONTIER_ACCOUNT_CONFLICT') accountLock('另一标签页已更新云存档。请重新登录后继续。');
+  else if (error?.message === 'FRONTIER_INVALID_PROGRESS' && !account.rejectedProgress) {
+    account.rejectedProgress = true;
+    toast('云存档未更新', '存档数值超出游戏规则。上一份云存档保留，当前进度仍在本机。');
+  }
 }
 
 function recordAccountVerification(uid) {
@@ -5708,7 +5761,7 @@ function installAccountSession(user, data, uploadedGuest = false) {
   if (readRegistration()?.uid === user.id) lsDel(`${ACCOUNT_KEY}:registration`);
   Object.assign(account,{uid:user.id, session:data.session_id, revision:data.revision,
     loginName:user.app_metadata?.frontier_username || user.email || '',
-    pending:false, blocked:'', expiredUid:null, retry:null, savedAt:data.saved_at, next:0, available:true});
+    pending:false, blocked:'', expiredUid:null, retry:null, rejectedProgress:false, savedAt:data.saved_at, next:0, available:true});
   lsSet(ACCOUNT_KEY,user.id);
   recordAccountVerification(user.id);
   if (account.loginName) lsSet(ACCOUNT_NAMES_KEY,JSON.stringify([account.loginName,...recentAccountNames().filter(name => name !== account.loginName)].slice(0,8)));
@@ -5766,10 +5819,15 @@ async function syncAccount(force = false) {
       const data = await accountCall('save',{p_revision:revision,p_save:snapshot.save});
       if (account.uid !== uid || account.session !== sid || account.blocked) return false;
       account.retry = null; account.revision = data.revision; account.savedAt = data.saved_at;
+      account.rejectedProgress = false;
       recordAccountVerification(uid); accountCacheCheckpoint(); accountMark();
       synced = true;
       return true;
-    } catch (error) { accountFault(error); return false; }
+    } catch (error) {
+      accountFault(error);
+      if (error?.message === 'FRONTIER_INVALID_PROGRESS') account.retry = null;
+      return false;
+    }
     finally { account.next = accountClock() + (synced ? ACCOUNT_SAVE_INTERVAL_MS : ACCOUNT_SAVE_RETRY_MS); }
   })();
   account.flight = task;
@@ -8159,6 +8217,8 @@ on('#benchHero', 'click', e => {
   else if (e.target.closest('#autoBenchSw')) { S.autoBench = !S.autoBench; renderBench(); }
 });
 on('#upgList', 'click', e => { const b = e.target.closest('[data-up]'); if (b) { initAudio(); buyUpgrade(b.dataset.up); renderActive(true); } });
+on('#bulkUpgradeBtn', 'click', () => { initAudio(); openResearchBulk(false); });
+on('#bulkTechBtn', 'click', () => { initAudio(); openResearchBulk(true); });
 on('#rebirthPanel', 'click', e => {
   if (e.target.closest('#rebirthBtn')) doRebirth(false);
   else if (e.target.closest('#autoRebSw')) { S.autoReb = !S.autoReb; renderResearch(); }
@@ -8252,16 +8312,17 @@ document.addEventListener('keydown', e => {
 /* =================== LOOP =================== */
 const simulationClock = performance.now.bind(performance);
 let lastT = Date.now(), lastSimulationTime = simulationClock(), lastAch = 0, lastLocalSave = lastSimulationTime, lastAfford = 0, nextAutoBench = 0, lastCloudTick = 0;
+let simulationWasHidden = document.hidden, simulationFrozen = false;
 function updateTimers() {
   if (currentView === 'pull') renderUpCooldown();
   if (currentView === 'bench' && benchCooldown && Date.now() >= benchCooldown) { benchCooldown = 0; markDirty('bench'); }
 }
-function advanceSimulation(now, dt, elapsed) {
+function advanceSimulation(now, dt, elapsed, background, frozen) {
   if (typeof moderation !== 'undefined' && moderation.level === 2) return;
-  if (dt > 60) {
+  if (dt > (background && !frozen ? 90 : 60)) {
     resetAutoPull();
     const off = applyOffline(now - dt * 1000);
-    if (off && off.earned > 0) toast('欢迎回来', `离开 ${fmtDur(off.sec)}，按 ${Math.round(off.rate * 100)}% 效率获得 ${fmt(off.earned)} Token`);
+    if (!document.hidden && off && off.earned > 0) toast('欢迎回来', `离开 ${fmtDur(off.sec)}，按 ${Math.round(off.rate * 100)}% 效率获得 ${fmt(off.earned)} Token`);
     dt = 0.1;
   }
   if (buffs.some(b => b.until <= now)) {
@@ -8271,14 +8332,18 @@ function advanceSimulation(now, dt, elapsed) {
   const displayedYield = lastYield * eventMultiplier('tokens');
   if (Number.isFinite(displayedYield) && displayedYield > S.titlePeakTps) S.titlePeakTps = Math.min(displayedYield, 1e300);
   addTokens(eventTokenCredit(lastYield,dt,elapsed));
-  advanceAutoPull(dt);
+  advanceAutoPull(dt,background);
   if (S.autoReb && S.tech.autoReb && S.tokens >= rebirthCost()) doRebirth(true);
   if (S.autoBench && S.tech.autoBench && now >= nextAutoBench) { nextAutoBench = now + 8000; runBench(true); }
-  if (!news && now >= nextNewsAt) spawnNews();
-  if (news && now > news.expires) { news = null; scheduleNews(); renderNews(); }
+  if (!news && now >= nextNewsAt) spawnNews(!document.hidden);
+  if (news && now > news.expires) { news = null; scheduleNews(); if (!document.hidden) renderNews(); }
   if (now - lastAch > 1000) { lastAch = now; checkAch(); if (!document.hidden) { renderNews(); updateTimers(); } }
 }
-function tick() {
+function tick(resuming = false) {
+  if (simulationFrozen && !resuming) return;
+  const frozen = simulationFrozen, background = !!(simulationWasHidden || document.hidden);
+  simulationFrozen = false;
+  simulationWasHidden = document.hidden;
   const now = Date.now(), elapsed = simulationClock(), dt = (elapsed - lastSimulationTime) / 1000;
   lastT = now; lastSimulationTime = elapsed;
   if (!Number.isFinite(dt) || dt <= 0) return;
@@ -8287,7 +8352,7 @@ function tick() {
     if (elapsed - lastCloudTick > 1000) { lastCloudTick = elapsed; cloudTick(false); }
     return;
   }
-  advanceSimulation(now, dt, elapsed);
+  advanceSimulation(now, dt, elapsed, background, frozen);
   if (elapsed - lastLocalSave > 5000) { lastLocalSave = elapsed; saveLocal(); }
   if (elapsed - lastCloudTick > 1000) { lastCloudTick = elapsed; cloudTick(false); }
   if (document.hidden) return;
@@ -8296,8 +8361,17 @@ function tick() {
   renderActive(false);
 }
 
-document.addEventListener('visibilitychange', () => { resetAutoPull(); if (document.hidden) { saveLocal(); cloudTick(true); } });
-window.addEventListener('pagehide', () => saveLocal());
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && pullFrame !== null) { cancelAnimationFrame(pullFrame); pullFrame = null; }
+  tick();
+  if (document.hidden) { saveLocal(); cloudTick(true); }
+  else renderNews();
+});
+function freezeSimulation() { tick(); simulationFrozen = true; resetAutoPull(); saveLocal(); }
+document.addEventListener('freeze', freezeSimulation);
+document.addEventListener('resume', () => tick(true));
+window.addEventListener('pagehide', e => { if (e.persisted) freezeSimulation(); else saveLocal(); });
+window.addEventListener('pageshow', e => { if (e.persisted) tick(true); });
 
 /* =================== INIT =================== */
 let offlineReport = null;
