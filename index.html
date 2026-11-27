@@ -606,6 +606,7 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .lb th { text-align: left; font-weight: 500; font-size: 12px; color: var(--ink-3); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .lb td { padding: 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .lb tr.me td { background: color-mix(in srgb, var(--copper) 10%, transparent); }
+.lb tr.lb-pinned td { background: color-mix(in srgb, var(--role-color) 9%, transparent); border-bottom-color: color-mix(in srgb, var(--role-color) 30%, var(--line)); }
 .lb .rk { font-family: var(--font-num); font-weight: 700; width: 36px; }
 .lb .rk.g1 { color: var(--gold); } .lb .rk.g2 { color: var(--ink-2); } .lb .rk.g3 { color: var(--copper); }
 .lb .val { font-family: var(--font-num); font-weight: 700; text-align: right; }
@@ -937,6 +938,8 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .modal-h h3 { margin: 0; font-size: 18px; }
 .x-btn { border: 0; background: var(--bg-3); width: 32px; height: 32px; border-radius: 8px; font-size: 18px; line-height: 1; color: var(--ink-2); }
 .detail { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 18px; }
+.detail [data-act=replay] { display:inline-flex; align-items:center; gap:7px; min-height:44px; }
+.detail [data-act=replay] svg { width:16px; height:16px; flex:none; }
 .variant-preview { display: grid; align-content: start; gap: 8px; min-width: 0; }
 .variant-preview > [data-act=replay] { justify-content: center; width: 100%; }
 .variant-face .card .body { min-height: 52px; }
@@ -1032,6 +1035,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
+
 .cine[data-scene] {
   --cine-card: min(220px, 58vw, 37dvh);
   --cine-stage: clamp(590px, 92vw, 1060px);
@@ -1315,7 +1319,6 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
 @media (prefers-reduced-motion:reduce) {
   .admin-card-reveal *, .admin-card-reveal *::after { animation:none !important; }
 }
-
 </style>
 </head>
 <body>
@@ -1444,8 +1447,6 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
           </div>
         </div>
         <div class="toolbar"><div class="chipsel" id="labFilter"></div></div>
-
-
         <div class="vault" id="vault"></div>
       </section>
 
@@ -1517,7 +1518,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
           <div class="upg-list" id="upgList"></div>
         </div>
         <div class="panel" id="rebirthPanel"></div>
-                <div class="panel">
+        <div class="panel">
           <div class="panel-h"><h3>GPU 科技树</h3><span class="side">消耗 GPU 芯片，永久保留</span></div>
           <div class="tech-grid" id="techGrid"></div>
         </div>
@@ -1804,6 +1805,12 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
   </form>
 </dialog>
 <div class="modal-back" id="modalBack"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
+<div class="cine" id="cine">
+  <div class="rays"></div><div class="wafer"></div>
+  <div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div>
+  <div class="hint">点击任意处继续</div><button class="bang-continue" type="button" id="bangContinue">继续</button>
+</div>
+<div class="flash" id="flash"></div>
 <dialog class="admin-card-reveal" id="adminCardReveal" aria-labelledby="adminCardRevealTitle" aria-describedby="adminCardRevealBase">
   <svg class="admin-card-rift" viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
     <defs>
@@ -1859,12 +1866,6 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
   </div>
 </dialog>
 
-<div class="cine" id="cine">
-  <div class="rays"></div><div class="wafer"></div>
-  <div class="kicker" id="cineKicker"></div><div class="holder" id="cineCard"></div><div class="title" id="cineTitle"></div><div class="sub" id="cineSub"></div>
-  <div class="hint">点击任意处继续</div><button class="bang-continue" type="button" id="bangContinue">继续</button>
-</div>
-<div class="flash" id="flash"></div>
 <script>/* MIT License
 
 Copyright (c) 2020 Supabase
@@ -2534,7 +2535,7 @@ const TECH = [
   { key: 'compound', name: '算力复利', desc: '全局产出 ×1.5，可以无限升级。', max: null, cost: lv => Math.ceil(10 * Math.pow(1.7, lv)), eff: lv => `产出 ×${fmtMul(Math.pow(1.5, lv))}` },
   { key: 'doubleDraw', name: '双核推理', desc: '每批独立抽数翻倍，Token 费用同比增加。', max: 1, cost: () => 6000, eff: lv => `每批抽数 ×${1 + lv}` },
   { key: 'doubleCopies', name: '镜像复制', desc: '每次命中的卡片份数翻倍，不增加抽数或保底进度。', max: 1, cost: () => 8000, eff: lv => `卡片份数 ×${1 + lv}` },
-  { key: 'doubleOdds', name: '超频采样', desc: '思考、满血、全息变体和权重泄露概率翻倍，权重泄露最高 2%。', max: 1, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
+  { key: 'doubleOdds', name: '超频采样', desc: '思考、满血、全息变体和权重泄露概率翻倍。', max: 1, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
   { key: 'doubleSpeed', name: '瞬时推理', desc: '自动抽卡间隔减半。', max: 1, cost: () => 12000, eff: lv => `自动抽卡速度 ×${1 + lv}` },
   { key: 'doubleNews', name: '热点增幅', desc: '所有热点的数值效果翻倍；折后价再减半。频率和时长不变。', max: 1, cost: () => 20000, eff: lv => `热点强度 ×${1 + lv}` }
 ];
@@ -3648,11 +3649,28 @@ function continueLocalSaveAfterCutover() {
   if (!lsSet(SAVE_KEY, JSON.stringify({...(draft || guest), packetDebit:null}))) lsDel(receipt);
 }
 
+function parsePacketAmount(value) {
+  const parts = /^(\d+(?:\.\d+)?|\.\d+)(?:e([+-]?\d+))?$/i.exec(value);
+  if (!parts) return null;
+  const [whole, fraction = ''] = parts[1].split('.');
+  const shift = Number(parts[2] || 0) - fraction.length;
+  if (Math.abs(shift)>220) return null;
+  const digits = BigInt(whole+fraction);
+  if (shift>=0) return digits*10n**BigInt(shift);
+  const scale = 10n**BigInt(-shift);
+  return digits%scale === 0n ? digits/scale : null;
+}
 function packetCharge(kind, balance, cost) {
   if (!(cost>0) || !Number.isFinite(cost) || !Number.isFinite(balance) || balance<cost) return null;
-  const deducted = balance - (balance-cost);
-  if (kind==='tokens' && deducted===0) return 0;
-  return deducted>0 && Math.abs(deducted-cost)<=Math.max(0.005,cost*Number.EPSILON*8) ? cost : null;
+  const after = balance-cost, deducted = balance-after;
+  if (deducted>0 && Math.abs(deducted-cost)<=Math.max(0.005,cost*Number.EPSILON*8)) return cost;
+  if (kind!=='tokens') return null;
+  if (deducted<=cost) return deducted;
+  // The subtraction rounded the balance down. Move up one representable value so we never overcharge.
+  const bits = new DataView(new ArrayBuffer(8));
+  bits.setFloat64(0,after);
+  bits.setBigUint64(0,bits.getBigUint64(0)+1n);
+  return Math.max(0,balance-bits.getFloat64(0));
 }
 function savePacketDebit(debit, settled = null) {
   const key = debit.payload.p_kind;
@@ -3959,42 +3977,6 @@ function statusTag(st) { return STATUS[st] ? `<span class="tag st-${st}">${STATU
 function specTag(s) { return `<span class="spec ${s}">${SPECS[s].name}</span>`; }
 function tierTag(t) { return `<span class="tag tier-text${t === 9 ? ' tier-q' : ''}" style="color:${tierColor(t)}">${TIERS[t].id}</span>`; }
 
-/* =================== TOAST / MODAL / FX =================== */
-function toast(title, desc, category) {
-  if (isInfoMuted(category)) return;
-  const box = $('#toasts');
-  while (box.children.length >= 4) box.firstElementChild.remove();
-  const el = document.createElement('div');
-  el.className = 'toast';
-  if (category) el.dataset.info = category;
-  el.innerHTML = `<div class="t">${esc(title)}</div>${desc ? `<div class="d">${esc(desc)}</div>` : ''}`;
-  box.appendChild(el);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3400);
-}
-function openModal(html, onBind) {
-  const m = $('#modal'); m.innerHTML = html;
-  $('#modalBack').classList.add('open');
-  const x = m.querySelector('.x-btn'); if (x) x.onclick = closeModal;
-  if (onBind) onBind(m);
-  const f = m.querySelector('button:not(.x-btn), input'); if (f) setTimeout(() => f.focus(), 30);
-}
-function closeModal() { $('#modalBack').classList.remove('open'); $('#modal').innerHTML = ''; }
-function confirmModal(title, desc, details, okText, onOk) {
-  openModal(`<div class="modal-h"><h3>${esc(title)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
-    <p class="desc">${esc(desc)}</p>${details && details.length ? `<ul style="margin:12px 0 0;padding-left:20px;color:var(--ink-2);font-size:13.5px">${details.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px"><button class="btn ghost" data-act="no">取消</button><button class="btn" data-act="ok">${esc(okText)}</button></div>`,
-    m => { m.querySelector('[data-act=no]').onclick = closeModal; m.querySelector('[data-act=ok]').onclick = () => { closeModal(); onOk(); }; });
-}
-function burstAt(el, color) {
-  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  for (let i = 0; i < 14; i++) {
-    const p = document.createElement('i'); p.className = 'burst';
-    const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
-    p.style.left = cx + 'px'; p.style.top = cy + 'px'; p.style.background = color;
-    p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
-    document.body.appendChild(p); setTimeout(() => p.remove(), 750);
-  }
-}
 /* Geometry runs on a card-centered stage, independent of viewport layout. */
 const CINE_HORIZON_IMPACT = .82;
 const cineLayer = (motion, markup) => `<g class="cine-layer sc-${motion}">${markup}</g>`;
@@ -4092,6 +4074,42 @@ function tierCineSVG(scene, draw) {
   </svg>`;
 }
 
+/* =================== TOAST / MODAL / FX =================== */
+function toast(title, desc, category) {
+  if (isInfoMuted(category)) return;
+  const box = $('#toasts');
+  while (box.children.length >= 4) box.firstElementChild.remove();
+  const el = document.createElement('div');
+  el.className = 'toast';
+  if (category) el.dataset.info = category;
+  el.innerHTML = `<div class="t">${esc(title)}</div>${desc ? `<div class="d">${esc(desc)}</div>` : ''}`;
+  box.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3400);
+}
+function openModal(html, onBind) {
+  const m = $('#modal'); m.innerHTML = html;
+  $('#modalBack').classList.add('open');
+  const x = m.querySelector('.x-btn'); if (x) x.onclick = closeModal;
+  if (onBind) onBind(m);
+  const f = m.querySelector('button:not(.x-btn), input'); if (f) setTimeout(() => f.focus(), 30);
+}
+function closeModal() { $('#modalBack').classList.remove('open'); $('#modal').innerHTML = ''; }
+function confirmModal(title, desc, details, okText, onOk) {
+  openModal(`<div class="modal-h"><h3>${esc(title)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
+    <p class="desc">${esc(desc)}</p>${details && details.length ? `<ul style="margin:12px 0 0;padding-left:20px;color:var(--ink-2);font-size:13.5px">${details.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:18px"><button class="btn ghost" data-act="no">取消</button><button class="btn" data-act="ok">${esc(okText)}</button></div>`,
+    m => { m.querySelector('[data-act=no]').onclick = closeModal; m.querySelector('[data-act=ok]').onclick = () => { closeModal(); onOk(); }; });
+}
+function burstAt(el, color) {
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  for (let i = 0; i < 14; i++) {
+    const p = document.createElement('i'); p.className = 'burst';
+    const a = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+    p.style.left = cx + 'px'; p.style.top = cy + 'px'; p.style.background = color;
+    p.style.setProperty('--dx', Math.cos(a) * d + 'px'); p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    document.body.appendChild(p); setTimeout(() => p.remove(), 750);
+  }
+}
 let cineOpen = false, cineCloseTimer, cineReturnFocus;
 function showCine(r, replayFrom = null) {
   const c = $('#cine'), replay = !!replayFrom;
@@ -4297,7 +4315,7 @@ function buffEffect(b) {
     case 'train': return `模型微调费用 ${mul}`;
     case 'rush': return `自动抽卡速度 ${mul}`;
     case 'bench': return `评测战力 ${mul}`;
-    case 'leak': return `权重泄露概率 ${mul}（最高 2%）`;
+    case 'leak': return `权重泄露概率 ${mul}`;
     default: return b.label;
   }
 }
@@ -5164,6 +5182,11 @@ const BOARD_OFFLINE_AFTER = 3;
 const BOARD_ISSUE_AFTER = 2;
 const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
 const HIT_LIMIT = 256;
+function resetBoardRanks(b) {
+  b.boards = {};
+  b.profileRanks = null;
+  for (const key of Object.keys(b.issues)) if (key.startsWith('rank:') || key.startsWith('mine:')) delete b.issues[key];
+}
 function newEventId() {
   // getRandomValues also works on HTTP LAN previews, without touching the draw RNG.
   if (crypto.randomUUID) return crypto.randomUUID();
@@ -5261,7 +5284,7 @@ async function syncBoardPart(b, key, run, missing = false) {
 function unwrap({data, error}) { if (error) throw error; return data; }
 async function boardIdentity(b) {
   let session = unwrap(await b.client.auth.getSession()).session;
-  if (!session && account.pending) { accountLock('账号会话已结束，请重新登录或返回访客模式。'); return null; }
+  if (!session && (account.pending || account.uid)) { accountLock('账号会话已结束，请重新登录或返回访客模式。'); return null; }
   if (!session) session = await restoreGuestSession(b) || unwrap(await b.client.auth.signInAnonymously()).session;
   if (!session?.user?.id) throw new Error('Missing player session');
   if (!await accountIdentity(session)) return null;
@@ -5275,9 +5298,8 @@ async function boardIdentity(b) {
     cloud.uid = uid; b.scoreIssue = null; b.changed = true; cloudBump(true);
     cloud.lastPlayerWrite = 0;
     moderation.next = 0;
-    b.boards = {};
+    resetBoardRanks(b);
     markDirty('world','prefs');
-    for (const key of Object.keys(b.issues)) if (key.includes(':')) delete b.issues[key];
   }
   b.presence.connect(uid);
   b.checkAccount();
@@ -5287,7 +5309,7 @@ async function boardIdentity(b) {
 async function boardTick(force = false) {
   const b = cloud.board, now = Date.now();
   persistHits(b);
-  if (account.working || account.blocked) return;
+  if (account.working || account.blocked || accountOfflineExpired()) return;
   if (navigator.onLine === false) { boardOffline(); return; }
   if (!account.pending) b.presence?.connect(cloud.uid);
   if (!b.client || b.busy || now < b.next) return;
@@ -5295,16 +5317,19 @@ async function boardTick(force = false) {
   const mode = BOARD_KEYS.includes(lbMode) ? lbMode : 'tps';
   const viewing = currentView === 'world' && !document.hidden;
   const can = key => force || now >= (b.issues[key]?.next || 0);
-  const board = b.boards[mode];
-  const readBoard = viewing && can('rank:' + mode) && (!board?.at || now - board.at > BOARD_REFRESH_MS);
-  const readMine = viewing && !board?.migrating && can('mine:' + mode) &&
-    (readBoard || !board?.mineAt || now - board.mineAt > BOARD_REFRESH_MS);
+  const rankReads = () => {
+    const board = b.boards[mode];
+    const top = viewing && can('rank:' + mode) && (!board?.at || now - board.at > BOARD_REFRESH_MS);
+    const mine = viewing && !verifiedAdmin(cloud.uid) && !board?.migrating && can('mine:' + mode) &&
+      (top || !board?.mineAt || now - board.mineAt > BOARD_REFRESH_MS);
+    return [top, mine];
+  };
   const readFeed = viewing && can('feed') && now - b.feedAt > BOARD_REFRESH_MS;
   const readTotals = can('totals') && (!b.totals || now >= b.nextTotals);
   const writeScore = can('session') && can('score') && (!b.issues.totals || readTotals) &&
     (force || b.issues.score || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000));
   const writeHits = can('session') && can('hits') && b.pending.length && (force || now >= b.nextHits);
-  if (!readBoard && !readMine && !readFeed && !readTotals && !writeScore && !writeHits &&
+  if (!rankReads().some(Boolean) && !readFeed && !readTotals && !writeScore && !writeHits &&
       !b.errors && !(can('session') && now >= moderation.next)) {
     if (cloud.ready) boardSynced(b);
     return;
@@ -5367,6 +5392,7 @@ async function boardTick(force = false) {
         pack: r.pack, model: r.id, variant: r.v, chance: r.chance, drawn_at: r.ts})), {onConflict: 'player_id,event_id', ignoreDuplicates: true}));
       b.pending = b.pending.filter(r => !ids.has(r.event)); b.changed = true; persistHits(b); b.nextHits = now + 4000;
     });
+    const [readBoard, readMine] = rankReads();
     const ranking = (readBoard || readMine) && refreshRanking(b, mode, uid, readBoard, readMine);
     const feed = readFeed && syncBoardPart(b, 'feed', async () => {
       const hits = unwrap(await b.client.from('leaderboard_hits').select('player_id,event_id,name,pack,model,variant,chance,drawn_at')
@@ -5376,9 +5402,9 @@ async function boardTick(force = false) {
     }, !b.feed);
     await Promise.all([ranking, feed]);
     boardSynced(b);
-  } catch {
+  } catch (error) {
     finishModerationBoot();
-    if (account.pending) accountLock('无法连接账号服务，请联网后重新登录。');
+    if ((account.pending || account.uid) && authSessionLost(error)) { accountFault(error); return; }
     if (navigator.onLine === false) { boardOffline(); return; }
     // Spread retries across clients when the backend comes back under load.
     b.next = Date.now() + 2000 * 2 ** Math.min(5, b.errors++) * (1 + Math.random() / 4);
@@ -5473,16 +5499,17 @@ async function readLabProfile(uid) {
   return restricted ? {id:uid,name:restricted.name,level:restricted.level} : null;
 }
 
-async function readTopBoard(client, mode, fields, limit) {
-  return unwrap(await client.from('leaderboard_players').select(fields)
-    .not(mode,'is',null).order(mode,{ascending:false}).order('player_id').limit(limit));
+const rankedPlayers = (query, adminId) => adminId ? query.neq('player_id',adminId) : query;
+async function readTopBoard(client, mode, fields, limit, adminId) {
+  const query = rankedPlayers(client.from('leaderboard_players').select(fields), adminId);
+  return unwrap(await query.not(mode,'is',null).order(mode,{ascending:false}).order('player_id').limit(limit));
 }
 
-function profileRankIds(b, cache, mode) {
+function profileRankIds(b, cache, mode, adminId) {
   const now = Date.now();
   const cached = cache[mode];
   if (cached && now - cached.at < BOARD_REFRESH_MS) return cached.ids;
-  const entry = {at:now, ids:readTopBoard(b.client, mode, 'player_id', PROFILE_RANK_LIMIT)
+  const entry = {at:now, ids:readTopBoard(b.client, mode, 'player_id', PROFILE_RANK_LIMIT, adminId)
     .then(rows => rows.map(row => row.player_id))
     .catch(() => {
       if (cache[mode] === entry) delete cache[mode];
@@ -5493,11 +5520,12 @@ function profileRankIds(b, cache, mode) {
 }
 
 async function readLabRank(player, mode) {
-  const b = cloud.board, viewer = cloud.uid;
-  if (!b?.client || !viewer || !BOARD_KEYS.includes(mode) || player[mode] == null) return 0;
-  if (b.profileRanks?.viewer !== viewer) b.profileRanks = {viewer, boards:{}};
-  const ids = await profileRankIds(b, b.profileRanks.boards, mode);
-  return viewer === cloud.uid ? ids.indexOf(player.id) + 1 : 0;
+  const b = cloud.board, viewer = cloud.uid, adminId = moderation.adminId;
+  if (!b?.client || !viewer || player.id === adminId || !BOARD_KEYS.includes(mode) || player[mode] == null) return 0;
+  if (b.profileRanks?.viewer !== viewer || b.profileRanks.adminId !== adminId) b.profileRanks = {viewer, adminId, boards:{}};
+  const cache = b.profileRanks;
+  const ids = await profileRankIds(b, cache.boards, mode, adminId);
+  return viewer === cloud.uid && cache === b.profileRanks ? ids.indexOf(player.id) + 1 : 0;
 }
 
 async function refreshRanking(b, mode, uid, readBoard, readMine) {
@@ -5509,19 +5537,24 @@ async function refreshRanking(b, mode, uid, readBoard, readMine) {
     return;
   }
   if (!b.boards[mode] || b.boards[mode].migrating) b.boards[mode] = {};
-  const board = b.boards[mode], table = () => b.client.from('leaderboard_players');
+  const board = b.boards[mode], table = () => b.client.from('leaderboard_players'), adminId = moderation.adminId;
   const fields = 'player_id,name,sig,sig_variant,' + mode;
   const player = r => ({...sanitizePlayer(r.player_id, {...r,sigV:r.sig_variant}), me:r.player_id === uid});
+  const readPlayer = async id => unwrap(await table().select(fields).eq('player_id',id).maybeSingle());
   const fresh = readBoard && await syncBoardPart(b, rankKey, async () => {
-    board.rows = (await readTopBoard(b.client, mode, fields, 10)).map(player);
+    const [rows, admin] = await Promise.all([readTopBoard(b.client, mode, fields, 10, adminId), adminId && readPlayer(adminId)]);
+    board.rows = rows.map(player);
+    board.admin = adminId ? player(admin ?? {player_id:adminId,name:'管理员'}) : null;
+    if (board.admin && admin?.[mode] == null) board.admin[mode] = null;
     board.at = Date.now();
   }, !board.rows);
+  if (b.boards[mode] !== board || uid === adminId) return;
   const pos = fresh ? board.rows.findIndex(p => p.me) : -1;
   if (pos >= 0) {
     Object.assign(board, {mine:board.rows[pos], rank:pos+1, mineAt:board.at});
     delete b.issues[mineKey]; markDirty('world');
   } else if (readMine) await syncBoardPart(b, mineKey, async () => {
-    const own = unwrap(await table().select(fields).eq('player_id',uid).maybeSingle());
+    const own = await readPlayer(uid);
     if (!own || own[mode] == null) {
       Object.assign(board, {mine:null, rank:null, mineAt:Date.now()});
       return;
@@ -5531,7 +5564,7 @@ async function refreshRanking(b, mode, uid, readBoard, readMine) {
     board.mine = player(own);
     markDirty('world');
     const value = own[mode];
-    const ahead = await table().select('player_id',{head:true,count:'exact'})
+    const ahead = await rankedPlayers(table().select('player_id',{head:true,count:'exact'}), adminId)
       .or(mode+'.gt.'+value+',and('+mode+'.eq.'+value+',player_id.lt.'+uid+')');
     unwrap(ahead);
     if (!Number.isSafeInteger(ahead.count) || ahead.count < 0) throw new Error('Missing ranking count');
@@ -5542,13 +5575,17 @@ async function refreshRanking(b, mode, uid, readBoard, readMine) {
 const ACCOUNT_KEY = `${SAVE_KEY}:account:${WORLD_CONFIG?.url || 'offline'}`;
 const GUEST_SESSION_KEY = `${ACCOUNT_KEY}:guest-session`;
 const ACCOUNT_NAMES_KEY = `${ACCOUNT_KEY}:recent-names`;
+const ACCOUNT_OFFLINE_LIMIT_MS = 3 * 24 * 60 * 60 * 1000;
+const accountVerifiedKey = uid => `${ACCOUNT_KEY}:${uid}:verified-at`;
 const account = {available:false, usernameReady:false, uid:null, session:null, revision:0, loginName:'', savedAt:null,
-  pending:!!WORLD_CONFIG && !!lsGet(ACCOUNT_KEY), working:false, blocked:'', next:0, flight:null};
+  pending:!!WORLD_CONFIG && !!lsGet(ACCOUNT_KEY), working:false, blocked:'', expiredUid:null, verifiedAt:0, next:0, flight:null};
 const accountPaused = () => account.pending || account.working || !!account.blocked;
 const activeSaveKey = () => account.uid ? `${ACCOUNT_KEY}:${account.uid}` : SAVE_KEY;
 const accountClient = () => cloud.board?.client;
 const accountCall = async (p_action, args = {}, client = accountClient()) => unwrap(await client.rpc('frontier_account',{p_action,...args}));
 const accountStale = error => ['FRONTIER_ACCOUNT_REPLACED','FRONTIER_ACCOUNT_RELOGIN','FRONTIER_ACCOUNT_SESSION'].includes(error?.message);
+const authSessionLost = error => error?.name === 'AuthSessionMissingError' ||
+  ['session_not_found','session_expired','refresh_token_not_found','refresh_token_already_used'].includes(error?.code);
 const accountClock = performance.now.bind(performance);
 function accountMark() { markDirty('prefs'); renderAccountPanel(); }
 
@@ -5560,8 +5597,27 @@ function accountLock(message) {
   accountMark();
 }
 function accountFault(error) {
-  if (accountStale(error)) accountLock(error.message === 'FRONTIER_ACCOUNT_REPLACED' ? '此账号已在另一台设备登录，当前设备已停止游玩和同步。' : '账号会话已失效，请重新登录。');
+  if (accountStale(error) || authSessionLost(error)) accountLock(error.message === 'FRONTIER_ACCOUNT_REPLACED' ? '此账号已在另一台设备登录，当前设备已停止游玩和同步。' : '账号会话已失效，请重新登录。');
   else if (error?.message === 'FRONTIER_ACCOUNT_CONFLICT') accountLock('另一标签页已更新云存档。请重新登录后继续。');
+}
+
+function recordAccountVerification(uid) {
+  if (!uid || uid !== account.uid || account.blocked) return;
+  account.verifiedAt = Date.now();
+  lsSet(accountVerifiedKey(uid), String(account.verifiedAt));
+}
+function accountOfflineExpired() {
+  const uid = account.uid || (account.pending ? lsGet(ACCOUNT_KEY) : null);
+  if (!uid) return false;
+  const now = Date.now();
+  if (account.verifiedAt > 0 && now-account.verifiedAt <= ACCOUNT_OFFLINE_LIMIT_MS) return false;
+  const cached = Number(lsGet(accountVerifiedKey(uid)));
+  const last = Math.max(account.verifiedAt, Number.isSafeInteger(cached) ? cached : 0);
+  if (last <= 0 || now-last <= ACCOUNT_OFFLINE_LIMIT_MS) return false;
+  if (account.uid) saveLocal();
+  account.expiredUid = uid;
+  accountLock('已超过 72 小时未连接账号服务，请重新登录。');
+  return true;
 }
 
 function startAccount(b) {
@@ -5629,7 +5685,8 @@ function installAccountSession(user, data, uploadedGuest = false) {
   const cached = user.id === lsGet(ACCOUNT_KEY) && lsGet(`${ACCOUNT_KEY}:${user.id}:checkpoint`);
   if (!uploadedGuest && cached) try {
     const copy = JSON.parse(cached);
-    if (copy.session === data.session_id && copy.revision === data.revision) {
+    // After an offline timeout, a new session may recover its draft if the cloud has not advanced.
+    if ((copy.session === data.session_id || account.expiredUid === user.id) && copy.revision === data.revision) {
       const draft = parseSave(lsGet(`${ACCOUNT_KEY}:${user.id}`));
       if (draft.lastSave >= st.lastSave) Object.assign(st,draft);
     }
@@ -5637,8 +5694,9 @@ function installAccountSession(user, data, uploadedGuest = false) {
   if (readRegistration()?.uid === user.id) lsDel(`${ACCOUNT_KEY}:registration`);
   Object.assign(account,{uid:user.id, session:data.session_id, revision:data.revision,
     loginName:user.app_metadata?.frontier_username || user.email || '',
-    pending:false, blocked:'', retry:null, savedAt:data.saved_at, next:0, verified:accountClock(), available:true});
+    pending:false, blocked:'', expiredUid:null, retry:null, savedAt:data.saved_at, next:0, available:true});
   lsSet(ACCOUNT_KEY,user.id);
+  recordAccountVerification(user.id);
   if (account.loginName) lsSet(ACCOUNT_NAMES_KEY,JSON.stringify([account.loginName,...recentAccountNames().filter(name => name !== account.loginName)].slice(0,8)));
   moderation.offlineFrom = 0;
   installSave(st);
@@ -5672,13 +5730,13 @@ async function accountIdentity(session) {
     return true;
   } catch (error) {
     accountFault(error);
-    if (!account.blocked) accountLock('无法读取云存档，请检查连接后重新登录。');
-    return false;
+    if (account.blocked) return false;
+    throw error;
   }
 }
 
 async function syncAccount(force = false) {
-  if (!account.uid || account.pending || account.blocked || moderation.level === 2) return false;
+  if (!account.uid || account.pending || account.blocked || moderation.level === 2 || accountOfflineExpired()) return false;
   if (account.flight) {
     const ok = await account.flight;
     if (!force || !ok) return ok;
@@ -5691,9 +5749,9 @@ async function syncAccount(force = false) {
   const task = (async () => {
     try {
       const data = await accountCall('save',{p_revision:revision,p_save:snapshot.save});
-      if (account.uid !== uid || account.session !== sid) return false;
+      if (account.uid !== uid || account.session !== sid || account.blocked) return false;
       account.retry = null; account.revision = data.revision; account.savedAt = data.saved_at;
-      account.verified = accountClock(); accountCacheCheckpoint(); accountMark();
+      recordAccountVerification(uid); accountCacheCheckpoint(); accountMark();
       return true;
     } catch (error) { accountFault(error); return false; }
     finally { account.next = accountClock() + 10000; }
@@ -5708,9 +5766,7 @@ async function beforeAccountAck() {
   return syncAccount(true);
 }
 function accountTick(force) {
-  if (!account.uid || account.blocked || account.working) return;
-  if (accountClock()-account.verified > 45000) { accountLock('暂时无法确认账号仍在本机登录。进度已保留在本设备，请联网后继续。'); return; }
-  if (moderation.level === 2) { account.verified = accountClock(); return; }
+  if (account.blocked || account.working || accountOfflineExpired() || !account.uid || moderation.level === 2) return;
   syncAccount(force);
 }
 
@@ -5815,8 +5871,7 @@ async function loginAccount(identifier,password) {
     await waitForBoard(b);
     await flushOutgoingAccount();
     recoverGuestSave(account.uid || (account.blocked ? lsGet(ACCOUNT_KEY) : null));
-    const previous = unwrap(await b.client.auth.getSession()).session;
-    if (!account.uid && !account.blocked) keepGuestSession(previous);
+    if (!account.uid && !account.blocked) keepGuestSession(unwrap(await b.client.auth.getSession()).session);
     const staging = accountStagingClient(b);
     const {user, session} = identifier.includes('@')
       ? unwrap(await staging.auth.signInWithPassword({email:identifier,password}))
@@ -5841,7 +5896,7 @@ async function leaveAccount() {
     const {error} = await b.client.auth.signOut({scope:'local'});
     if (error) throw error;
     lsDel(ACCOUNT_KEY);
-    Object.assign(account,{pending:false,uid:null,session:null,revision:0,loginName:'',savedAt:null,blocked:'',retry:null});
+    Object.assign(account,{pending:false,uid:null,session:null,revision:0,loginName:'',savedAt:null,blocked:'',expiredUid:null,verifiedAt:0,retry:null});
     // Do not restore an account's cache as the guest save.
     const st = loadLocal() || defaultState();
     reconnectAccountBoard(b,null);
@@ -5865,13 +5920,14 @@ let moderationRevision = 0;
 function finishModerationBoot(skipOffline = false) {
   if (!moderation.booting) return;
   moderation.booting = false;
-  $('.shell').inert = false;
+  $('.shell').inert = account.working;
   if (!skipOffline && moderation.level !== 2 && moderation.offlineFrom) offlineReport = applyOffline(moderation.offlineFrom);
   moderation.offlineFrom = 0;
 }
 
 function applyModerationStatus(data) {
   const before = moderation.level;
+  const beforeAdmin = moderation.adminId;
   const level = [1,2].includes(data?.level) ? data.level : 0;
   if (before !== 2 && level === 2) saveLocal();
   moderation.level = level;
@@ -5893,10 +5949,12 @@ function applyModerationStatus(data) {
   if (level && cloud.board?.pending.length) {
     cloud.board.pending = []; cloud.board.changed = true; persistHits(cloud.board);
   }
-  if (before !== level && cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
+  if (cloud.board && (before !== level || beforeAdmin !== moderation.adminId)) resetBoardRanks(cloud.board);
+  if (before !== level && cloud.board) { cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
   renderModerationLock(); renderModerationNotice(); renderBulkCardAccess(); renderCommunityNotice(); renderProfileAdminAccess();
   pullTest.refresh();
   if (adminDialog.open && !canOpenAdminPanel()) adminDialog.close();
+  if (beforeAdmin !== moderation.adminId && $('#labProfile').open && profileOrigin) void loadLabProfile(profileOrigin.id);
   markDirty('world');
 }
 
@@ -6006,6 +6064,7 @@ async function readModerationStatus(b) {
   if (missingWorldRPC(reply.error)) { moderation.next = Date.now() + 120000; finishModerationBoot(); return; }
   const data = unwrap(reply);
   if (!data || typeof data !== 'object') { finishModerationBoot(); return; }
+  recordAccountVerification(uid);
   applyModerationStatus(data);
   if (cardIdentity === adminCard) observeAdminCardRole(uid, data.admin_id);
   if (moderation.level) return;
@@ -6294,23 +6353,25 @@ function renderWorld() {
   }
   const key = lbMode;
   const live = cloud.board ? null : livePlayers();
-  const list = live?.filter(p => p[key] != null).sort((a,b) => b[key]-a[key] || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  const list = live?.filter(p => !verifiedAdmin(p.id) && p[key] != null).sort((a,b) => b[key]-a[key] || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const board = cloud.board?.boards[key];
   const top = board?.rows || list?.slice(0,10);
   const mine = board?.mine || list?.find(p => p.me);
+  const admin = board?.admin || live?.find(p => verifiedAdmin(p.id));
   const feed = cloud.board ? cloud.board.feed : live.flatMap(p => p.rare.map(r=>({...r,owner:p.id}))).sort((a,b) => b.ts - a.ts);
-  refreshWorldTitles([...(top || []).map(p=>p.id),mine?.id,...(feed || []).slice(0,30).map(r=>r.owner)]);
+  refreshWorldTitles([admin?.id,...(top || []).map(p=>p.id),mine?.id,...(feed || []).slice(0,30).map(r=>r.owner)]);
   const rank = board?.rank ?? (mine && list && cloud.players.length < 500 ? list.indexOf(mine)+1 : null);
   const minePending = issues?.['mine:' + key] || (cloud.board && !board?.mineAt);
   const label = { tps:'Token/s', dex:'图鉴格', stage:'评测关', pulls:'抽卡数', power:'评测战力', achievements:'已解锁成就', lifetime:'累计 Token' }[key];
-  function row(p, n, own) {
+  function row(p, n, own, pinned = false) {
     const sm = publicModel(p.sig,p.id);
-    return `<tr class="${p.me ? 'me' : ''}"><td class="rk ${!own && n<=3 ? 'g'+n : ''}">${n ?? '—'}</td><td>${own ? `<small>我的排名${minePending ? ' · 待更新' : ''}</small>` : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
+    const place = pinned ? '<span class="role-tag">置顶</span>' : n ?? '—';
+    return `<tr class="${p.me ? 'me ' : ''}${pinned ? 'lb-pinned role-admin' : ''}"><td class="rk ${!own && n && n<=3 ? 'g'+n : ''}">${place}</td><td>${own ? `<small>我的排名${minePending ? ' · 待更新' : ''}</small>` : ''}${labLink(p.id,p.name)}${p.me && !own ? '（你）' : ''}${pinned && p.name !== '管理员' ? ' <span class="role-tag">管理员</span>' : ''}${labTitleBadge(titlePublic[p.id],true)}</td><td class="val">${p[key] == null ? '—' : fmt(p[key])}</td><td>${sm ? `<span class="sigc"><span class="ic">${sharedArt(sm)}</span>${esc(sm.n)} · ${VARIANTS[p.sigV].name}</span>` : '<span class="muted">未设置</span>'}</td></tr>`;
   }
   const waiting = cloud.status === 'warn' ? '暂时离线，将自动重试。' : cloud.status === 'retrying' ? '正在重连…' : '正在读取…';
-  const ownRow = mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || (minePending ? '待更新' : '尚未上报成绩')}</td></tr>`;
+  const ownRow = verifiedAdmin(cloud.uid) ? '' : mine ? row(mine,rank,true) : `<tr><td colspan="4">我的排名 · ${scoreNotice || (minePending ? '待更新' : '尚未上报成绩')}</td></tr>`;
   const rankWait = board?.migrating ? '此榜等待数据库更新；原有四榜仍可使用。' : issues?.['rank:' + key] ? '暂时读不到榜单，将自动重试。' : waiting;
-  setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无成绩</td></tr>'}</tbody><tfoot>${ownRow}</tfoot></table>` : `<div class="empty">${rankWait}</div>`);
+  setWorldList($('#lbWrap'), top ? `<table class="lb"><thead><tr><th>名次</th><th>实验室名</th><th class="val">成绩 · ${label}</th><th>镇馆模型</th></tr></thead><tbody>${admin ? row(admin,null,false,true) : ''}${top.map((p,i)=>row(p,i+1,false)).join('') || '<tr><td colspan="4">尚无排名成绩</td></tr>'}</tbody>${ownRow ? `<tfoot>${ownRow}</tfoot>` : ''}</table>` : `<div class="empty">${rankWait}</div>`);
   setWorldList($('#feed'), feed?.length ? feed.slice(0, 30).map(r => {
     const m = modelOrLeak(r.id);
     const what = r.id === 'leak' ? '泄露的权重' : `${VARIANTS[r.v].name}版 ${m.n}`;
@@ -6861,28 +6922,20 @@ function openCommunityComposer(channel) {
   if (packet) loadPacketAccess();
   (packet ? f.packetMode[0] : f.title).focus();
 }
-function packetMinorUnits(value) {
-  const parts = /^(\d+)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(String(value));
-  if (!parts) return null;
-  const shift = 2+Number(parts[3] || 0)-(parts[2]?.length || 0);
-  if (Math.abs(shift)>220) return null;
-  const digits = BigInt(parts[1]+(parts[2] || ''));
-  if (shift>=0) return digits*10n**BigInt(shift);
-  const scale = 10n**BigInt(-shift);
-  return digits%scale === 0n ? digits/scale : null;
-}
 function formatPacketAmount(cents) {
   const fraction = String(cents%100n).padStart(2,'0').replace(/0+$/,'');
   return (cents/100n).toLocaleString('zh-CN')+(fraction ? '.'+fraction : '');
 }
 function packetQuote(f) {
   if (!f.amount.value || !f.amount.validity.valid || !f.slots.validity.valid) return null;
-  const amount = packetMinorUnits(f.amount.value);
-  if (amount === null || amount<100n || amount%100n!==0n) return null;
-  const base = amount*BigInt(f.packetMode.value === 'lucky' ? 1 : f.slots.valueAsNumber);
+  const amount = parsePacketAmount(f.amount.value), slots = BigInt(f.slots.valueAsNumber);
+  const lucky = f.packetMode.value === 'lucky';
+  const max = f.kind.value === 'gpu' ? 10_000_000n : 10n**100n;
+  if (amount === null || amount<(lucky ? slots : 1n) || amount>max) return null;
+  const base = amount*100n*(lucky ? 1n : slots);
   const fee = base*BigInt(packetAccess.fee_bps)/10000n;
-  const cost = Number(base+fee)/100;
-  return {base,fee,cost,amount:(amount/100n).toString()};
+  const cost = Number(`${base+fee}e-2`);
+  return {base,fee,cost,amount:amount.toString()};
 }
 function renderPacketDebit() {
   if (communityChannel !== 'packet') return;
@@ -6895,7 +6948,9 @@ function renderPacketDebit() {
   if (!quote) { debit.textContent = ''; return; }
   const kind = f.kind.value === 'gpu' ? 'GPU' : 'Token';
   const balance = S[f.kind.value], {base,fee,cost} = quote;
-  if (packetCharge(f.kind.value,balance,cost)===0) { debit.textContent = '金额太小，实扣 0 Token。'; return; }
+  const charge = packetCharge(f.kind.value,balance,cost);
+  if (charge===0) { debit.textContent = '金额太小，实扣 0 Token。'; return; }
+  if (charge!==null && charge!==cost) { debit.textContent = `受余额精度限制，实扣 ${charge<1e12 ? charge.toLocaleString('zh-CN') : charge.toExponential()} Token。`; return; }
   debit.textContent = `本金 ${formatPacketAmount(base)} ＋ 手续费 ${formatPacketAmount(fee)}（${packetAccess.fee_bps/100}%）＝ 实扣 ${formatPacketAmount(base+fee)} ${kind}${balance<cost ? ' · 数量不足' : ''}`;
 }
 async function loadPacketAccess() {
@@ -7838,6 +7893,175 @@ function bindWorldEventAdmin() {
   paint();
 }
 
+const ADMIN_CARD_COPIES = Object.freeze([1,1,1,1]);
+const isAdminCardUID = id => typeof id === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
+const adminCardKey = uid => `frontier:admin-card:${WORLD_CONFIG.url}:${uid}`;
+const adminCardState = (uid, owned = false) => ({uid, owned, role:null, ready:false, busy:false, error:''});
+let adminCard = adminCardState(null);
+
+function adminCardEligible() {
+  return adminCard.role === true && adminCard.uid === cloud.uid && !moderation.level && !accountPaused() && navigator.onLine;
+}
+function adminCardValid() {
+  return adminCardEligible() && adminCard.ready;
+}
+function hasAdminCard() { return adminCard.owned; }
+function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === adminCard.uid; }
+function adminCardChanged() {
+  if ($('.detail[data-train-id="admin-nullpoint"]')) {
+    if (owned(HIDDEN_CARD)) openDetail(HIDDEN_CARD.id);
+    else closeModal();
+  }
+  renderAdminCard();
+  markDirty('models','dex','bench','world','hud');
+  cloudBump(true);
+}
+function bindAdminCardIdentity(uid) {
+  uid = isAdminCardUID(uid) ? uid : null;
+  if (adminCard.uid === uid) return;
+  // A receipt is outside exported saves and scoped to this server and the active Auth identity.
+  adminCard = adminCardState(uid, !!uid && lsGet(adminCardKey(uid)) === '1');
+  const dialog = $('#adminCardReveal');
+  if (dialog.open && !S.hiddenCard) dialog.close();
+  adminCardChanged();
+}
+function observeAdminCardRole(uid, adminId) {
+  if (!uid || uid !== adminCard.uid || (adminId !== null && !isAdminCardUID(adminId))) return;
+  if (adminId === uid) {
+    adminCard.role = true;
+    void refreshAdminCard();
+    return;
+  }
+  if (adminCard.role === false) return;
+  lsDel(adminCardKey(uid));
+  adminCard = adminCardState(uid);
+  adminCard.role = false;
+  const dialog = $('#adminCardReveal');
+  if (dialog.open && !S.hiddenCard) dialog.close();
+  adminCardChanged();
+}
+async function refreshAdminCard(claim = false) {
+  if (!adminCardEligible() || adminCard.owned) return;
+  const client = cloud.board?.client, uid = cloud.uid;
+  if (!client) return;
+  if (adminCard.busy || (claim && !adminCardValid())) return;
+  const check = adminCard;
+  const wasOwned = hasAdminCard();
+  check.busy = claim ? 'claim' : 'status'; check.error = '';
+  if (claim) renderAdminCard();
+  try {
+    const reply = await client.rpc('frontier_admin_card', {p_claim:claim}).abortSignal(AbortSignal.timeout(8000));
+    if (check !== adminCard || uid !== cloud.uid || check.role !== true) return;
+    if (accountStale(reply.error)) { accountFault(reply.error); return; }
+    const data = unwrap(reply);
+    if (data?.player_id !== uid || typeof data.owned !== 'boolean' || (claim && !data.owned)) throw Error('Unverified card response');
+    check.owned = data.owned;
+    check.ready = true;
+    if (check.owned) lsSet(adminCardKey(uid), '1');
+    if (claim) {
+      if (S.set.fx) showAdminCardReveal();
+      else toast('??!! 已入库', '四种变体各 1 张');
+    }
+  } catch {
+    if (check !== adminCard || uid !== cloud.uid) return;
+    check.ready = false;
+    check.error = claim ? '未能确认领取，可重试查询。' : '暂时无法验证专属档案。';
+  } finally {
+    if (check === adminCard) {
+      check.busy = false;
+      if (wasOwned !== hasAdminCard()) adminCardChanged();
+      else renderAdminCard();
+    }
+  }
+}
+
+const NULLPOINT_FOILS = [
+  ['#ff9b60','#91f3ee','#173134'], ['#ffcd79','#ff795c','#39201d'],
+  ['#8ceaff','#98b6ff','#162d46'], ['#f5acff','#82ffcd','#342140']
+];
+let nullpointArtId = 0;
+function adminCardArt(variant = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
+  const [metal,prism,plate] = NULLPOINT_FOILS[variant] || NULLPOINT_FOILS[0];
+  const square = skin === 'classic';
+  const id = `np-art-${++nullpointArtId}`;
+  const glyphs = [52,87,125,159].map((x,i)=>`<g transform="translate(${x} ${131-i*11}) skewX(-10)"><g class="np-glyph np-glyph-${i}">
+    <path d="${i<2 ? 'M-14-13v-9l8-8H9l7 7v13L4 1v7H-6V-4L6-15v-5l-2-2H-3l-2 2v7Z' : 'M-6-30H8L5 8H-5Z'} M0 12l7 7-7 7-7-7Z" fill="url(#${id}-type)" stroke="#fff5de" stroke-width=".7"/>
+  </g></g>`).join('');
+  return `<svg viewBox="0 0 224 224" aria-hidden="true" focusable="false" class="np-engraving">
+    <defs>
+      <linearGradient id="${id}-type" x2="24%" y2="100%"><stop stop-color="#fff9e9"/><stop offset=".43" stop-color="#fff4cf"/><stop offset=".52" stop-color="${metal}"/><stop offset="1" stop-color="${prism}"/></linearGradient>
+      <linearGradient id="${id}-blade" x2="86%" y2="100%"><stop stop-color="${plate}"/><stop offset=".32" stop-color="#0b1015"/><stop offset=".61" stop-color="${plate}"/><stop offset=".63" stop-color="#10171c"/><stop offset="1" stop-color="#040609"/></linearGradient>
+      <linearGradient id="${id}-edge" x1="0%" y1="100%" x2="100%" y2="0%"><stop stop-color="${prism}" stop-opacity=".2"/><stop offset=".24" stop-color="${prism}"/><stop offset=".51" stop-color="#fff9de"/><stop offset=".72" stop-color="${metal}"/><stop offset="1" stop-color="${metal}" stop-opacity=".28"/></linearGradient>
+      <radialGradient id="${id}-core"><stop offset=".16" stop-color="#040509"/><stop offset=".69" stop-color="#040509"/><stop offset=".77" stop-color="${metal}"/><stop offset=".81" stop-color="${metal}" stop-opacity=".35"/><stop offset="1" stop-color="${metal}" stop-opacity="0"/></radialGradient>
+    </defs>
+    <path class="np-rim" d="${square ? 'M3 3H221V221H3Z' : 'M3 3h184l34 34v184H37L3 187Z'}" fill="#05070a" stroke="url(#${id}-edge)" stroke-width="2.4"/>
+    <g fill="none" stroke="${prism}" opacity=".27">
+      <path d="${square ? 'M11 11H213V213H11Z' : 'M11 11h170l32 32v170H43l-32-32Z'}"/>
+      <path d="M10 104h25l39-39h36l48-48h20m35 103h-25l-43 43h-44l-45 45H41M9 115h32l43-42h40m92 37h-34l-45 45h-33M25 17h46m84 190h40"/>
+      <path d="M12 85h25l22-22m128 78-22 23v24m-95-63 55-55m-17 91 52-52" stroke-dasharray="4 3"/>
+    </g>
+    <circle cx="112" cy="112" r="82" fill="url(#${id}-core)"/>
+    <g transform="rotate(-25 112 112)" fill="none" stroke="url(#${id}-edge)">
+      <ellipse cx="112" cy="112" rx="107" ry="53" stroke-opacity=".7"/>
+      <ellipse cx="112" cy="112" rx="100" ry="42" stroke-dasharray="111 17 5 25" stroke-width="2"/>
+      <ellipse cx="112" cy="112" rx="89" ry="35" stroke-opacity=".45"/>
+    </g>
+    <g fill="url(#${id}-blade)" stroke="url(#${id}-edge)" stroke-linejoin="bevel">
+      <path d="M11 128 28 82 74 45l54-8 35-24-20 35-33 19-25-2-36 24-14 40-24 36Z"/>
+      <path d="M210 95 204 140l-53 42-54 4-36 25 20-34 33-19 27 2 42-33 11-35 17-32Z"/>
+      <path d="M17 181 46 151l32 12-26 12-20 28Zm190-142-30 29-31-9 25-15 18-24Z"/>
+    </g>
+    <path d="M11 128 43 82l45-28 40-17-19 21-52 15-22 56-24 36Zm199-33-20 45-42 34-51 12 19-20 29 3 42-30 7-47 17-32Z" fill="${prism}" opacity=".18"/>
+    <path d="M14 147 66 121l23 4 32-26 23-2 66-41M28 169l57-22 25-2 29-23 16-1 42-23" fill="none" stroke="url(#${id}-edge)" stroke-width="7" opacity=".17"/>
+    <path d="M14 147 66 121l23 4 32-26 23-2 66-41M28 169l57-22 25-2 29-23 16-1 42-23" fill="none" stroke="url(#${id}-edge)" stroke-width="1.4"/>
+    ${glyphs}
+    <path d="M9 69V9h61L49 14H15v33Zm206 85v61h-61l22-6h33v-34Z" fill="${prism}"/>
+    <path d="M21 30h33l-5 4H21Zm0 9h17l-4 4H21Zm148 151h34v4h-38Zm14 9h20v4h-24Z" fill="${metal}" opacity=".76"/>
+    <path d="m19 136 3-7 3 4-3 6zm36-49 6-2-3 5-6 1zm118 44 7-3-3 5-7 2zm18-60 8-6-3 6-7 4zm-70 94 9-4-3 6-7 1z" fill="#fff3d7"/>
+  </svg>`;
+}
+
+function renderAdminCard() {
+  const panel = $('#adminCardSlot'), valid = adminCardValid();
+  panel.hidden = !adminCardEligible() || adminCard.uid !== cloud.uid || hasAdminCard() || (!adminCard.ready && !adminCard.error);
+  if (panel.hidden) return;
+  const button = $('[data-admin-card-action]',panel);
+  textIfChanged(button, adminCard.busy === 'claim' ? '领取中…' : !valid ? '重试查询' : '领取 ??!!');
+  button.disabled = adminCard.busy === 'claim';
+  textIfChanged($('[data-admin-card-error]',panel), adminCard.error);
+}
+function showAdminCardReveal(pull, replay = false) {
+  if (!pull && !hasAdminCard()) return;
+  const dialog = $('#adminCardReveal');
+  if (dialog.open || $('#cine').matches('.open[data-replay]')) return;
+  const variant = pull?.v ?? 3;
+  const label = pull ? VARIANTS[variant].name + (replay && pull.preview ? ' · 未拥有' : ` ×${fmt(pull.n)}`) : '四种变体各 1 张';
+  const [heat, ion] = NULLPOINT_FOILS[variant];
+  dialog.dataset.variant = variant;
+  dialog.style.setProperty('--np-heat',heat);
+  dialog.style.setProperty('--np-ion',ion);
+  dialog.toggleAttribute('data-replay',replay);
+  dialog.toggleAttribute('data-static',!S.set.fx);
+  $('[data-admin-card-face]',dialog).innerHTML = adminCardArt(variant);
+  $('[data-admin-card-base]',dialog).textContent = `${label} · 标准基础产出 ${fmt(HIDDEN_CARD.base)} Token/s`;
+  $('button',dialog).textContent = replay ? '返回详情' : pull ? '继续' : '返回模型库';
+  dialog.showModal();
+  return true;
+}
+function initAdminCard() {
+  const slot = $('#adminCardSlot'), dialog = $('#adminCardReveal');
+  const action = $('[data-admin-card-action]',slot);
+  action.addEventListener('click', () => {
+    if (!hasAdminCard()) refreshAdminCard(adminCardValid());
+  });
+  dialog.addEventListener('close', () => {
+    if (dialog.hasAttribute('data-replay') || currentView !== 'models') return;
+    if (!slot.hidden) action.focus();
+    else { renderModels(); $('#vault [data-model="admin-nullpoint"]')?.focus(); }
+  });
+  window.addEventListener('offline',renderAdminCard);
+}
+
 /* =================== ROUTER =================== */
 const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'chat', 'feats', 'prefs'];
 const RENDER = { pull: renderPull, models: renderModels, dex: renderDex, bench: renderBench, research: renderResearch, world: renderWorld, chat: renderChatView, feats: renderFeats, prefs: renderPrefs };
@@ -8054,175 +8278,6 @@ function installSave(st) {
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
   $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
 }
-const ADMIN_CARD_COPIES = Object.freeze([1,1,1,1]);
-const isAdminCardUID = id => typeof id === 'string' && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id);
-const adminCardKey = uid => `frontier:admin-card:${WORLD_CONFIG.url}:${uid}`;
-const adminCardState = (uid, owned = false) => ({uid, owned, role:null, ready:false, busy:false, error:''});
-let adminCard = adminCardState(null);
-
-function adminCardEligible() {
-  return adminCard.role === true && adminCard.uid === cloud.uid && !moderation.level && !accountPaused() && navigator.onLine;
-}
-function adminCardValid() {
-  return adminCardEligible() && adminCard.ready;
-}
-function hasAdminCard() { return adminCard.owned; }
-function adminCardProgressMatches() { return hasAdminCard() && S.adminCardProgress?.uid === adminCard.uid; }
-function adminCardChanged() {
-  if ($('.detail[data-train-id="admin-nullpoint"]')) {
-    if (owned(HIDDEN_CARD)) openDetail(HIDDEN_CARD.id);
-    else closeModal();
-  }
-  renderAdminCard();
-  markDirty('models','dex','bench','world','hud');
-  cloudBump(true);
-}
-function bindAdminCardIdentity(uid) {
-  uid = isAdminCardUID(uid) ? uid : null;
-  if (adminCard.uid === uid) return;
-  // A receipt is outside exported saves and scoped to this server and the active Auth identity.
-  adminCard = adminCardState(uid, !!uid && lsGet(adminCardKey(uid)) === '1');
-  const dialog = $('#adminCardReveal');
-  if (dialog.open && !S.hiddenCard) dialog.close();
-  adminCardChanged();
-}
-function observeAdminCardRole(uid, adminId) {
-  if (!uid || uid !== adminCard.uid || (adminId !== null && !isAdminCardUID(adminId))) return;
-  if (adminId === uid) {
-    adminCard.role = true;
-    void refreshAdminCard();
-    return;
-  }
-  if (adminCard.role === false) return;
-  lsDel(adminCardKey(uid));
-  adminCard = adminCardState(uid);
-  adminCard.role = false;
-  const dialog = $('#adminCardReveal');
-  if (dialog.open && !S.hiddenCard) dialog.close();
-  adminCardChanged();
-}
-async function refreshAdminCard(claim = false) {
-  if (!adminCardEligible() || adminCard.owned) return;
-  const client = cloud.board?.client, uid = cloud.uid;
-  if (!client) return;
-  if (adminCard.busy || (claim && !adminCardValid())) return;
-  const check = adminCard;
-  const wasOwned = hasAdminCard();
-  check.busy = claim ? 'claim' : 'status'; check.error = '';
-  if (claim) renderAdminCard();
-  try {
-    const reply = await client.rpc('frontier_admin_card', {p_claim:claim}).abortSignal(AbortSignal.timeout(8000));
-    if (check !== adminCard || uid !== cloud.uid || check.role !== true) return;
-    if (accountStale(reply.error)) { accountFault(reply.error); return; }
-    const data = unwrap(reply);
-    if (data?.player_id !== uid || typeof data.owned !== 'boolean' || (claim && !data.owned)) throw Error('Unverified card response');
-    check.owned = data.owned;
-    check.ready = true;
-    if (check.owned) lsSet(adminCardKey(uid), '1');
-    if (claim) {
-      if (S.set.fx) showAdminCardReveal();
-      else toast('??!! 已入库', '四种变体各 1 张');
-    }
-  } catch {
-    if (check !== adminCard || uid !== cloud.uid) return;
-    check.ready = false;
-    check.error = claim ? '未能确认领取，可重试查询。' : '暂时无法验证专属档案。';
-  } finally {
-    if (check === adminCard) {
-      check.busy = false;
-      if (wasOwned !== hasAdminCard()) adminCardChanged();
-      else renderAdminCard();
-    }
-  }
-}
-
-const NULLPOINT_FOILS = [
-  ['#ff9b60','#91f3ee','#173134'], ['#ffcd79','#ff795c','#39201d'],
-  ['#8ceaff','#98b6ff','#162d46'], ['#f5acff','#82ffcd','#342140']
-];
-let nullpointArtId = 0;
-function adminCardArt(variant = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
-  const [metal,prism,plate] = NULLPOINT_FOILS[variant] || NULLPOINT_FOILS[0];
-  const square = skin === 'classic';
-  const id = `np-art-${++nullpointArtId}`;
-  const glyphs = [52,87,125,159].map((x,i)=>`<g transform="translate(${x} ${131-i*11}) skewX(-10)"><g class="np-glyph np-glyph-${i}">
-    <path d="${i<2 ? 'M-14-13v-9l8-8H9l7 7v13L4 1v7H-6V-4L6-15v-5l-2-2H-3l-2 2v7Z' : 'M-6-30H8L5 8H-5Z'} M0 12l7 7-7 7-7-7Z" fill="url(#${id}-type)" stroke="#fff5de" stroke-width=".7"/>
-  </g></g>`).join('');
-  return `<svg viewBox="0 0 224 224" aria-hidden="true" focusable="false" class="np-engraving">
-    <defs>
-      <linearGradient id="${id}-type" x2="24%" y2="100%"><stop stop-color="#fff9e9"/><stop offset=".43" stop-color="#fff4cf"/><stop offset=".52" stop-color="${metal}"/><stop offset="1" stop-color="${prism}"/></linearGradient>
-      <linearGradient id="${id}-blade" x2="86%" y2="100%"><stop stop-color="${plate}"/><stop offset=".32" stop-color="#0b1015"/><stop offset=".61" stop-color="${plate}"/><stop offset=".63" stop-color="#10171c"/><stop offset="1" stop-color="#040609"/></linearGradient>
-      <linearGradient id="${id}-edge" x1="0%" y1="100%" x2="100%" y2="0%"><stop stop-color="${prism}" stop-opacity=".2"/><stop offset=".24" stop-color="${prism}"/><stop offset=".51" stop-color="#fff9de"/><stop offset=".72" stop-color="${metal}"/><stop offset="1" stop-color="${metal}" stop-opacity=".28"/></linearGradient>
-      <radialGradient id="${id}-core"><stop offset=".16" stop-color="#040509"/><stop offset=".69" stop-color="#040509"/><stop offset=".77" stop-color="${metal}"/><stop offset=".81" stop-color="${metal}" stop-opacity=".35"/><stop offset="1" stop-color="${metal}" stop-opacity="0"/></radialGradient>
-    </defs>
-    <path class="np-rim" d="${square ? 'M3 3H221V221H3Z' : 'M3 3h184l34 34v184H37L3 187Z'}" fill="#05070a" stroke="url(#${id}-edge)" stroke-width="2.4"/>
-    <g fill="none" stroke="${prism}" opacity=".27">
-      <path d="${square ? 'M11 11H213V213H11Z' : 'M11 11h170l32 32v170H43l-32-32Z'}"/>
-      <path d="M10 104h25l39-39h36l48-48h20m35 103h-25l-43 43h-44l-45 45H41M9 115h32l43-42h40m92 37h-34l-45 45h-33M25 17h46m84 190h40"/>
-      <path d="M12 85h25l22-22m128 78-22 23v24m-95-63 55-55m-17 91 52-52" stroke-dasharray="4 3"/>
-    </g>
-    <circle cx="112" cy="112" r="82" fill="url(#${id}-core)"/>
-    <g transform="rotate(-25 112 112)" fill="none" stroke="url(#${id}-edge)">
-      <ellipse cx="112" cy="112" rx="107" ry="53" stroke-opacity=".7"/>
-      <ellipse cx="112" cy="112" rx="100" ry="42" stroke-dasharray="111 17 5 25" stroke-width="2"/>
-      <ellipse cx="112" cy="112" rx="89" ry="35" stroke-opacity=".45"/>
-    </g>
-    <g fill="url(#${id}-blade)" stroke="url(#${id}-edge)" stroke-linejoin="bevel">
-      <path d="M11 128 28 82 74 45l54-8 35-24-20 35-33 19-25-2-36 24-14 40-24 36Z"/>
-      <path d="M210 95 204 140l-53 42-54 4-36 25 20-34 33-19 27 2 42-33 11-35 17-32Z"/>
-      <path d="M17 181 46 151l32 12-26 12-20 28Zm190-142-30 29-31-9 25-15 18-24Z"/>
-    </g>
-    <path d="M11 128 43 82l45-28 40-17-19 21-52 15-22 56-24 36Zm199-33-20 45-42 34-51 12 19-20 29 3 42-30 7-47 17-32Z" fill="${prism}" opacity=".18"/>
-    <path d="M14 147 66 121l23 4 32-26 23-2 66-41M28 169l57-22 25-2 29-23 16-1 42-23" fill="none" stroke="url(#${id}-edge)" stroke-width="7" opacity=".17"/>
-    <path d="M14 147 66 121l23 4 32-26 23-2 66-41M28 169l57-22 25-2 29-23 16-1 42-23" fill="none" stroke="url(#${id}-edge)" stroke-width="1.4"/>
-    ${glyphs}
-    <path d="M9 69V9h61L49 14H15v33Zm206 85v61h-61l22-6h33v-34Z" fill="${prism}"/>
-    <path d="M21 30h33l-5 4H21Zm0 9h17l-4 4H21Zm148 151h34v4h-38Zm14 9h20v4h-24Z" fill="${metal}" opacity=".76"/>
-    <path d="m19 136 3-7 3 4-3 6zm36-49 6-2-3 5-6 1zm118 44 7-3-3 5-7 2zm18-60 8-6-3 6-7 4zm-70 94 9-4-3 6-7 1z" fill="#fff3d7"/>
-  </svg>`;
-}
-
-function renderAdminCard() {
-  const panel = $('#adminCardSlot'), valid = adminCardValid();
-  panel.hidden = !adminCardEligible() || adminCard.uid !== cloud.uid || hasAdminCard() || (!adminCard.ready && !adminCard.error);
-  if (panel.hidden) return;
-  const button = $('[data-admin-card-action]',panel);
-  textIfChanged(button, adminCard.busy === 'claim' ? '领取中…' : !valid ? '重试查询' : '领取 ??!!');
-  button.disabled = adminCard.busy === 'claim';
-  textIfChanged($('[data-admin-card-error]',panel), adminCard.error);
-}
-function showAdminCardReveal(pull, replay = false) {
-  if (!pull && !hasAdminCard()) return;
-  const dialog = $('#adminCardReveal');
-  if (dialog.open || $('#cine').matches('.open[data-replay]')) return;
-  const variant = pull?.v ?? 3;
-  const label = pull ? VARIANTS[variant].name + (replay && pull.preview ? ' · 未拥有' : ` ×${fmt(pull.n)}`) : '四种变体各 1 张';
-  const [heat, ion] = NULLPOINT_FOILS[variant];
-  dialog.dataset.variant = variant;
-  dialog.style.setProperty('--np-heat',heat);
-  dialog.style.setProperty('--np-ion',ion);
-  dialog.toggleAttribute('data-replay',replay);
-  dialog.toggleAttribute('data-static',!S.set.fx);
-  $('[data-admin-card-face]',dialog).innerHTML = adminCardArt(variant);
-  $('[data-admin-card-base]',dialog).textContent = `${label} · 标准基础产出 ${fmt(HIDDEN_CARD.base)} Token/s`;
-  $('button',dialog).textContent = replay ? '返回详情' : pull ? '继续' : '返回模型库';
-  dialog.showModal();
-  return true;
-}
-function initAdminCard() {
-  const slot = $('#adminCardSlot'), dialog = $('#adminCardReveal');
-  const action = $('[data-admin-card-action]',slot);
-  action.addEventListener('click', () => {
-    if (!hasAdminCard()) refreshAdminCard(adminCardValid());
-  });
-  dialog.addEventListener('close', () => {
-    if (dialog.hasAttribute('data-replay') || currentView !== 'models') return;
-    if (!slot.hidden) action.focus();
-    else { renderModels(); $('#vault [data-model="admin-nullpoint"]')?.focus(); }
-  });
-  window.addEventListener('offline',renderAdminCard);
-}
-
 function init() {
   initAdminCard();
   $('.shell').inert = moderation.booting;
