@@ -2983,7 +2983,9 @@ function sanitizeState(st) {
 function parseSave(text) {
   const obj = JSON.parse(text);
   if (!obj || typeof obj.cards !== 'object' || !obj.cards || Array.isArray(obj.cards)) throw new Error('Invalid inventory');
-  return sanitizeState(mergeState(defaultState(), obj));
+  const base = defaultState();
+  base.created = 0; // Legacy saves of unknown age are not new saves.
+  return sanitizeState(mergeState(base, obj));
 }
 let S = defaultState();
 let lastYield = 0;
@@ -3625,6 +3627,17 @@ function loadLocal() {
   const raw = lsGet(SAVE_KEY);
   if (!raw) return null;
   try { return parseSave(raw); } catch (e) { return null; }
+}
+
+function cloudSaveSnapshot(state, stamp = Date.now()) {
+  const cards = {};
+  // parseSave already expands short arrays to all four variants, including in older clients.
+  for (const [id, counts] of Object.entries(state.cards)) {
+    let length = counts.length;
+    while (length && counts[length-1] === 0) length--;
+    cards[id] = counts.slice(0,length);
+  }
+  return structuredClone({...state,cards,lastSave:stamp});
 }
 
 function continueLocalSaveAfterCutover() {
@@ -5576,6 +5589,7 @@ const ACCOUNT_KEY = `${SAVE_KEY}:account:${WORLD_CONFIG?.url || 'offline'}`;
 const GUEST_SESSION_KEY = `${ACCOUNT_KEY}:guest-session`;
 const ACCOUNT_NAMES_KEY = `${ACCOUNT_KEY}:recent-names`;
 const ACCOUNT_OFFLINE_LIMIT_MS = 3 * 24 * 60 * 60 * 1000;
+const ACCOUNT_SAVE_INTERVAL_MS = 30000, ACCOUNT_SAVE_RETRY_MS = 10000;
 const accountVerifiedKey = uid => `${ACCOUNT_KEY}:${uid}:verified-at`;
 const account = {available:false, usernameReady:false, uid:null, session:null, revision:0, loginName:'', savedAt:null,
   pending:!!WORLD_CONFIG && !!lsGet(ACCOUNT_KEY), working:false, blocked:'', expiredUid:null, verifiedAt:0, next:0, flight:null};
@@ -5744,17 +5758,19 @@ async function syncAccount(force = false) {
   }
   if (navigator.onLine === false || (!force && (account.working || accountClock() < account.next))) return false;
   const uid = account.uid, sid = account.session, revision = account.revision;
-  const snapshot = account.retry?.revision === revision ? account.retry : {revision,save:{...JSON.parse(JSON.stringify(S)),lastSave:Date.now()}};
+  const snapshot = account.retry?.revision === revision ? account.retry : {revision,save:cloudSaveSnapshot(S)};
   account.retry = snapshot;
   const task = (async () => {
+    let synced = false;
     try {
       const data = await accountCall('save',{p_revision:revision,p_save:snapshot.save});
       if (account.uid !== uid || account.session !== sid || account.blocked) return false;
       account.retry = null; account.revision = data.revision; account.savedAt = data.saved_at;
       recordAccountVerification(uid); accountCacheCheckpoint(); accountMark();
+      synced = true;
       return true;
     } catch (error) { accountFault(error); return false; }
-    finally { account.next = accountClock() + 10000; }
+    finally { account.next = accountClock() + (synced ? ACCOUNT_SAVE_INTERVAL_MS : ACCOUNT_SAVE_RETRY_MS); }
   })();
   account.flight = task;
   try { return await task; } finally { if (account.flight === task) account.flight = null; }
@@ -6745,7 +6761,7 @@ bulkCardsForm.onsubmit = async e => {
 
 const communityDialog = $('#communityNotice'), communityComposer = $('#communityComposer');
 const communityForm = $('#communityForm'), communityNoticeStatus = $('#communityNoticeStatus');
-const community = {notice:null, next:0, busy:false, dismissing:false, owner:null, revision:0};
+const community = {notice:null, next:0, busy:false, dismissing:false, owner:null, after:null, revision:0, legacyUntil:0};
 const communityBucket = new Map();
 const communityImageURI = base64 => `data:image/webp;base64,${base64}`;
 const giftLabel = (kind, amount) => `${fmt(Number(amount))} ${kind === 'gpu' ? 'GPU' : 'Token'}`;
@@ -6846,8 +6862,21 @@ async function claimCommunityGift(id) {
   } finally { communityClaiming = false; }
 }
 
+function communityNoticeAfter() {
+  const created = S.created;
+  return Number.isSafeInteger(created) && created>0 && created<=8.64e15 ? new Date(created).toISOString() : null;
+}
+async function readCommunityInbox(client, after, seen) {
+  const args = seen ? {p_seen:seen} : {};
+  if (after && Date.now()>=community.legacyUntil) {
+    const reply = await client.rpc('frontier_community_inbox',{...args,p_after:after});
+    if (!missingWorldRPC(reply.error)) return reply;
+    community.legacyUntil = Date.now() + 120000;
+  }
+  return client.rpc('frontier_community_inbox',args);
+}
 function renderCommunityNotice() {
-  const notice = community.notice;
+  const notice = community.owner === cloud.uid && community.after === communityNoticeAfter() ? community.notice : null;
   if (!notice || moderation.notice) { if (communityDialog.open) communityDialog.close(); return; }
   if (shownNotice !== notice.id) {
     shownNotice = notice.id; communityNoticeStatus.textContent = '';
@@ -6866,16 +6895,17 @@ function renderCommunityNotice() {
   if (!communityDialog.open) communityDialog.showModal();
 }
 async function syncCommunityInbox(b, force = false) {
-  if (community.owner !== cloud.uid) {
-    community.owner = cloud.uid; community.notice = null; community.next = 0; community.revision++;
+  const after = communityNoticeAfter();
+  if (community.owner !== cloud.uid || community.after !== after) {
+    community.owner = cloud.uid; community.after = after; community.notice = null; community.next = 0; community.revision++;
     communityBucket.clear(); renderCommunityNotice();
   }
   if (community.busy || community.dismissing || (!force && Date.now() < community.next)) return;
   community.busy = true; community.next = Date.now() + 9500;
   const revision = community.revision, uid = cloud.uid;
   try {
-    const reply = await b.client.rpc('frontier_community_inbox');
-    if (revision !== community.revision || uid !== cloud.uid) return;
+    const reply = await readCommunityInbox(b.client,after);
+    if (revision !== community.revision || uid !== cloud.uid || after !== communityNoticeAfter()) return;
     if (missingWorldRPC(reply.error)) { community.next = Date.now() + 120000; return; }
     const data = unwrap(reply);
     community.notice = data.notice; renderCommunityNotice();
@@ -6883,9 +6913,11 @@ async function syncCommunityInbox(b, force = false) {
   } finally { community.busy = false; }
 }
 async function acknowledgeCommunityNotice(id) {
-  const reply = await communityClient().rpc('frontier_community_inbox',{p_seen:id});
+  const after = communityNoticeAfter(), uid = cloud.uid;
+  const reply = await readCommunityInbox(communityClient(),after,id);
+  if (uid !== cloud.uid || after !== communityNoticeAfter()) return;
   const data = unwrap(reply); community.notice = data.notice; renderCommunityNotice();
-  if (data.pending.length) await applyCommunityGifts(data.pending);
+  if (data.pending.length) await applyCommunityGifts(data.pending,uid);
 }
 async function readCommunityNotice(claim) {
   const current = community.notice;
