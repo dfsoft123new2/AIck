@@ -699,6 +699,12 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .admin-detail:first-child:not(:empty) { margin:0 0 16px; padding:0 0 16px; border-top:0; border-bottom:1px solid var(--line); }
 .admin-detail h3 { margin:0; overflow-wrap:anywhere; }
 .admin-detail .admin-tools { margin-top:12px; }
+.admin-progress { margin-block:12px; padding-block:10px; border-block:1px solid var(--line); }
+.admin-progress summary { cursor:pointer; color:var(--ink); font-weight:650; }
+.admin-progress .admin-tools { margin-block:8px; }
+.admin-progress .admin-tools[hidden], .admin-progress label[hidden] { display:none; }
+.admin-progress input[type=number] { inline-size:8ch; }
+.admin-progress select, .admin-progress input { max-inline-size:min(250px,66vw); }
 .admin-audit { padding-inline-start:20px; color:var(--ink-2); font-size:13px; }
 .notice-dialog header { border-block-start:4px solid var(--copper); }
 .notice-body { padding:12px 0; border-block:1px solid var(--line); }
@@ -1695,7 +1701,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
 <dialog id="accountLock" class="world-dialog notice-dialog" aria-labelledby="accountLockTitle">
   <header><h2 id="accountLockTitle">云存档连接暂停</h2></header>
   <div class="world-dialog-body"><p class="notice-message" id="accountLockDetail"></p><p class="note notice-status" id="accountLockStatus" role="status"></p>
-    <div class="world-tools"><button class="btn" id="accountLockLogin" type="button" autofocus>重新登录</button><button class="btn ghost" id="accountGuest" type="button">返回游客档</button></div>
+    <div class="world-tools"><button class="btn" id="accountLockReload" type="button" hidden>重新载入云档</button><button class="btn" id="accountLockLogin" type="button" autofocus>重新登录</button><button class="btn ghost" id="accountGuest" type="button">返回游客档</button></div>
   </div>
 </dialog>
 <dialog id="accountDialog" class="world-dialog" aria-labelledby="accountDialogTitle">
@@ -1731,7 +1737,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
       <button class="btn" id="lockNoticeRead" type="button">确认已读</button>
     </section>
     <p class="note notice-status" id="lockStatus" role="status"></p>
-    <div class="world-tools" id="lockActions" hidden><button class="btn ghost" id="checkLock" type="button" autofocus>检查状态</button><button class="btn ghost" id="clearLockedSave" type="button">清除数据重玩</button></div>
+    <div class="world-tools" id="lockActions" hidden><button class="btn ghost" id="checkLock" type="button" autofocus>检查状态</button><button class="btn ghost" id="clearLockedSave" type="button" hidden>清除数据重玩</button><button class="btn ghost" id="leaveLockedAccount" type="button" hidden>退出账号</button></div>
   </div>
 </dialog>
 <dialog id="moderationNotice" class="world-dialog notice-dialog" aria-labelledby="noticeTitle">
@@ -2953,7 +2959,7 @@ function sanitizeState(st) {
   st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
   const clean = {};
   for (const [id, arr] of Object.entries(st.cards || {})) {
-    if (!MODEL_BY_ID[id] || !Array.isArray(arr)) continue;
+    if (!Object.hasOwn(MODEL_BY_ID,id) || !Array.isArray(arr)) continue;
     clean[id] = [0, 1, 2, 3].map(i => Math.max(0, Number(arr[i]) || 0));
   }
   st.cards = clean;
@@ -3001,13 +3007,16 @@ function invalidate() {
 
 
 const WORLD_EVENT_EFFECTS = Object.freeze({
-  speed:{label:'自动抽卡速度',min:1,max:10,step:.01,example:2},
-  count:{label:'每批抽卡数量',min:1,max:10,step:1,example:2},
-  price:{label:'单抽价格',min:.1,max:5,step:.01,example:.8},
-  tokens:{label:'在线 Token 产出',min:1,max:10,step:.01,example:2},
-  power:{label:'评测战力',min:1,max:10,step:.01,example:2},
-  gpu:{label:'在线 GPU 奖励',min:1,max:10,step:.01,example:2}
+  speed:{label:'自动抽卡速度',min:.1,max:25,step:.01,example:2},
+  count:{label:'每批抽卡数量',min:1,max:20,step:1,example:2},
+  price:{label:'单抽价格',min:.01,max:20,step:.01,example:.8},
+  tokens:{label:'在线 Token 产出',min:.1,max:25,step:.01,example:2},
+  power:{label:'评测战力',min:.1,max:25,step:.01,example:2},
+  gpu:{label:'在线 GPU 奖励',min:1,max:25,step:.01,example:2},
+  odds:{label:'变体与权重泄露概率',min:.1,max:100,step:.01,example:2},
+  copies:{label:'每次命中的模型卡份数',min:1,max:10,step:1,example:2}
 });
+const EVENT_LEAK_CAP = .1;
 const worldEventClock = performance.now.bind(performance);
 const WORLD_EVENT_POLL_MS = 8000, WORLD_EVENT_LEASE_MS = 25000;
 let worldEvent = null, displayedWorldEventId = null;
@@ -3069,22 +3078,23 @@ function addBuff(b) {
 }
 function techDouble(key) { return 1 + S.tech[key]; }
 function multi(event = activeWorldEvent()) { return pullTest.count() ?? (1 + S.up.multi)*techDouble('doubleDraw')*eventMultiplier('count',event); }
-function cloneN() { return (1 + S.up.clone) * techDouble('doubleCopies'); }
+function cloneN(event = activeWorldEvent()) { return (1 + S.up.clone) * techDouble('doubleCopies') * eventMultiplier('copies',event); }
 function basePullInterval(lv = S.up.speed) { return Math.max(0.05, Math.pow(0.95, lv)) / techDouble('doubleSpeed'); }
 function interval() { return basePullInterval() / buffMul('rush'); }
 function packCost(p,event = activeWorldEvent()) { return p.cost * (1 - 0.03 * S.tech.discount) * buffMul('sale') * eventMultiplier('price',event); }
 function pullCost(p,event = activeWorldEvent()) { return packCost(p,event) * multi(event); }
 function pityN(p) { return Math.max(10, Math.round(p.pn * (1 - 0.1 * S.tech.pity))); }
 function pityProgress(p, goal = pityN(p)) { return Math.min(goal, S.pity[p.id] || 0); }
-function leakChance(p = curPack()) {
-  // There is no gameplay cap; only preserve the other outcomes on this same roll.
+function leakChance(p = curPack(), event = activeWorldEvent()) {
+  const odds = eventMultiplier('odds',event);
   const available = 1 - (p.hiddenChance ?? 0) - (p.special?.chance ?? 0);
-  return Math.min(available, 1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak'));
+  return Math.min(odds === 1 ? available : EVENT_LEAK_CAP, available,
+    1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak') * odds);
 }
-function varLuck() { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck'); }
+function varLuck(event = activeWorldEvent()) { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck') * eventMultiplier('odds',event); }
 const VARIANT_CAPS = Object.freeze({thinking:0.5, fullPower:0.3});
-function variantProbs() {
-  const L = varLuck();
+function variantProbs(event = activeWorldEvent()) {
+  const L = varLuck(event);
   const h = Math.min(1, 0.001 * L);
   const mx = Math.min(VARIANT_CAPS.fullPower, 0.01 * L), th = Math.min(VARIANT_CAPS.thinking, 0.1 * L);
   // Reserve the holographic odds first; shrink the other variants only when the roll is full.
@@ -3274,8 +3284,8 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
   if (S.tokens < cost) return null;
   S.tokens -= cost; S.stats.spent += cost;
   const pi = PACKS.indexOf(p); if (pi > (S.stats.topPack || 0)) S.stats.topPack = pi;
-  const clone = cloneN(), leakCopies = techDouble('doubleCopies'), table = drawTables.get(p);
-  const leak = leakChance(p), variants = variantProbs(), pity = pityN(p);
+  const clone = cloneN(event), hiddenCopies = cloneN(null), leakCopies = techDouble('doubleCopies'), table = drawTables.get(p);
+  const leak = leakChance(p,event), variants = variantProbs(event), pity = pityN(p);
   const special = p.special, specialChance = special?.chance ?? 0;
   const hiddenChance = p.hiddenChance ?? 0, hiddenCutoff = 1 - hiddenChance;
   const specialCutoff = hiddenCutoff - specialChance, normalChance = specialCutoff - leak;
@@ -3290,12 +3300,12 @@ function settlePull(p, compact = false, event = activeWorldEvent()) {
       const v = rollVariant(variants), isNew = !S.hiddenCard;
       const hidden = S.hiddenCard ??= {copies:[0,0,0,0], level:0};
       if (!hidden.copies[v]) structural = true;
-      hidden.copies[v] += clone;
+      hidden.copies[v] += hiddenCopies;
       if (v > stats.maxVar) stats.maxVar = v;
       const slot = drawSlot(HIDDEN_CARD, v);
-      if (compact && drawSlots[slot]) drawSlots[slot].n += clone;
+      if (compact && drawSlots[slot]) drawSlots[slot].n += hiddenCopies;
       else {
-        const r = {id:HIDDEN_CARD.id, v, t:HIDDEN_CARD.t, isNew, n:clone};
+        const r = {id:HIDDEN_CARD.id, v, t:HIDDEN_CARD.t, isNew, n:hiddenCopies};
         res.push(r); if (compact) drawSlots[slot] = r;
       }
       continue;
@@ -3652,7 +3662,7 @@ function advanceAutoPull(dt, background = document.hidden) {
   if (background) { meterSeconds = meterBase = meterBatches = meterCards = 0; pullSample = null; return; }
   meterSeconds += dt; meterBase += base;
   if (meterSeconds >= 2) {
-    pullSample = { speed: meterBatches / meterBase, cards: meterCards / meterSeconds };
+    pullSample = { speed: meterBatches / meterBase, cards: meterCards / meterSeconds, at:autoNow() };
     meterSeconds = meterBase = meterBatches = meterCards = 0;
   }
 }
@@ -4278,12 +4288,26 @@ function playRare(big, bang = false) {
 let lastResults = [];
 let lastResultMeta = null;
 let nextFastNotice = 0;
+const manualPullTimes = new Float64Array(100).fill(-Infinity);
+let manualPullSlot = 0, nextManualLimitNotice = 0;
 function isBroadcastHit(p) { return Number.isFinite(p) && p > 0 && p <= 1e-5; }
 function doPull(auto, originEl, paced = false, event = activeWorldEvent(), background = false) {
+  const at = auto ? 0 : performance.now();
+  if (!auto && at - manualPullTimes[manualPullSlot] < 1000) {
+    if (at >= nextManualLimitNotice) {
+      nextManualLimitNotice = at + 1000;
+      toast('手动抽卡过快', '每秒最多手动抽卡 100 次。');
+    }
+    return false;
+  }
   const p = curPack(), draw = settlePull(p, auto && paced && multi(event) >= 64,event);
   if (!draw) {
     if (!auto) toast('Token 不足', `这次抽卡需要 ${fmt(pullCost(p))} Token`);
     return false;
+  }
+  if (!auto) {
+    manualPullTimes[manualPullSlot] = at;
+    manualPullSlot = (manualPullSlot+1)%manualPullTimes.length;
   }
   if (draw.structural) markDirty('dex');
   afterPull(draw.res, auto, p, originEl, paced, draw.hits, draw.count, background);
@@ -5391,8 +5415,10 @@ async function boardTick(force = false) {
   const writeScore = can('session') && can('score') && (!b.issues.totals || readTotals) &&
     (force || b.issues.score || !cloud.uid || now - cloud.lastPlayerWrite >= (cloud.priority ? 8000 : 60000));
   const writeHits = can('session') && can('hits') && b.pending.length && (force || now >= b.nextHits);
+  const balanceDue = uid => can('session') && moderation.level !== 2 &&
+    (balanceOverLimit(uid) || (b.balanceReview?.uid === uid && b.balanceReview?.over)) && canReportBalance(b,uid);
   if (!rankReads().some(Boolean) && !readFeed && !readTotals && !writeScore && !writeHits &&
-      !b.errors && !(can('session') && now >= moderation.next)) {
+      !balanceDue(cloud.uid) && !b.errors && !(can('session') && now >= moderation.next)) {
     if (cloud.ready) boardSynced(b);
     return;
   }
@@ -5402,7 +5428,7 @@ async function boardTick(force = false) {
     if (!uid || account.working || account.blocked) { finishModerationBoot(); return; }
     await syncModeration(b, force || b.errors > 0);
     if (account.working || account.blocked) return;
-    if (!b.issues.session && moderation.level !== 2 && (writeScore || balanceOverLimit(uid))) await syncBalanceReview(b,uid);
+    if (!b.issues.session && moderation.level !== 2 && (writeScore || balanceDue(uid))) await syncBalanceReview(b,uid);
     if (account.working || account.blocked || uid !== cloud.uid) return;
     const sessionOK = !b.issues.session;
     if (moderation.level) { delete b.issues.score; delete b.issues.hits; }
@@ -5477,27 +5503,33 @@ async function boardTick(force = false) {
 }
 
 const balanceOverLimit = uid => !verifiedAdmin(uid) && (S.gpu > 100000 || S.tokens > 1e60);
+function canReportBalance(b,uid) {
+  const report = b.balanceReview;
+  return !verifiedAdmin(uid) && Number.isFinite(S.gpu) && Number.isFinite(S.tokens) &&
+    (!report || report.uid !== uid || (Date.now() >= (report.retryAt || 0) &&
+      (balanceOverLimit(uid) !== report.over || Date.now() >= report.next)));
+}
 function reportCurrentBalances(b) {
   return b.client.rpc('frontier_report_balances',{p_gpu:S.gpu,p_tokens:S.tokens});
 }
 async function syncBalanceReview(b,uid) {
-  if (verifiedAdmin(uid)) return;
+  if (!canReportBalance(b,uid)) return;
   if (b.balanceReview?.uid !== uid) b.balanceReview = {uid,next:0,over:false};
   const report = b.balanceReview, over = balanceOverLimit(uid);
-  if ((over === report.over && Date.now() < report.next) || !Number.isFinite(S.gpu) || !Number.isFinite(S.tokens)) return;
-  report.over = over;
   report.next = Date.now() + 55000;
   try {
     let reply = await reportCurrentBalances(b);
     if (uid !== cloud.uid || accountPaused()) return;
     if (missingWorldRPC(reply.error)) {
       reply = await b.client.rpc('frontier_report_gpu',{p_gpu:S.gpu});
-      if (missingWorldRPC(reply.error)) { report.next = Date.now() + 120000; return; }
+      if (missingWorldRPC(reply.error)) { report.retryAt = Date.now() + 120000; return; }
     }
-    if (unwrap(reply) === true && uid === cloud.uid && !accountPaused() && !moderation.level) await syncModeration(b,true);
+    const blocked = unwrap(reply);
+    report.over = over;
+    if (blocked === true && uid === cloud.uid && !accountPaused() && moderation.level !== 2) await syncModeration(b,true);
   } catch (error) {
     if (uid === cloud.uid && accountStale(error)) accountFault(error);
-    report.next = Date.now() + 9500;
+    report.retryAt = report.next = Date.now() + 9500;
   }
 }
 
@@ -5647,24 +5679,30 @@ const activeSaveKey = () => account.uid ? `${ACCOUNT_KEY}:${account.uid}` : SAVE
 const accountClient = () => cloud.board?.client;
 const accountCall = async (p_action, args = {}, client = accountClient()) => unwrap(await client.rpc('frontier_account',{p_action,...args}));
 const accountStale = error => ['FRONTIER_ACCOUNT_REPLACED','FRONTIER_ACCOUNT_RELOGIN','FRONTIER_ACCOUNT_SESSION'].includes(error?.message);
+const invalidCloudProgress = error => ['FRONTIER_INVALID_PROGRESS','FRONTIER_UNVERIFIED_INVENTORY'].includes(error?.message);
 const authSessionLost = error => error?.name === 'AuthSessionMissingError' ||
   ['session_not_found','session_expired','refresh_token_not_found','refresh_token_already_used'].includes(error?.code);
 const accountClock = performance.now.bind(performance);
 function accountMark() { markDirty('prefs'); renderAccountPanel(); }
 
-function accountLock(message) {
+function accountLock(message, canReload = false) {
   account.blocked = message; account.pending = false;
   pullTest.reset();
   resetAutoPull(); cloud.board?.presence?.disconnect();
-  showAccountLock(message);
+  showAccountLock(message,canReload);
   accountMark();
 }
 function accountFault(error) {
   if (accountStale(error) || authSessionLost(error)) accountLock(error.message === 'FRONTIER_ACCOUNT_REPLACED' ? '此账号已在另一台设备登录，当前设备已停止游玩和同步。' : '账号会话已失效，请重新登录。');
-  else if (error?.message === 'FRONTIER_ACCOUNT_CONFLICT') accountLock('另一标签页已更新云存档。请重新登录后继续。');
-  else if (error?.message === 'FRONTIER_INVALID_PROGRESS' && !account.rejectedProgress) {
+  else if (error?.message === 'FRONTIER_ACCOUNT_CONFLICT') accountLock('云存档已有更新。重新载入后将以云档为准，未上传的本地进度不会合并。',true);
+  else if (['FRONTIER_AUTO_BAN','FRONTIER_TIER3_BAN','FRONTIER_SAVE_REPLACED'].includes(error?.message) && cloud.board) {
+    moderation.next = 0;
+    void boardTick(true);
+  }
+  else if (invalidCloudProgress(error) && !account.rejectedProgress) {
     account.rejectedProgress = true;
-    toast('云存档未更新', '存档数值超出游戏规则。上一份云存档保留，当前进度仍在本机。');
+    const reason = error.message === 'FRONTIER_UNVERIFIED_INVENTORY' ? '新增卡牌与抽卡记录或发放记录不符。' : '存档数值超出游戏规则。';
+    toast('云存档未更新', reason + '上一份云存档已保留。');
   }
 }
 
@@ -5825,7 +5863,7 @@ async function syncAccount(force = false) {
       return true;
     } catch (error) {
       accountFault(error);
-      if (error?.message === 'FRONTIER_INVALID_PROGRESS') account.retry = null;
+      if (invalidCloudProgress(error) || ['FRONTIER_AUTO_BAN','FRONTIER_TIER3_BAN','FRONTIER_SAVE_REPLACED'].includes(error?.message)) account.retry = null;
       return false;
     }
     finally { account.next = accountClock() + (synced ? ACCOUNT_SAVE_INTERVAL_MS : ACCOUNT_SAVE_RETRY_MS); }
@@ -5866,7 +5904,7 @@ function reconnectAccountBoard(b, uid) {
     b.pending = []; b.changed = false;
     b.presence?.disconnect(); pauseOnlineGPU(b);
     cloud.uid = null;
-    moderation.adminId = null; moderation.ready = false; moderation.notice = null;
+    moderation.adminId = null; moderation.ready = false; moderation.notice = null; moderation.autoBan = moderation.tier3 = false;
   }
   b.next = 0; b.nextTotals = 0; moderation.next = 0;
   delete b.issues.session;
@@ -5961,7 +5999,7 @@ async function loginAccount(identifier,password) {
 async function leaveAccount() {
   const b = cloud.board;
   if (!b?.client || account.working) return;
-  if (S.packetDebit && !account.blocked) throw Error('请先等红包结算完成。');
+  if (S.packetDebit && !account.blocked && moderation.level !== 2) throw Error('请先等红包结算完成。');
   beginAccountSwitch();
   try {
     await waitForBoard(b);
@@ -6007,6 +6045,8 @@ function applyModerationStatus(data) {
   moderation.level = level;
   moderation.adminId = data.admin_id || null;
   moderation.until = data.until; moderation.reason = data.reason;
+  moderation.autoBan = level === 2 && data.auto_ban === true;
+  moderation.tier3 = level === 2 && data.tier3 === true;
   moderation.notice = data.notice || null;
   moderation.ready = true;
   lsSet(MODERATION_KEY, level === 2 ? '2' : '0');
@@ -6191,6 +6231,7 @@ async function pulseOnlineGPU(b) {
   const revision = pulse.revision;
   const current = () => pulse.uid === cloud.uid && revision === pulse.revision && moderation.level !== 2 && !accountPaused();
   pulse.next = Date.now()+9000; pulse.busy = true;
+  reportDrawStatus(b,pulse);
   try {
     const data = unwrap(await b.client.rpc('frontier_online_gpu',{p_tab:pulse.tab,p_resume:pulse.resume}));
     if (!current()) return;
@@ -6206,6 +6247,19 @@ async function pulseOnlineGPU(b) {
     if (missingWorldRPC(error)) pulse.next = Date.now()+120000;
     markDirty('world');
   } finally { pulse.busy = false; }
+}
+
+async function reportDrawStatus(b,pulse) {
+  if (SELF_HOST_TEST || Date.now() < (pulse.drawNext || 0)) return;
+  pulse.drawNext = Date.now()+30000;
+  const event = activeWorldEvent(), measured = pullSample && performance.now()-pullSample.at < 6000 ? pullSample.cards : null;
+  try {
+    const {error} = await b.client.rpc('frontier_draw_status',{
+      p_batch:multi(event),p_interval_ms:interval()*1000/autoPullSpeed(event),p_auto:!!S.auto,
+      p_measured:S.auto && Number.isFinite(measured) ? measured : null,
+    });
+    if (missingWorldRPC(error)) pulse.drawNext = Date.now()+300000;
+  } catch { /* A player can continue playing if telemetry is unavailable. */ }
 }
 
 function renderOnlineGPU() {
@@ -6285,7 +6339,7 @@ const PROFILE_STATS = [ ['tps','每秒产出',' Token/s'], ['dex','图鉴',' 格
   ['pulls','累计抽卡',' 抽'], ['power','评测战力',''], ['achievements','已解锁成就',' 项'], ['lifetime','累计 Token',''] ];
 
 function labRole(id, level = 0, isAdmin = verifiedAdmin(id)) {
-  return level === 2 ? ['banned','封禁'] : level === 1 ? ['limited','限制'] : isAdmin ? ['admin','管理员'] : ['', ''];
+  return level >= 2 ? ['banned',level === 3 ? '三级封禁' : '封禁'] : level === 1 ? ['limited','限制'] : isAdmin ? ['admin','管理员'] : ['', ''];
 }
 function styledLabName(name, role) { return `<span${role ? ` class="lab-name lab-name-${role}"` : ''}>${esc(name)}</span>`; }
 
@@ -6497,14 +6551,17 @@ function renderModerationLock() {
     if (lockDialog.open) lockDialog.close();
     return;
   }
-  $('#moderationTitle').textContent = '该实验室已被封禁';
-  const until = moderation.until ? new Date(moderation.until).toLocaleString('zh-CN') : moderation.ready ? '永久' : '待联网确认';
+  $('#moderationTitle').textContent = moderation.tier3 ? '该实验室已被三级封禁' : '该实验室已被封禁';
+  const noReset = moderation.tier3 || moderation.autoBan;
+  const until = moderation.until ? new Date(moderation.until).toLocaleString('zh-CN') : !moderation.ready ? '待联网确认' : noReset ? '需管理员复核' : '永久';
   textIfChanged($('#lockDetail'), `解封时间：${until}${moderation.reason ? `。原因：${moderation.reason}` : ''}`);
   const notice = moderation.notice;
   $('#lockNotice').hidden = !notice;
   textIfChanged($('#lockNoticeMeta'),notice ? noticeMeta(notice) : '');
   textIfChanged($('#lockNoticeText'),notice?.body || '');
   $('#lockActions').hidden = false;
+  $('#clearLockedSave').hidden = !moderation.ready || noReset;
+  $('#leaveLockedAccount').hidden = !noReset || !account.uid;
   if (!lockDialog.open) { $('#lockStatus').textContent = ''; lockDialog.showModal(); }
 }
 lockDialog.addEventListener('cancel', e => e.preventDefault());
@@ -6530,14 +6587,26 @@ for (const [selector,status] of [['#noticeRead','#noticeStatus'],['#lockNoticeRe
   } finally { button.disabled = false; }
 };
 $('#checkLock').onclick = () => { if (cloud.board) boardTick(true); };
+$('#leaveLockedAccount').onclick = async e => {
+  const button = e.currentTarget; button.disabled = true;
+  try { await leaveAccount(); }
+  catch (error) { $('#lockStatus').textContent = accountErrorText(error); }
+  finally { button.disabled = false; }
+};
 $('#clearLockedSave').onclick = async e => {
+  if (moderation.autoBan || moderation.tier3) return;
   if (!moderation.ready || !cloud.board?.client) { $('#lockStatus').textContent = '请先联网确认封禁状态。'; return; }
   if (!window.confirm('清除当前进度及公开成绩，解除封禁并从头开始？此操作不可撤销。')) return;
   const button = e.currentTarget; button.disabled = true;
   try {
     await changeModerationSession('reset');
     toast('已从头开始', '已清除旧进度。');
-  } catch { $('#lockStatus').textContent = '清档未完成，请检查连接后重试。'; }
+  } catch (error) {
+    if (['FRONTIER_AUTO_BAN','FRONTIER_TIER3_BAN'].includes(error?.message)) {
+      $('#lockStatus').textContent = '此封禁只能由管理员解除。';
+      await syncModeration(cloud.board,true);
+    } else $('#lockStatus').textContent = '清档未完成，请检查连接后重试。';
+  }
   finally { button.disabled = false; }
 };
 
@@ -6697,15 +6766,17 @@ async function loadAdminDetail() {
     const name = p?.name || nameHint || '未上榜玩家';
     const online = r.online, lastSeen = online?.last_seen ? new Date(online.last_seen) : null;
     const onlineTime = online ? fmtDur(online.seconds) : Object.hasOwn(r,'online') ? '暂无记录' : '未启用';
-    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理余额复核',balance_limit:'余额超限自动限制'};
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理余额复核',balance_limit:'余额超限自动限制',auto_ban:'自动封号',edit_progress:'修改云档等级'};
     box.innerHTML = `<h3>${esc(name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
       <dl class="profile-stats" id="adminOnlineTime"><div><dt>累计在线</dt><dd>${onlineTime}</dd></div>
       <div><dt>最近心跳</dt><dd>${lastSeen && Number.isFinite(+lastSeen) ? `<time datetime="${lastSeen.toISOString()}">${esc(lastSeen.toLocaleString('zh-CN'))}</time>` : '暂无记录'}</dd></div></dl>
       <button type="button" class="btn ghost small" id="adminComposeNotice">发私密通知或赠礼</button>
       <button type="button" class="btn ghost small" id="adminComposeTitle">发放称号</button>
+      <section class="admin-progress" id="adminDrawStatus" aria-label="自动抽卡速度"><p class="note" role="status"></p><button type="button" class="btn ghost small">刷新抽速</button></section>
+      <details class="admin-progress"><summary>云档等级</summary><div id="adminProgress"></div></details>
       ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
       <div id="adminPlayerControls" aria-label="红包权限与 GPU 复核" aria-live="polite"></div>
-      <form id="adminBan" class="admin-tools"><label>级别<select class="input" name="level"><option value="1">一级限制</option><option value="2">二级封禁</option></select></label>
+      <form id="adminBan" class="admin-tools"><label>级别<select class="input" name="level"><option value="1">一级限制</option><option value="2">二级封禁</option><option value="3"${r.hold?.level===3?' selected':''}>三级封禁</option></select></label>
       <label>时长<select class="input" name="minutes"><option value="60">1 小时</option><option value="1440">1 天</option><option value="10080">7 天</option><option value="43200">30 天</option><option value="custom">自定义</option><option value="0">永久</option></select></label>
       <label id="banCustom" hidden>分钟<input name="custom" class="input" type="number" min="1" max="525600" step="1" value="60"></label>
       <label>原因<input class="input" name="reason" maxlength="200" required></label>
@@ -6720,10 +6791,23 @@ async function loadAdminDetail() {
       ${r.audit.length ? `<ul class="admin-audit">${r.audit.map(a=>`<li>${esc(new Date(a.at).toLocaleString('zh-CN'))} · ${esc(auditNames[a.action] || a.action)}${a.detail?.reason ? `：${esc(a.detail.reason)}` : ''}</li>`).join('')}</ul>` : ''}`;
     $('#adminComposeNotice').onclick = () => composePrivateNotice(id,name);
     $('#adminComposeTitle').onclick = () => chooseTitleRecipient(id);
+    mountAdminProgress($('#adminProgress'),id,current);
+    mountAdminDrawStatus($('#adminDrawStatus'),id,current);
     renderAdminPlayerControls(id);
     const ban = $('#adminBan'), items = $('#adminItems');
     const field = (form, name) => form.elements.namedItem(name);
-    field(ban,'minutes').onchange = () => { $('#banCustom').hidden = field(ban,'minutes').value !== 'custom'; };
+    const banLevel = field(ban,'level'), banMinutes = field(ban,'minutes');
+    let previousDuration = banMinutes.value;
+    function updateBanOptions() {
+      const permanent = banLevel.value === '3';
+      if (permanent && !banMinutes.disabled) previousDuration = banMinutes.value;
+      if (permanent) banMinutes.value = '0';
+      else if (banMinutes.disabled) banMinutes.value = previousDuration;
+      banMinutes.disabled = permanent;
+      $('#banCustom').hidden = banMinutes.value !== 'custom';
+    }
+    banLevel.onchange = banMinutes.onchange = updateBanOptions;
+    updateBanOptions();
     ban.onsubmit = e => { e.preventDefault(); const duration=field(ban,'minutes').value;
       if (window.confirm(`确定调整「${name}」（${id}）的封禁状态？`)) runAdminAction('ban',id,{level:field(ban,'level').value, minutes:duration==='custom'?field(ban,'custom').value:duration,reason:field(ban,'reason').value,notice:field(ban,'notice').value}); };
     $('#adminUnban').onclick = () => { if (window.confirm(`确定解除「${name}」（${id}）的封禁？`)) runAdminAction('unban',id); };
@@ -6766,7 +6850,10 @@ async function runAdminAction(action, id, args = {}) {
     if (cloud.board) { cloud.board.boards = {}; cloud.board.feedAt = 0; cloud.board.nextTotals = 0; }
     toast('操作已提交', action === 'items' ? '道具调整等待玩家联网领取。' : '封禁状态已更新。');
     if (adminDialog.open) { await loadAdminList(); if (adminTarget === id) await loadAdminDetail(); }
-  } catch { const status = $('#adminActionStatus'); if (status) status.textContent = '操作未完成。请检查权限与输入。'; }
+  } catch (error) {
+    const status = $('#adminActionStatus');
+    if (status) status.textContent = error?.message === 'FRONTIER_TIER3_BAN' ? '请先解除三级封禁，再改为其他级别。' : '操作未完成。请检查权限与输入。';
+  }
   finally { adminActionBusy = false; }
 }
 
@@ -6816,6 +6903,124 @@ bulkCardsForm.onsubmit = async e => {
     submit.disabled = bulkAmount.disabled = bulkAllVariants.disabled = false;
   }
 };
+
+function mountAdminProgress(box, id, current) {
+  const panel = box.closest('details');
+  let data, busy = false;
+  box.innerHTML = `<p class="note" role="status"></p>
+    <form class="admin-tools" hidden>
+      <label>类别<select class="input" name="group"><option value="train">模型微调</option><option value="up">Token 研究</option><option value="tech">GPU 升级</option></select></label>
+      <label data-progress-filter>筛选模型<input class="input" name="filter" type="search" placeholder="名称或模型 ID" maxlength="80"></label>
+      <label>项目<select class="input" name="item" required></select></label>
+      <label>设为等级<input class="input" name="level" type="number" min="0" step="1" required></label>
+      <label>调整原因<input class="input" name="reason" maxlength="200" required></label>
+      <button type="submit" class="btn small">保存等级</button>
+    </form><button type="button" class="btn ghost small" data-progress-refresh>刷新云档</button>`;
+  const status = box.querySelector('[role=status]'), form = box.querySelector('form');
+  const refresh = box.querySelector('[data-progress-refresh]');
+  const field = name => form.elements.namedItem(name);
+  const group = field('group'), filter = field('filter'), item = field('item');
+  const level = field('level'), reason = field('reason'), save = form.querySelector('[type=submit]');
+  const active = () => box.isConnected && current();
+  const rpc = async args => unwrap(await cloud.board.client.rpc('frontier_admin_progress',{p_player:id,...args}));
+  const value = key => data?.[group.value]?.[key];
+  const label = n => Number.isSafeInteger(n) && n >= 0 ? `Lv.${n}` : '异常等级';
+  function syncLevel() {
+    const key = item.value, stored = value(key);
+    level.max = key ? group.value === 'train' ? data.train_cap : data.caps[group.value][key] : 0;
+    level.value = key && label(stored) !== '异常等级' ? stored : '';
+    save.disabled = level.disabled = !key;
+  }
+  function syncOptions(preferred = '') {
+    const query = filter.value.trim().toLowerCase(), kind = group.value;
+    box.querySelector('[data-progress-filter]').hidden = filter.disabled = kind !== 'train';
+    const entries = kind === 'train' ? Object.keys(data.train).flatMap(key => {
+      const model = key === 'hidden-nullpoint' ? HIDDEN_CARD : modelById(key);
+      return model && (!query || `${model.n} ${key}`.toLowerCase().includes(query)) ? [{key,name:model.n}] : [];
+    }) : (kind === 'up' ? UPGRADES : TECH).filter(({key}) => Object.hasOwn(data.caps[kind],key));
+    item.replaceChildren(...entries.map(({key,name}) => new Option(`${name} · ${label(value(key))}`,key)));
+    if (!entries.length) item.add(new Option('没有匹配项目',''));
+    if (entries.some(({key})=>key===preferred)) item.value = preferred;
+    item.disabled = !entries.length; syncLevel();
+  }
+  async function run(work) {
+    if (busy || !active()) return;
+    busy = true;
+    const enabled = [...form.elements].filter(el => !el.disabled);
+    refresh.disabled = true; enabled.forEach(el => { el.disabled = true; });
+    try { await work(); }
+    finally {
+      busy = false;
+      if (active()) {
+        refresh.disabled = false; enabled.forEach(el => { el.disabled = false; });
+        if (data?.available) syncOptions(item.value);
+      }
+    }
+  }
+  async function read(message = '') {
+    const latest = await rpc({});
+    if (!active()) return;
+    data = latest;
+    form.hidden = !data.available;
+    status.textContent = !data.available ? '该玩家暂无账号云存档。' : message || (data.saved_at ?
+      `存档时间：${new Date(data.saved_at).toLocaleString('zh-CN')}` : '已读取账号云档。');
+  }
+  refresh.onclick = () => run(async () => {
+    status.textContent = '正在读取云档…';
+    try { await read(); }
+    catch (error) {
+      if (!active()) return;
+      data = null; form.hidden = true;
+      status.textContent = missingWorldRPC(error) ? '服务器尚未启用云档等级管理。' : '读取失败，请检查连接或管理员权限后刷新。';
+    }
+  });
+  panel.addEventListener('toggle',() => { if (panel.open && !data) refresh.click(); });
+  group.onchange = () => syncOptions();
+  filter.oninput = () => syncOptions(item.value);
+  item.onchange = syncLevel;
+  form.onsubmit = event => {
+    event.preventDefault();
+    const key = item.value, next = level.valueAsNumber, why = reason.value.trim(), old = value(key);
+    if (!data?.available || !key || !Number.isSafeInteger(next) || next < 0 || next > Number(level.max) || !why) return;
+    if (next === old) { status.textContent = '等级未变化。'; return; }
+    if (!window.confirm(`将「${item.selectedOptions[0].textContent}」设为 Lv.${next}？玩家尚未上传的本地进度不会合并。`)) return;
+    const args = {p_group:group.value,p_key:key,p_level:next,p_revision:data.revision,p_reason:why};
+    run(async () => {
+      status.textContent = '正在保存…';
+      try {
+        const result = await rpc(args);
+        if (!active()) return;
+        data.revision = result.revision; data[args.p_group][key] = result.level;
+        status.textContent = `已保存：${label(old)} → ${label(result.level)}。`; reason.value = '';
+      } catch (error) {
+        if (!active()) return;
+        form.hidden = true; data = null;
+        status.textContent = error?.message === 'FRONTIER_ADMIN_PROGRESS_STALE' ? '玩家已同步了新进度。请刷新云档后重新确认。' :
+          '未确认写入，请刷新云档核对结果。';
+      }
+    });
+  };
+}
+
+function mountAdminDrawStatus(box,id,current) {
+  const line = box.querySelector('[role=status]'), refresh = box.querySelector('button');
+  refresh.onclick = async () => {
+    if (refresh.disabled || !current()) return;
+    refresh.disabled = true; line.textContent = '正在读取…';
+    try {
+      const d = unwrap(await cloud.board.client.rpc('frontier_draw_status',{p_player:id}));
+      if (!current()) return;
+      if (!d) { line.textContent = '暂无抽卡速度上报。'; return; }
+      const format = n => Number(n).toLocaleString('zh-CN',{maximumFractionDigits:2});
+      const intervalText = d.interval_ms<1000 ? `${format(d.interval_ms)} 毫秒` : `${format(d.interval_ms/1000)} 秒`;
+      const status = d.auto ? `目标 ${format(d.batch*1000/d.interval_ms)} 抽/秒${d.measured == null ? '' : ` · 实测 ${format(d.measured)} 抽/秒`}` : '自动抽卡关闭';
+      line.textContent = `${d.fresh ? '最近上报' : '旧记录'} ${new Date(d.reported_at).toLocaleString('zh-CN')} · 每批 ${format(d.batch)} 抽 · 间隔 ${intervalText} · ${status}`;
+    } catch (error) {
+      if (current()) line.textContent = missingWorldRPC(error) ? '服务器尚未启用抽速上报。' : '抽速读取失败。';
+    } finally { if (current()) refresh.disabled = false; }
+  };
+  refresh.click();
+}
 
 const communityDialog = $('#communityNotice'), communityComposer = $('#communityComposer');
 const communityForm = $('#communityForm'), communityNoticeStatus = $('#communityNoticeStatus');
@@ -7100,11 +7305,11 @@ communityForm.onsubmit = async e => {
       const uid = cloud.uid, board = cloud.board;
       communitySending = true; renderPacketDebit(); status.textContent = '正在复核余额…';
       try {
-        const restricted = unwrap(await reportCurrentBalances(board));
+        const blocked = unwrap(await reportCurrentBalances(board));
         if (uid !== cloud.uid || accountPaused() || !communityComposer.open) return;
-        if (restricted !== false) {
+        if (blocked !== false) {
           packetAccess = null;
-          status.textContent = '余额超限，发红包权限已关闭。';
+          status.textContent = '余额超限，红包未发送。正在检查账号状态…';
           void syncModeration(board,true);
           return;
         }
@@ -7781,10 +7986,12 @@ function renderAccountPanel() {
   $('#accountLogout').disabled = account.working;
 }
 
-function showAccountLock(message) {
+function showAccountLock(message, canReload = false) {
   $('#accountLockDetail').textContent = message;
+  $('#accountLockReload').hidden = !canReload;
   if (!accountLockDialog.open) { $('#accountLockStatus').textContent = ''; accountLockDialog.showModal(); }
 }
+$('#accountLockReload').onclick = () => location.reload();
 accountLockDialog.addEventListener('cancel',e => e.preventDefault());
 function openAccountForm(mode, name = '') {
   accountMode = mode;
@@ -7863,7 +8070,7 @@ renderAccountPanel();
 
 const eventBadge = $('#worldEventBadge'), eventDetails = $('#worldEventDetails');
 const eventEffectsLabel = effects => Object.entries(WORLD_EVENT_EFFECTS).filter(([key]) => Object.hasOwn(effects,key))
-  .map(([key,spec]) => [spec.label,'×'+effects[key]]);
+  .map(([key,spec]) => [spec.label,'×'+effects[key]+(key==='odds' ? '（泄露 ≤ 10%）' : '')]);
 
 function worldEventAdminHTML() {
   return `<details class="admin-notice" id="adminWorldEvent">
