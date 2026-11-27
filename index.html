@@ -5171,6 +5171,8 @@ async function boardTick(force = false) {
     if (!uid || account.working || account.blocked) { finishModerationBoot(); return; }
     await syncModeration(b, force || b.errors > 0);
     if (account.working || account.blocked) return;
+    if (!b.issues.session && moderation.level !== 2 && (writeScore || balanceOverLimit(uid))) await syncBalanceReview(b,uid);
+    if (account.working || account.blocked || uid !== cloud.uid) return;
     const sessionOK = !b.issues.session;
     if (moderation.level) { delete b.issues.score; delete b.issues.hits; }
     if (moderation.level === 2) { boardSynced(b); return; }
@@ -5214,7 +5216,6 @@ async function boardTick(force = false) {
       }
     });
     pulseOnlineGPU(b);
-    if (sessionOK && writeScore) syncGPUReview(b,uid);
     if (b.scoreIssue || !b.pending.length) delete b.issues.hits;
     if (sessionOK && writeHits && b.pending.length && !b.scoreIssue && !moderation.level) await syncBoardPart(b, 'hits', async () => {
       const batch = b.pending.slice(0, 64), ids = new Set(batch.map(r => r.event));
@@ -5243,16 +5244,29 @@ async function boardTick(force = false) {
   } finally { b.busy = false; }
 }
 
-async function syncGPUReview(b,uid) {
+const balanceOverLimit = uid => !verifiedAdmin(uid) && (S.gpu > 100000 || S.tokens > 1e60);
+function reportCurrentBalances(b) {
+  return b.client.rpc('frontier_report_balances',{p_gpu:S.gpu,p_tokens:S.tokens});
+}
+async function syncBalanceReview(b,uid) {
   if (verifiedAdmin(uid)) return;
-  if (b.gpuReview?.uid !== uid) b.gpuReview = {uid,next:0};
-  const report = b.gpuReview;
-  if (report.busy || Date.now()<report.next || !Number.isFinite(S.gpu)) return;
-  report.busy = true;
-  report.next = Date.now()+55000;
-  try { unwrap(await b.client.rpc('frontier_report_gpu',{p_gpu:S.gpu})); }
-  catch (error) { if (missingWorldRPC(error)) report.next = Date.now()+120000; }
-  finally { report.busy = false; }
+  if (b.balanceReview?.uid !== uid) b.balanceReview = {uid,next:0,over:false};
+  const report = b.balanceReview, over = balanceOverLimit(uid);
+  if ((over === report.over && Date.now() < report.next) || !Number.isFinite(S.gpu) || !Number.isFinite(S.tokens)) return;
+  report.over = over;
+  report.next = Date.now() + 55000;
+  try {
+    let reply = await reportCurrentBalances(b);
+    if (uid !== cloud.uid || accountPaused()) return;
+    if (missingWorldRPC(reply.error)) {
+      reply = await b.client.rpc('frontier_report_gpu',{p_gpu:S.gpu});
+      if (missingWorldRPC(reply.error)) { report.next = Date.now() + 120000; return; }
+    }
+    if (unwrap(reply) === true && uid === cloud.uid && !accountPaused() && !moderation.level) await syncModeration(b,true);
+  } catch (error) {
+    if (uid === cloud.uid && accountStale(error)) accountFault(error);
+    report.next = Date.now() + 9500;
+  }
 }
 
 async function syncInventorySnapshot(b, uid) {
@@ -6249,7 +6263,7 @@ $('#clearLockedSave').onclick = async e => {
 };
 
 const adminDialog = $('#adminPanel'), adminBody = $('#adminBody');
-const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力',high_gpu:'GPU 超过 10 万'};
+const reviewLabels = {impossible_training:'微调超出历史上限',high_stage:'异常高评测',dex_vs_pulls:'图鉴与抽数不符',high_power:'异常高战力',high_gpu:'GPU 超过 10 万',high_tokens:'Token 余额超过 1e60'};
 const adminModelOptions = () => MODELS.map(m=>`<option value="${m.id}">${esc(m.n)}</option>`).join('');
 const adminVariantOptions = () => VARIANTS.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('');
 const canOpenAdminPanel = () => !!cloud.board?.client && canGrantAllCards();
@@ -6404,7 +6418,7 @@ async function loadAdminDetail() {
     const name = p?.name || nameHint || '未上榜玩家';
     const online = r.online, lastSeen = online?.last_seen ? new Date(online.last_seen) : null;
     const onlineTime = online ? fmtDur(online.seconds) : Object.hasOwn(r,'online') ? '暂无记录' : '未启用';
-    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理 GPU 标记'};
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理余额复核',balance_limit:'余额超限自动限制'};
     box.innerHTML = `<h3>${esc(name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
       <dl class="profile-stats" id="adminOnlineTime"><div><dt>累计在线</dt><dd>${onlineTime}</dd></div>
       <div><dt>最近心跳</dt><dd>${lastSeen && Number.isFinite(+lastSeen) ? `<time datetime="${lastSeen.toISOString()}">${esc(lastSeen.toLocaleString('zh-CN'))}</time>` : '暂无记录'}</dd></div></dl>
@@ -6451,9 +6465,10 @@ async function renderAdminPlayerControls(id,box=$('#adminPlayerControls'),args={
     const result = unwrap(await cloud.board.client.rpc('frontier_admin_packet_controls',{p_player:id,...args}));
     if (!adminDialog.open || adminTarget !== id || !box.isConnected) return;
     const {enabled,qualified,review} = result;
-    box.innerHTML = `<p class="note">发红包：${!enabled ? '管理员已关闭' : qualified ? '已开启' : '未达门槛'}${qualified ? '' : ' · 累计 Token 须超过 1 京'}</p>
-      <div class="world-tools"><button type="button" id="adminPacketToggle" class="btn ghost small"${!enabled && !qualified ? ' disabled' : ''}>${enabled ? '关闭发红包' : '开启发红包'}</button></div>
-      ${review ? `<p class="note">GPU 复核：${review.resolved ? '已处理' : '待处理'} · 最近上报 ${esc(fmt(Number(review.gpu)))} GPU · 标记期间最高 ${esc(fmt(Number(review.peak)))} GPU</p>
+    const reviewPending = review && !review.resolved;
+    box.innerHTML = `<p class="note">发红包：${!enabled ? (reviewPending ? '已关闭 · 待复核' : '已关闭') : qualified ? '已开启' : '未达门槛'}${qualified ? '' : ' · 累计 Token 须超过 1 京'}</p>
+      <div class="world-tools"><button type="button" id="adminPacketToggle" class="btn ghost small"${!enabled && (!qualified || reviewPending) ? ' disabled' : ''}>${enabled ? '关闭发红包' : '开启发红包'}</button></div>
+      ${review ? `<p class="note">余额复核：${review.resolved ? '已处理' : '待处理'} · GPU ${esc(fmt(Number(review.gpu)))}（最高 ${esc(fmt(Number(review.peak)))}）${review.tokens == null ? '' : ` · Token ${esc(fmt(Number(review.tokens)))}（最高 ${esc(fmt(Number(review.token_peak)))}）`}</p>
       ${review.resolved ? '' : '<button type="button" id="adminResolveGPU" class="btn ghost small">标记为已处理</button>'}` : ''}`;
     $('#adminPacketToggle').onclick = () => renderAdminPlayerControls(id,box,{p_enabled:!enabled});
     if (review && !review.resolved) $('#adminResolveGPU').onclick = () => renderAdminPlayerControls(id,box,{p_resolve_gpu:true});
@@ -6612,7 +6627,7 @@ function communityError(error) {
   if (error?.message === 'FRONTIER_PACKET_FEE_CHANGED') return '手续费已变化，请重新发送。';
   if (error?.message === 'FRONTIER_PACKET_UPDATE_REQUIRED') return '发红包需要刷新到新版。';
   if (error?.message === 'FRONTIER_PACKET_LIFETIME') return '累计 Token 超过 1 京后才能发红包。';
-  if (error?.message === 'FRONTIER_PACKET_DISABLED') return '管理员已关闭该实验室的发红包权限。';
+  if (error?.message === 'FRONTIER_PACKET_DISABLED') return '该实验室的发红包权限已关闭。';
   if (error?.message === 'FRONTIER_CHAT_RATE') return '发得太快了，请稍后再发。';
   return '未确认操作成功，请联网后重试。';
 }
@@ -6789,9 +6804,25 @@ communityForm.onsubmit = async e => {
   e.preventDefault();
   if (communitySending || !canComposeCommunity(communityChannel)) return;
   const f = communityForm.elements, status = $('#communityComposeStatus'), packet = communityChannel === 'packet';
-  const lucky = packet && f.packetMode.value === 'lucky';
   if (packet) {
     if (!packetAccess?.enabled || !packetAccess?.qualified || S.packetDebit) return;
+    if (balanceOverLimit(cloud.uid)) {
+      const uid = cloud.uid, board = cloud.board;
+      communitySending = true; renderPacketDebit(); status.textContent = '正在复核余额…';
+      try {
+        const restricted = unwrap(await reportCurrentBalances(board));
+        if (uid !== cloud.uid || accountPaused() || !communityComposer.open) return;
+        if (restricted !== false) {
+          packetAccess = null;
+          status.textContent = '余额超限，发红包权限已关闭。';
+          void syncModeration(board,true);
+          return;
+        }
+      } catch {
+        status.textContent = '未能确认余额权限，红包未发送。';
+        return;
+      } finally { communitySending = false; renderPacketDebit(); }
+    }
     const quote = packetQuote(f);
     if (!quote) { status.textContent = '请输入有效的整数金额。'; return; }
     const balance = S[f.kind.value];
@@ -6801,7 +6832,7 @@ communityForm.onsubmit = async e => {
       status.textContent = '此金额太小，无法从当前数量中精确扣除。'; return;
     }
     const debit = {uid:cloud.uid,cost:quote.cost,payload:{p_id:newEventId(),p_body:f.message.value.trim(),p_kind:f.kind.value,
-      p_amount:quote.amount,p_slots:f.slots.valueAsNumber,p_lucky:lucky,p_fee_bps:packetAccess.fee_bps}};
+      p_amount:quote.amount,p_slots:f.slots.valueAsNumber,p_lucky:f.packetMode.value === 'lucky',p_fee_bps:packetAccess.fee_bps}};
     if (!savePacketDebit(debit)) { status.textContent = '扣款未能保存，红包未发送。'; return; }
     communitySending = true; renderPacketDebit(); status.textContent = '正在确认发送…';
     try {
