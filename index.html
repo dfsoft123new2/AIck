@@ -351,6 +351,27 @@ button.card { transition: transform .12s; }
 .card.t-Q .tier, .tier-text.tier-q { text-shadow:-1px 0 #ef577a,1px 0 #5af4f1; }
 .detail > .card { align-self:start; }
 
+/* Classic illustrations use the original lab-colour frames and simple nameplates. */
+html[data-card-skin="classic"] .card:not(.t-NULLPOINT) {
+  border-color:var(--tc); box-shadow:0 6px 18px -12px var(--tc);
+}
+html[data-card-skin="classic"] .card:not(.t-NULLPOINT) .body {
+  background:linear-gradient(180deg,#ffffff08,transparent); border-top-color:#ffffff14;
+}
+html[data-card-skin="classic"] .card:not(.t-NULLPOINT) .tier {
+  background:var(--tc); color:#0b1412; box-shadow:none;
+}
+html[data-card-skin="classic"] .card.t-N { --tc:#8c9894; }
+html[data-card-skin="classic"] .card.t-R { --tc:#4cc383; }
+html[data-card-skin="classic"] .card.t-SR { --tc:#4ba2f8; }
+html[data-card-skin="classic"] .card.t-SSR { --tc:#a97cff; }
+html[data-card-skin="classic"] .card.t-UR { --tc:#f2b533; }
+html[data-card-skin="classic"] .card.t-LR { --tc:#ff6a46; }
+html[data-card-skin="classic"] .card.t-MR { --tc:#ff4fd8; }
+html[data-card-skin="classic"] .card:is(.t-AGI,.t-Q) { --tc:#fff; }
+html[data-card-skin="classic"] .card.t-ALEPH { --tc:#cdbeff; }
+html[data-card-skin="classic"] .card.t-BANG { --tc:#ffb68a; }
+
 /* The finish occupies the face. The frame and labels stay put during a sweep. */
 :is(.card.v1,.admin-card-reveal[data-variant="1"]) {
   --foil-ink:#ffecb5; --foil-base:#2d1d0a; --foil-animation:foil-glint; --foil-speed:3.8s;
@@ -386,7 +407,7 @@ button.card { transition: transform .12s; }
   background:var(--foil-rest); mix-blend-mode:screen;
 }
 .admin-card-reveal[data-variant]:not([data-variant="0"]) .admin-card-cine-face::before {
-  clip-path:polygon(1% 1%,83% 1%,99% 17%,99% 99%,17% 99%,1% 83%);
+  clip-path:var(--np-face-clip);
 }
 .card:is(.v1,.v2,.v3) .art::after {
   content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
@@ -461,6 +482,8 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 /* ========== Dex ========== */
 .dex-sum { display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; }
 .dex-sum .big { font-family: var(--font-num); font-size: 26px; font-weight: 700; }
+.dex-counts { display:flex; align-items:baseline; gap:8px; }
+#dexHiddenCount { color:var(--t-SSR); font-size:20px; }
 .dex-labs-head, .dex-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .dex-filter label { color: var(--ink-2); font-size: 13px; }
 #dexTier { flex: none; min-height: 44px; }
@@ -482,7 +505,7 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .dex-row { display: grid; grid-template-columns: 44px 1fr; gap: 9px; align-items: center; padding: 6px 8px; border-radius: var(--r-m); background: var(--bg-3); border: 1px solid var(--line); text-align: left; }
 .dex-row:hover { border-color: var(--line-2); }
 .dex-row .ic { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; background: #0E1A18; }
-.dex-row .ic svg { width: 100%; height: 100%; display: block; }
+.dex-row .ic img { width: 100%; height: 100%; display: block; }
 .dex-row .ic.off { filter: grayscale(1); opacity: .35; }
 .dex-row .t1 { font-size: 13px; font-weight: 700; line-height: 1.3; display: flex; gap: 6px; align-items: center; min-width: 0; }
 .dex-row .t1 span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -516,7 +539,7 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .series .d { font-size: 12px; color: var(--ink-3); margin-top: -3px; }
 .series-icons { display: flex; flex-wrap: wrap; gap: 4px; }
 .sic { width: 30px; height: 30px; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: #0E1A18; }
-.sic svg { width: 100%; height: 100%; display: block; }
+.sic img { width: 100%; height: 100%; display: block; }
 .sic.off { filter: grayscale(1); opacity: .32; }
 .sic:hover { outline: 1px solid var(--line-2); }
 .series-foot { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); }
@@ -1199,6 +1222,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .card.t-NULLPOINT .body { background:linear-gradient(116deg,#0b1014 53%,color-mix(in srgb,var(--tc) 16%,#090d11)); border-top-color:color-mix(in srgb,var(--np-foil) 39%,#000); }
 .card.t-NULLPOINT .nm { color:#fff6e5; }
 .card.t-NULLPOINT .cd { color:var(--np-foil); }
+html[data-card-skin="classic"] :is(.card.t-NULLPOINT,#dexHidden .ic) { border-radius:0; }
 
 .admin-card-reveal {
   --np-heat:#ff9b60; --np-ion:#91f3ee; --np-cream:#fff6e2; --np-impact:.71s;
@@ -1219,13 +1243,15 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .np-stage-sparks { animation:np-stage-impact .78s .77s cubic-bezier(.1,.6,.16,1) both; }
 .np-reveal-result { display:grid; justify-items:center; gap:14px; min-inline-size:0; }
 .admin-card-cine-face {
+  --np-face-clip:polygon(1% 1%,83% 1%,99% 17%,99% 99%,17% 99%,1% 83%);
   position:relative; inline-size:min(22rem,77vw,49dvh); aspect-ratio:1;
   filter:drop-shadow(0 19px 24px #000e); animation:admin-card-rise .78s var(--np-impact) cubic-bezier(.16,.72,.24,1) both;
 }
+html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%); }
 .admin-card-cine-face svg { display:block; inline-size:100%; block-size:100%; }
 .admin-card-cine-face::after {
   content:""; position:absolute; inset:0; pointer-events:none; opacity:0;
-  clip-path:polygon(1% 1%,83% 1%,99% 17%,99% 99%,17% 99%,1% 83%);
+  clip-path:var(--np-face-clip);
   background:linear-gradient(121deg,transparent 43%,#fff1bd26 49%,#fff7df80 51%,transparent 56%) no-repeat;
   background-size:250% 100%; animation:np-card-polish .68s 1.27s ease-out both;
 }
@@ -1434,7 +1460,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
         </div>
         <div class="panel">
           <div class="dex-sum">
-            <div><div class="muted">已点亮</div><div class="big" id="dexCount">0</div></div>
+            <div><div class="muted">已点亮</div><div class="big dex-counts"><span id="dexCount">0</span><span id="dexHiddenCount" title="隐藏卡图鉴" hidden></span></div></div>
             <div><div class="muted">图鉴加成</div><div class="big" id="dexBonus" style="color:var(--ok)">×1.00</div></div>
             <div><div class="muted">系列加成</div><div class="big" id="dexSetBonus" style="color:var(--gold)">×1.00</div></div>
             <div class="legend">
@@ -2878,6 +2904,10 @@ const LEGACY_PULL_MUTES = ['newCard', 'rareCard', 'autoBench'];
 const DEFAULT_UP_LAB = 'anthropic';
 const UP_SWITCH_COOLDOWN = 10 * 60_000;
 const DOUBLE_TECH_KEYS = ['doubleDraw', 'doubleCopies', 'doubleOdds', 'doubleSpeed', 'doubleNews'];
+function normalizeCardSkin(skin) { return skin === 'classic' ? 'classic' : 'modern'; }
+function validPacketDebitCost(kind, cost) {
+  return ['gpu','tokens'].includes(kind) && Number.isFinite(cost) && (cost>0 || (kind==='tokens' && cost===0));
+}
 function mutedInfo() { return S.set.mutedInfo ?? (S.set.toast ? [] : LEGACY_PULL_MUTES); }
 function isInfoMuted(key) { return !!key && mutedInfo().includes(key); }
 function defaultCinePrefs() { return { custom: false, tiers: [...TIERS.slice(6).map(t => t.id), 'LEAK'] }; }
@@ -2894,7 +2924,7 @@ function defaultState() {
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
     name: randomLabName(), sig: null, adminCardProgress: null, hiddenCard: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
-    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cine: undefined, mutedInfo: undefined }
+    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cardSkin: 'modern', cine: undefined, mutedInfo: undefined }
   };
 }
 function mergeState(base, saved) {
@@ -2914,6 +2944,7 @@ function sanitizeState(st) {
   for (const key of DOUBLE_TECH_KEYS) st.tech[key] = Number(st.tech[key] === 1);
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
   st.set.hideCompleteDex = st.set.hideCompleteDex === true;
+  st.set.cardSkin = normalizeCardSkin(st.set.cardSkin);
   const cine = st.set.cine;
   st.set.cine = Array.isArray(cine?.tiers) ? {custom: cine.custom === true, tiers: CINE_TIERS.filter(id => cine.tiers.includes(id))} : undefined;
   st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
@@ -2933,7 +2964,7 @@ function sanitizeState(st) {
   st.itemReceipts = Array.isArray(st.itemReceipts) ? st.itemReceipts.filter(id => typeof id === 'string').slice(-200) : [];
   const debit = st.packetDebit;
   if (!debit || typeof debit.uid !== 'string' || typeof debit.payload?.p_id !== 'string' ||
-    !['gpu','tokens'].includes(debit.payload.p_kind) || !Number.isFinite(debit.cost) || debit.cost<=0) st.packetDebit = null;
+    !validPacketDebitCost(debit.payload.p_kind,debit.cost)) st.packetDebit = null;
   if (!Array.isArray(st.redeemed)) st.redeemed = [];
   if (!Array.isArray(st.stats.byTier)) st.stats.byTier = [];
   while (st.stats.byTier.length < TIERS.length) st.stats.byTier.push(0);
@@ -3138,6 +3169,7 @@ function dexInfo() {
   return caches.dex = { n, mul: 1 + b };
 }
 function dexCount() { return dexInfo().n; }
+function hiddenDexCount() { return hiddenCardInventory()?.filter(n => n>0).length ?? 0; }
 function trainLv(id) {
   if (!isHiddenCard(id)) return S.train[id] || 0;
   const granted = typeof adminCardProgressMatches === 'function' && adminCardProgressMatches() ? S.adminCardProgress.level : 0;
@@ -3616,13 +3648,19 @@ function continueLocalSaveAfterCutover() {
   if (!lsSet(SAVE_KEY, JSON.stringify({...(draft || guest), packetDebit:null}))) lsDel(receipt);
 }
 
+function packetCharge(kind, balance, cost) {
+  if (!(cost>0) || !Number.isFinite(cost) || !Number.isFinite(balance) || balance<cost) return null;
+  const deducted = balance - (balance-cost);
+  if (kind==='tokens' && deducted===0) return 0;
+  return deducted>0 && Math.abs(deducted-cost)<=Math.max(0.005,cost*Number.EPSILON*8) ? cost : null;
+}
 function savePacketDebit(debit, settled = null) {
   const key = debit.payload.p_kind;
-  if (!['gpu','tokens'].includes(key) || !(debit.cost>0) || !Number.isFinite(debit.cost)) return false;
+  if (!validPacketDebitCost(key,debit.cost)) return false;
   const reserving = settled === null;
   if (reserving ? !!S.packetDebit : S.packetDebit?.payload.p_id !== debit.payload.p_id) return false;
   const before = S[key], value = reserving ? before-debit.cost : settled ? before : before+debit.cost;
-  if (!Number.isFinite(value) || value<0 || (reserving && value>=before)) return false;
+  if (!Number.isFinite(value) || value<0 || (reserving && debit.cost>0 && value>=before)) return false;
   const next = {...S,[key]:value,packetDebit:reserving ? debit : null,lastSave:Date.now()};
   if (!lsSet(typeof activeSaveKey === 'function' ? activeSaveKey() : SAVE_KEY,JSON.stringify(next))) return false;
   S = next;
@@ -3761,8 +3799,98 @@ function tierArt(m) {
   </svg>`;
 }
 
+/* Classic card illustrations from the pre-redesign build. */
+function classicCardArt(m) {
+  const L = LABS[m.lab], hue = L.hue, rnd = rngFrom(hashStr(m.id + '#' + m.lab));
+  const gid = 'g_' + m.id;
+  let s = `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="${gid}" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="${hue}" stop-opacity=".22"/><stop offset="1" stop-color="${hue}" stop-opacity="0"/></radialGradient></defs>`;
+  s += `<rect width="100" height="100" fill="#0E1A18"/><rect width="100" height="100" fill="url(#${gid})"/>`;
+  if (m.id === 'leak') {
+    s += `<rect x="18" y="18" width="64" height="64" rx="6" fill="#13221F" stroke="#E6F0EA" stroke-opacity=".5"/>`;
+    s += `<path d="M50 18 L44 40 L56 52 L46 70 L52 82" fill="none" stroke="#E6F0EA" stroke-width="2"/>`;
+    s += `<text x="50" y="58" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="13" font-weight="700" fill="#E6F0EA">.safetensors</text>`;
+    return s + `</svg>`;
+  }
+  if (m.t === EXCLAMATION_TIER) {
+    s = `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect width="100" height="100" fill="#100a11"/>
+      <g transform="rotate(-24 50 50)" fill="none">
+        <ellipse cx="50" cy="50" rx="46" ry="19" stroke="#712738" stroke-width="1.4"/>
+        <ellipse cx="50" cy="50" rx="42" ry="16" stroke="#d85f51" stroke-width="1.6" stroke-dasharray="64 12 12 14"/>
+        <ellipse cx="50" cy="50" rx="38" ry="12" stroke="#ffb68a" stroke-width="1.5"/>
+      </g>
+      <circle cx="50" cy="50" r="25" fill="#060509" stroke="#d85f51" stroke-width="1.2"/>
+      <path d="M15 27h6m-3-3v6m62 39h4m-2-2v4M79 21h3m-1.5-1.5v3" stroke="#ffb68a" opacity=".65"/>
+      <path d="M45 30h10l-1.7 27h-6.6z" fill="#fff2d9"/><circle cx="50" cy="65" r="4" fill="#ffb68a"/>
+    </svg>`;
+    return s;
+  }
+  if (m.t === 9) {
+    const r3 = rngFrom(hashStr('qm#' + m.id));
+    let noise = '';
+    for (let i = 0; i < 70; i++) { const w = 1 + r3() * 9, x = r3() * 100, y = r3() * 100; noise += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${(0.6 + r3() * 1.4).toFixed(1)}" fill="${['#ffffff', '#FF2D55', '#00E5FF'][i % 3]}" fill-opacity="${(0.08 + r3() * 0.3).toFixed(2)}"/>`; }
+    s = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#000"/>${noise}`;
+    const glyph = m.g || '?';
+    const size = Math.min(62, 125 / glyph.length);
+    for (const [x, fill] of [[48, '#FF2D55'], [52, '#00E5FF'], [50, '#fff']]) {
+      s += `<text x="${x}" y="${50 + size / 3}" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="${size}" font-weight="700" fill="${fill}">${glyph}</text>`;
+    }
+    s += '</svg>';
+    return s;
+  }
+  if (m.t === 8) {
+    const r2 = rngFrom(hashStr('aleph#' + m.id));
+    let stars = '';
+    for (let i = 0; i < 34; i++) stars += `<circle cx="${(r2() * 100).toFixed(1)}" cy="${(r2() * 100).toFixed(1)}" r="${(0.25 + r2() * 0.7).toFixed(2)}" fill="#fff" fill-opacity="${(0.3 + r2() * 0.6).toFixed(2)}"/>`;
+    s = `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="${gid}" cx="50%" cy="50%" r="62%"><stop offset="0" stop-color="#8C6BFF" stop-opacity=".6"/><stop offset=".55" stop-color="#2A1B6B" stop-opacity=".45"/><stop offset="1" stop-color="#070A16" stop-opacity="0"/></radialGradient></defs><rect width="100" height="100" fill="#070A16"/><rect width="100" height="100" fill="url(#${gid})"/>${stars}`;
+    s += `<ellipse cx="50" cy="50" rx="41" ry="12" fill="none" stroke="#CDBEFF" stroke-opacity=".6" stroke-width="1" transform="rotate(-24 50 50)"/><ellipse cx="50" cy="50" rx="41" ry="12" fill="none" stroke="#8FD3FF" stroke-opacity=".5" stroke-width="1" transform="rotate(30 50 50)"/>`;
+    s += `<circle cx="50" cy="50" r="17" fill="#070A16" stroke="#fff" stroke-opacity=".85" stroke-width="1.2"/><text x="50" y="58.5" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="22" font-weight="700" fill="#fff">${m.g || 'ℵ'}</text></svg>`;
+    return s;
+  }
+  if (m.t === 7) {
+    for (let i = 5; i >= 1; i--) s += `<circle cx="50" cy="50" r="${i * 8}" fill="none" stroke="${['#ff7aa8', '#ffd36e', '#7dffb8', '#7cc9ff', '#c28bff'][i - 1]}" stroke-opacity=".7" stroke-width="1.4"/>`;
+    s += `<text x="50" y="62" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="34" font-weight="700" fill="#fff">${m.g || 'Ω'}</text></svg>`;
+    return s;
+  }
+  // pins
+  const pinC = '#C98B4A';
+  for (let i = 0; i < 7; i++) {
+    const p = 23 + i * 9;
+    s += `<rect x="${p - 1.6}" y="8" width="3.2" height="8" rx=".8" fill="${pinC}"/><rect x="${p - 1.6}" y="84" width="3.2" height="8" rx=".8" fill="${pinC}"/>`;
+    s += `<rect x="8" y="${p - 1.6}" width="8" height="3.2" rx=".8" fill="${pinC}"/><rect x="84" y="${p - 1.6}" width="8" height="3.2" rx=".8" fill="${pinC}"/>`;
+  }
+  s += `<rect x="15" y="15" width="70" height="70" rx="6" fill="#13221F" stroke="${hue}" stroke-opacity=".45"/>`;
+  // traces: from tile edge outward with a 45-degree bend
+  let tr = '';
+  const n = 9 + Math.floor(rnd() * 5);
+  for (let i = 0; i < n; i++) {
+    const side = Math.floor(rnd() * 4), off = 34 + rnd() * 32;
+    let x0, y0, x1, y1, x2, y2;
+    const reach = 7 + rnd() * 10, bend = (rnd() < .5 ? -1 : 1) * (3 + rnd() * 7);
+    if (side === 0) { x0 = off; y0 = 34; x1 = off; y1 = 34 - reach; x2 = off + bend; y2 = y1 - Math.abs(bend); }
+    else if (side === 1) { x0 = off; y0 = 66; x1 = off; y1 = 66 + reach; x2 = off + bend; y2 = y1 + Math.abs(bend); }
+    else if (side === 2) { x0 = 34; y0 = off; x1 = 34 - reach; y1 = off; x2 = x1 - Math.abs(bend); y2 = off + bend; }
+    else { x0 = 66; y0 = off; x1 = 66 + reach; y1 = off; x2 = x1 + Math.abs(bend); y2 = off + bend; }
+    x2 = Math.min(82, Math.max(18, x2)); y2 = Math.min(82, Math.max(18, y2));
+    tr += `<polyline points="${x0.toFixed(1)},${y0.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}"/>`;
+    tr += `<circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="1.5" fill="${hue}" stroke="none"/>`;
+  }
+  s += `<g fill="none" stroke="${hue}" stroke-opacity=".6" stroke-width="1.1">${tr}</g>`;
+  // tile
+  s += `<rect x="32" y="32" width="36" height="36" rx="3" fill="${hue}" fill-opacity=".12" stroke="${hue}" stroke-width="1.4"/>`;
+  s += `<text x="35.5" y="39.5" font-family="Chakra Petch,sans-serif" font-size="5.5" font-weight="600" fill="${hue}" opacity=".85">${m.idx}</text>`;
+  s += `<text x="50" y="57" text-anchor="middle" font-family="Chakra Petch,sans-serif" font-size="${L.sym.length > 1 ? 15 : 18}" font-weight="700" fill="${hue}">${L.sym}</text>`;
+  s += `<text x="64.5" y="65" text-anchor="end" font-family="Chakra Petch,sans-serif" font-size="4.6" font-weight="600" fill="${hue}" opacity=".7">${TIERS[m.t].id}</text>`;
+  if (m.t >= 5) s += `<rect x="29" y="29" width="42" height="42" rx="5" fill="none" stroke="${TIER_HEX[m.t]}" stroke-opacity=".7" stroke-dasharray="2 2"/>`;
+  if (m.st && STATUS[m.st]) {
+    const S0 = STATUS[m.st], w = 6 + S0.stamp.length * 7;
+    s += `<g transform="rotate(-12 74 78)"><rect x="${74 - w / 2}" y="72" width="${w}" height="11" rx="1.5" fill="#0E1A18" fill-opacity=".9" stroke="${S0.ink}" stroke-width="1"/><text x="74" y="80.4" text-anchor="middle" font-family="Noto Sans SC,sans-serif" font-size="7" font-weight="900" fill="${S0.ink}">${S0.stamp}</text></g>`;
+  }
+  s += `</svg>`;
+  return s;
+}
+
 /* =================== ART =================== */
-const artCache = new Map();
 function elementMark(size, sym, no, hue) {
   return `<svg viewBox="0 0 120 120" width="${size}" height="${size}" aria-hidden="true">
     <rect x="6" y="6" width="108" height="108" rx="14" fill="#0E1A18" stroke="${hue}" stroke-width="3"/>
@@ -3782,23 +3910,35 @@ function logoSVG() {
   <path d="M38 76 L52 50 L62 64 L82 38" fill="none" stroke="#F2C94C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
-function cardArt(m, v = 0) {
-  if (isHiddenCard(m.id)) return adminCardArt(v);
-  if (!artCache.has(m.id)) artCache.set(m.id, tierArt(m));
-  return artCache.get(m.id);
+function cardArt(m, v = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
+  if (isHiddenCard(m.id)) return adminCardArt(v, skin);
+  return skin === 'classic' ? classicCardArt(m) : tierArt(m);
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
 function modelOrLeak(id) { return id === 'leak' ? LEAK_MODEL : modelById(id); }
-// The catalogue is fixed: at most one in-memory image URL per model for the
-// lifetime of the page. No shared SVG document to invalidate on every new card.
+// One image URL per model and skin; the hidden card also has four distinct foils.
 const artUrls = new Map();
-function sharedArt(m, v = 0) {
-  const key = isHiddenCard(m.id) ? `${m.id}:${v}` : m.id;
+function cardArtUrl(m, v, skin) {
+  const key = `${skin}:${m.id}:${v}`;
   if (!artUrls.has(key)) {
-    const svg = cardArt(m,v).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+    const svg = cardArt(m, v, skin).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
     artUrls.set(key, URL.createObjectURL(new Blob([svg], {type:'image/svg+xml'})));
   }
-  return `<img alt="" decoding="async" width="100" height="100" src="${artUrls.get(key)}">`;
+  return artUrls.get(key);
+}
+function sharedArt(m, v = 0) {
+  const variant = isHiddenCard(m.id) ? v : 0;
+  const src = cardArtUrl(m, variant, normalizeCardSkin(S.set.cardSkin));
+  return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}" src="${src}">`;
+}
+function applyCardSkin() {
+  const skin = normalizeCardSkin(S.set.cardSkin), root = document.documentElement;
+  if (root.dataset.cardSkin === skin) return;
+  root.dataset.cardSkin = skin;
+  // Update mounted results and lazy catalogue art without rebuilding their views.
+  for (const img of $$('img[data-card-art]')) {
+    img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), skin);
+  }
 }
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
@@ -4568,11 +4708,11 @@ function openDetail(id) {
 let dexGrid;
 const DEX_COMPLETE = (1 << VARIANTS.length) - 1;
 function syncHiddenDex() {
-  const slot = $('#dexHidden'), copies = S.hiddenCard?.copies;
+  const slot = $('#dexHidden'), copies = hiddenCardInventory();
   const mask = copies?.reduce((n, count, v) => n | (count > 0 ? 1 << v : 0), 0) || 0;
   if (dexGrid.hiddenMask !== mask) {
     dexGrid.hiddenMask = mask;
-    slot.innerHTML = mask ? `<div class="dex-grid"><button type="button" class="dex-row" data-model="${HIDDEN_CARD.id}"><span class="ic" aria-hidden="true">${cardArt(HIDDEN_CARD)}</span><span><span class="t1"><span class="tag">${HIDDEN_CARD_LABEL}</span><span>${esc(HIDDEN_CARD.n)}</span></span><span class="cells">${VARIANTS.map((v,i) => `<i class="c${i}${copies[i] > 0 ? ' on' : ''}" title="${v.name}"></i>`).join('')}</span></span></button></div>` : '';
+    slot.innerHTML = mask ? `<div class="dex-grid"><button type="button" class="dex-row" data-model="${HIDDEN_CARD.id}"><span class="ic" aria-hidden="true">${sharedArt(HIDDEN_CARD)}</span><span><span class="t1"><span class="tag">${HIDDEN_CARD_LABEL}</span><span>${esc(HIDDEN_CARD.n)}</span></span><span class="cells">${VARIANTS.map((v,i) => `<i class="c${i}${copies[i] > 0 ? ' on' : ''}" title="${v.name}"></i>`).join('')}</span></span></button></div>` : '';
   }
   slot.hidden = !mask || !!$('#dexTier').value || (S.set.hideCompleteDex && mask === DEX_COMPLETE);
 }
@@ -4585,7 +4725,7 @@ function mountDex() {
   const heads = $$('.lab-head', root).map(el => ({ key: el.dataset.labKey, prog: $('.prog', el), bonus: $('.bonus', el) }));
   const sets = $$('.series', root).map(el => ({ el, bonus: $('.series-top .b', el), count: $('.series-foot .num', el),
     bar: $('.bar > i', el), icons: $$('.sic', el) }));
-  const paint = el => { el.innerHTML = cardArt(MODEL_BY_ID[el.dataset.thumb]); };
+  const paint = el => { el.innerHTML = sharedArt(MODEL_BY_ID[el.dataset.thumb]); };
   const observer = typeof IntersectionObserver === 'function' ? new IntersectionObserver(entries => {
     for (const { target, isIntersecting } of entries) {
       if (isIntersecting && !target.firstChild) paint(target);
@@ -4619,6 +4759,9 @@ function filterDexTier() {
 }
 function syncDex() {
   syncHiddenDex();
+  const hidden = hiddenDexCount(), hiddenCount = $('#dexHiddenCount');
+  hiddenCount.hidden = !hidden;
+  textIfChanged(hiddenCount, hidden ? `${hidden}/${VARIANTS.length}` : '');
   const di = dexInfo(), si = seriesInfo(), ls = labStats();
   if (dexGrid.snapshot === di) {
     if (dexGrid.hideComplete !== S.set.hideCompleteDex) filterDexTier();
@@ -4783,7 +4926,8 @@ function renderPrefs() {
   $('#prefList').innerHTML = PREFS.map(([k, n, d]) => `<div class="pref"><div><div class="n">${n}</div><div class="d">${d}</div></div><button class="switch" role="switch" aria-checked="${!!S.set[k]}" data-pref="${k}" aria-label="${n}"></button></div>`).join('') +
     `<div class="pref cine-pref"><div class="mode"><div class="n" id="cineModeLabel">抽卡过场稀有度</div><div class="seg" role="group" aria-labelledby="cineModeLabel">${[['default','原规则'],['custom','自选档位']].map(([mode,label]) => `<button data-cine-mode="${mode}" aria-pressed="${(mode === 'custom') === cine.custom}">${label}</button>`).join('')}</div></div><div id="cineTiers" class="pref-checks" role="group" aria-label="播放过场的档位" ${cine.custom ? '' : 'hidden'}>${tiers}</div></div>
     <div class="pref cine-pref"><div class="n" id="muteLabel">屏蔽次要信息</div><div class="pref-checks" role="group" aria-labelledby="muteLabel">${mutes}</div></div>` +
-    `<div class="pref"><div><div class="n">主题</div><div class="d">默认跟随系统</div></div><div class="seg" id="themeSeg">${[['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme-opt="${k}" aria-pressed="${S.set.theme === k}">${n}</button>`).join('')}</div></div>`;
+    `<div class="pref"><div class="n" id="cardSkinLabel">卡面皮肤</div><div class="seg" role="group" aria-labelledby="cardSkinLabel">${[['modern','新版'],['classic','旧版']].map(([k,n]) => `<button type="button" data-card-skin-opt="${k}" aria-pressed="${S.set.cardSkin === k}">${n}</button>`).join('')}</div></div>
+    <div class="pref"><div><div class="n">主题</div><div class="d">默认跟随系统</div></div><div class="seg" id="themeSeg">${[['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme-opt="${k}" aria-pressed="${S.set.theme === k}">${n}</button>`).join('')}</div></div>`;
   $('#saveSide').textContent = '每 5 秒自动保存到本机' + (account.uid ? '，并同步到账号' : '');
   renderAccountPanel();
 }
@@ -4864,7 +5008,7 @@ function playerDoc() {
   const team = bestTeam(benchInfo(S.stage).s), sig = featuredModel();
   return {
     name: S.name.slice(0, 16), sig: playerModelId(sig), sigV: sig ? bestVar(modelInventory(sig) || [0, 0, 0, 0]) : 0,
-    tps: computeYield(), dex: dexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
+    tps: computeYield(), dex: dexCount() + hiddenDexCount(), stage: S.stage, pulls: S.stats.pulls, reb: S.rebirths,
     power: team.reduce((sum, x) => sum + x.pw, 0),
     team: team.map(({m,v,pw}) => ({id:playerModelId(m),v,pw:num(pw,1e300),count:modelInventory(m)[v],lv:trainLv(m.id)})),
     achievements: ACH.filter(a => S.ach[a.id]).length, lifetime: S.lifetime,
@@ -6751,6 +6895,7 @@ function renderPacketDebit() {
   if (!quote) { debit.textContent = ''; return; }
   const kind = f.kind.value === 'gpu' ? 'GPU' : 'Token';
   const balance = S[f.kind.value], {base,fee,cost} = quote;
+  if (packetCharge(f.kind.value,balance,cost)===0) { debit.textContent = '金额太小，实扣 0 Token。'; return; }
   debit.textContent = `本金 ${formatPacketAmount(base)} ＋ 手续费 ${formatPacketAmount(fee)}（${packetAccess.fee_bps/100}%）＝ 实扣 ${formatPacketAmount(base+fee)} ${kind}${balance<cost ? ' · 数量不足' : ''}`;
 }
 async function loadPacketAccess() {
@@ -6776,9 +6921,9 @@ function syncPacketDebit(b) {
     if (typeof result?.sent !== 'boolean' || debit.uid !== cloud.uid || moderation.level === 2) return null;
     if (!savePacketDebit(debit,result.sent)) throw Error('确认结果未保存，联网后会继续重试。');
     if (result.sent) { toast('红包已发出', giftLabel(debit.payload.p_kind,Number(debit.payload.p_amount))); pollChat(); }
-    else toast('红包未发送，已退回扣款', communityError({message:result.reason}));
+    else toast(debit.cost ? '红包未发送，已退回扣款' : '红包未发送，未扣款', communityError({message:result.reason}));
     if (communityComposer.open && communityChannel === 'packet') {
-      if (!communitySending) $('#communityComposeStatus').textContent = result.sent ? '上一笔红包已发出。' : `${communityError({message:result.reason})} 已退回扣款。`;
+      if (!communitySending) $('#communityComposeStatus').textContent = result.sent ? '上一笔红包已发出。' : `${communityError({message:result.reason})} ${debit.cost ? '已退回扣款。' : '未扣款。'}`;
       renderPacketDebit();
     }
     return result;
@@ -6827,18 +6972,18 @@ communityForm.onsubmit = async e => {
     if (!quote) { status.textContent = '请输入有效的整数金额。'; return; }
     const balance = S[f.kind.value];
     if (!Number.isFinite(balance) || balance<quote.cost) { status.textContent = '道具数量不足，未扣款。'; return; }
-    const deducted = balance - (balance-quote.cost);
-    if (deducted<=0 || Math.abs(deducted-quote.cost)>Math.max(0.005,quote.cost*Number.EPSILON*8)) {
+    const charge = packetCharge(f.kind.value,balance,quote.cost);
+    if (charge===null) {
       status.textContent = '此金额太小，无法从当前数量中精确扣除。'; return;
     }
-    const debit = {uid:cloud.uid,cost:quote.cost,payload:{p_id:newEventId(),p_body:f.message.value.trim(),p_kind:f.kind.value,
+    const debit = {uid:cloud.uid,cost:charge,payload:{p_id:newEventId(),p_body:f.message.value.trim(),p_kind:f.kind.value,
       p_amount:quote.amount,p_slots:f.slots.valueAsNumber,p_lucky:f.packetMode.value === 'lucky',p_fee_bps:packetAccess.fee_bps}};
     if (!savePacketDebit(debit)) { status.textContent = '扣款未能保存，红包未发送。'; return; }
     communitySending = true; renderPacketDebit(); status.textContent = '正在确认发送…';
     try {
       const result = await syncPacketDebit(cloud.board);
       if (result?.sent) communityComposer.close();
-      else if (result) status.textContent = `${communityError({message:result.reason})} 已退回扣款。`;
+      else if (result) status.textContent = `${communityError({message:result.reason})} ${debit.cost ? '已退回扣款。' : '未扣款。'}`;
     } catch { status.textContent = '尚未收到确认，联网后会自动重试，不会重复扣款。'; }
     finally { communitySending = false; renderPacketDebit(); if (communityComposer.open) loadPacketAccess(); }
     return;
@@ -7796,6 +7941,13 @@ on('#prefList', 'click', e => {
     if (k === 'fx') applyTheme();
     saveLocal(); return;
   }
+  const skin = e.target.closest('[data-card-skin-opt]');
+  if (skin) {
+    S.set.cardSkin = normalizeCardSkin(skin.dataset.cardSkinOpt);
+    applyCardSkin();
+    for (const b of $$('[data-card-skin-opt]')) b.setAttribute('aria-pressed', b === skin);
+    saveLocal(); return;
+  }
   const t = e.target.closest('[data-theme-opt]');
   if (t) { S.set.theme = t.dataset.themeOpt; applyTheme(); renderPrefs(); }
 });
@@ -7898,7 +8050,7 @@ function installSave(st) {
   pullTest.reset();
   resetAutoPull(); lastT = Date.now(); lastSimulationTime = simulationClock(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
   news = null; nextNewsAt = lastT + 40000; offlineReport = null; vaultLab = 'all';
-  invalidate(); lastYield = computeYield(); applyTheme(); renderNews();
+  invalidate(); lastYield = computeYield(); applyTheme(); applyCardSkin(); renderNews();
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
   $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
 }
@@ -7922,7 +8074,7 @@ function adminCardChanged() {
     else closeModal();
   }
   renderAdminCard();
-  markDirty('models','bench','world','hud');
+  markDirty('models','dex','bench','world','hud');
   cloudBump(true);
 }
 function bindAdminCardIdentity(uid) {
@@ -7989,8 +8141,9 @@ const NULLPOINT_FOILS = [
   ['#8ceaff','#98b6ff','#162d46'], ['#f5acff','#82ffcd','#342140']
 ];
 let nullpointArtId = 0;
-function adminCardArt(variant = 0) {
+function adminCardArt(variant = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
   const [metal,prism,plate] = NULLPOINT_FOILS[variant] || NULLPOINT_FOILS[0];
+  const square = skin === 'classic';
   const id = `np-art-${++nullpointArtId}`;
   const glyphs = [52,87,125,159].map((x,i)=>`<g transform="translate(${x} ${131-i*11}) skewX(-10)"><g class="np-glyph np-glyph-${i}">
     <path d="${i<2 ? 'M-14-13v-9l8-8H9l7 7v13L4 1v7H-6V-4L6-15v-5l-2-2H-3l-2 2v7Z' : 'M-6-30H8L5 8H-5Z'} M0 12l7 7-7 7-7-7Z" fill="url(#${id}-type)" stroke="#fff5de" stroke-width=".7"/>
@@ -8002,9 +8155,9 @@ function adminCardArt(variant = 0) {
       <linearGradient id="${id}-edge" x1="0%" y1="100%" x2="100%" y2="0%"><stop stop-color="${prism}" stop-opacity=".2"/><stop offset=".24" stop-color="${prism}"/><stop offset=".51" stop-color="#fff9de"/><stop offset=".72" stop-color="${metal}"/><stop offset="1" stop-color="${metal}" stop-opacity=".28"/></linearGradient>
       <radialGradient id="${id}-core"><stop offset=".16" stop-color="#040509"/><stop offset=".69" stop-color="#040509"/><stop offset=".77" stop-color="${metal}"/><stop offset=".81" stop-color="${metal}" stop-opacity=".35"/><stop offset="1" stop-color="${metal}" stop-opacity="0"/></radialGradient>
     </defs>
-    <path d="M3 3h184l34 34v184H37L3 187Z" fill="#05070a" stroke="url(#${id}-edge)" stroke-width="2.4"/>
+    <path class="np-rim" d="${square ? 'M3 3H221V221H3Z' : 'M3 3h184l34 34v184H37L3 187Z'}" fill="#05070a" stroke="url(#${id}-edge)" stroke-width="2.4"/>
     <g fill="none" stroke="${prism}" opacity=".27">
-      <path d="M11 11h170l32 32v170H43l-32-32Z"/>
+      <path d="${square ? 'M11 11H213V213H11Z' : 'M11 11h170l32 32v170H43l-32-32Z'}"/>
       <path d="M10 104h25l39-39h36l48-48h20m35 103h-25l-43 43h-44l-45 45H41M9 115h32l43-42h40m92 37h-34l-45 45h-33M25 17h46m84 190h40"/>
       <path d="M12 85h25l22-22m128 78-22 23v24m-95-63 55-55m-17 91 52-52" stroke-dasharray="4 3"/>
     </g>
@@ -8082,6 +8235,7 @@ function init() {
   }
   else cloud.freshStart = true;
   applyTheme();
+  applyCardSkin();
   invalidate();
   lastYield = computeYield();
   $('#introMark').innerHTML = logoSVG();
