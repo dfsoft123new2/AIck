@@ -1914,7 +1914,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 const SELF_HOST_TEST = false;
 const DEV_BUILD = false;
 const LOCAL_SAVE_SOURCE_URL = "https://oovwnjjuzdelajikfodr.supabase.co";
-const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://publicly-coffee-threatened-identification.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token"};
+const WORLD_CONFIG = {"url":"https://desktop-srb9skv.tail232143.ts.net","key":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTU2Nzk5ODIsImlzcyI6InN1cGFiYXNlIiwiZXhwIjoxOTUzMzU5OTgyLCJyb2xlIjoiYW5vbiJ9.5SS_s-6PgGs5h64iSTXn9Et9KBizZ4p3-VUQlgNj3JE","apiUrl":"https://publicly-coffee-threatened-identification.trycloudflare.com","authStorageKey":"sb-desktop-srb9skv-auth-token","apiAlternates":["https://individuals-reads-stamp-examinations.trycloudflare.com","https://desktop-srb9skv.tail232143.ts.net"]};
 const pullTest = Object.freeze({ speed: () => 1, count: () => null, mount() {}, reset() {}, refresh() {} });
 /* =================== DATA =================== */
 // Rarity N–LR comes from a three-part score (see TIER_CUTS below). MR, Ω and ℵ are categories.
@@ -5246,7 +5246,7 @@ async function cloudTick(force) {
 
 
 /* =================== ONLINE PLAYERS =================== */
-function setupPresence(client) {
+function setupPresence(client, ready = () => true) {
   let channel = null, key = null, retryAt = 0, away = false;
   const state = { count:null, status:'connecting', connect, disconnect:() => { key = null; leave(); } };
   function show(count, status) {
@@ -5259,7 +5259,7 @@ function setupPresence(client) {
     show(null, 'offline');
   }
   function connect(uid) {
-    if (!uid || away || !navigator.onLine) return;
+    if (!uid || away || !navigator.onLine || !ready()) return;
     if (key !== uid) { leave(); key = uid; retryAt = 0; }
     if (channel || Date.now() < retryAt) return;
     show(null, 'connecting');
@@ -5296,6 +5296,9 @@ const BOARD_KEYS = ['tps', 'dex', 'stage', 'pulls', ...EXTRA_SCORES];
 const PROFILE_RANK_LIMIT = 100;
 const BOARD_REFRESH_MS = 15000;
 const BOARD_REQUEST_TIMEOUT_MS = 25000;
+const BOARD_GATEWAY_PROBE_MS = 8000;
+const BOARD_GATEWAY_RECHECK_MS = 20000;
+const BOARD_GATEWAY_ERRORS = new Set([502, 503, 504, 520, 521, 522, 523, 524, 525, 526, 527, 530]);
 const BOARD_OFFLINE_AFTER = 3;
 const BOARD_ISSUE_AFTER = 2;
 const missingScoreColumn = e => ['PGRST204','42703'].includes(e?.code);
@@ -5329,7 +5332,60 @@ function persistHits(b) {
   if (!cloud.uid || !b.changed) return;
   try { sessionStorage.setItem(`${b.store}:${cloud.uid}`, JSON.stringify(b.pending)); b.changed = false; } catch {}
 }
-function boardFetch(config) {
+function createBoardGateway(config) {
+  if (!config.apiAlternates?.length) return null;
+  const origin = new URL(config.apiUrl || config.url).origin;
+  const origins = [...new Set([origin, ...config.apiAlternates.map(value => new URL(value).origin)])];
+  let active = origin, pending = null, checkedAt = -Infinity, suspect = false;
+  function select() {
+    if (pending || navigator.onLine === false) return pending;
+    const stop = new AbortController();
+    const signal = AbortSignal.any([stop.signal, AbortSignal.timeout(BOARD_GATEWAY_PROBE_MS)]);
+    async function probe(host) {
+      const res = await fetch(new URL('/auth/v1/health',host), {headers:{apikey:config.key}, signal,
+        cache:'no-store', credentials:'omit', redirect:'error'});
+      if (!res.ok || (await res.json()).name !== 'GoTrue') throw Error('Gateway health check failed');
+      return host;
+    }
+    pending = Promise.any(origins.map(probe)).then(host => { active = host; }, () => {})
+      .finally(() => { stop.abort(); checkedAt = Date.now(); suspect = false; pending = null; });
+    return pending;
+  }
+  function moveURL(url, host) {
+    const target = new URL(host);
+    target.pathname = url.pathname; target.search = url.search;
+    return target;
+  }
+  async function routedFetch(input, init = {}) {
+    const url = new URL(input instanceof Request ? input.url : input);
+    if (url.origin !== origin) return fetch(input, init);
+    if (suspect && Date.now() - checkedAt >= BOARD_GATEWAY_RECHECK_MS) select();
+    if (pending) await pending;
+    const host = active;
+    const target = moveURL(url, host);
+    const signal = init.signal ?? (input instanceof Request ? input.signal : undefined);
+    signal?.throwIfAborted();
+    try {
+      const response = await fetch(input instanceof Request ? new Request(target,input) : target,
+        {...init, signal, credentials:'omit', redirect:'error'});
+      if (host === active && BOARD_GATEWAY_ERRORS.has(response.status)) suspect = true;
+      return response;
+    } catch (error) {
+      if (host === active && navigator.onLine !== false &&
+          (error?.name === 'TypeError' || error?.name === 'TimeoutError')) suspect = true;
+      throw error;
+    }
+  }
+  function socketURL(address) {
+    const url = new URL(address);
+    if ('https://' + url.host !== origin || url.protocol !== 'wss:') return url;
+    const target = moveURL(url, active);
+    target.protocol = 'wss:';
+    return target;
+  }
+  return {select, pending:() => pending, fetch:routedFetch, socketURL};
+}
+function boardFetch(config, gateway) {
   const origin = new URL(config.apiUrl || config.url).origin;
   return async (input, init = {}) => {
     const url = new URL(input instanceof Request ? input.url : input);
@@ -5343,22 +5399,29 @@ function boardFetch(config) {
     }
     const signal = init.signal ?? (input instanceof Request ? input.signal : undefined);
     const timeout = AbortSignal.timeout(BOARD_REQUEST_TIMEOUT_MS);
-    return fetch(input, { ...init, signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
+    return (gateway?.fetch || fetch)(input, {...init, signal:signal ? AbortSignal.any([signal, timeout]) : timeout});
   };
 }
 function initLeaderboard(config) {
+  const gateway = createBoardGateway(config);
+  const request = boardFetch(config, gateway);
   cloud.board = { boards: {}, feed: null, totals: null, pending: [], changed: false,
     store: `frontier:outbox:${config.url}`, client: null, busy: false, next: 0, errors: 0,
-    nextHits: 0, nextTotals: 0, feedAt: 0, issues: {} };
+    nextHits: 0, nextTotals: 0, feedAt: 0, issues: {}, gateway, request };
   setCloudStatus('connecting');
   try {
+    const realtime = gateway && {transport:class extends WebSocket {
+      constructor(address, protocols) { super(gateway.socketURL(address), protocols); }
+    }};
+    void gateway?.select();
     cloud.board.client = window.supabase.createClient(config.apiUrl || config.url, config.key, {
       auth: { ...(config.authStorageKey ? {storageKey:config.authStorageKey} : {}), detectSessionInUrl: location.protocol !== 'file:' },
-      global: { fetch: boardFetch(config) }
+      global: {fetch:request}, ...(realtime ? {realtime} : {})
     });
   } catch { finishModerationBoot(); setCloudStatus('warn'); return; }
+  if (gateway) window.addEventListener('online', gateway.select);
   cloud.board.client.auth.onAuthStateChange((_event, session) => bindAdminCardIdentity(session?.user?.id));
-  cloud.board.presence = setupPresence(cloud.board.client);
+  cloud.board.presence = setupPresence(cloud.board.client, () => !gateway?.pending());
   startAccount(cloud.board);
   window.addEventListener('pagehide', () => persistHits(cloud.board));
   window.addEventListener('offline', boardOffline);
@@ -5366,7 +5429,9 @@ function initLeaderboard(config) {
     const b = cloud.board;
     b.next = 0; b.errors = 0; moderation.next = 0;
     setCloudStatus('retrying');
-    boardTick(false);
+    const choosing = gateway?.pending();
+    if (choosing) void choosing.then(() => boardTick(false));
+    else boardTick(false);
   });
   startInbox(cloud.board);
   boardTick(false);
@@ -5771,7 +5836,7 @@ function startAccount(b) {
   };
 }
 async function usernameAuth(action, username, password, token = WORLD_CONFIG.key) {
-  const res = await fetch(new URL('/functions/v1/frontier-username',WORLD_CONFIG.apiUrl || WORLD_CONFIG.url),{
+  const res = await (cloud.board?.gateway?.fetch || fetch)(new URL('/functions/v1/frontier-username',WORLD_CONFIG.apiUrl || WORLD_CONFIG.url),{
     method:action ? 'POST' : 'GET', headers:{apikey:WORLD_CONFIG.key, Authorization:`Bearer ${token}`,
       ...(action ? {'Content-Type':'application/json'} : {})},
     body:action ? JSON.stringify({action,username,password}) : undefined, signal:AbortSignal.timeout(28000),
@@ -5951,7 +6016,7 @@ async function flushOutgoingAccount() {
 function accountStagingClient(b) {
   return window.supabase.createClient(WORLD_CONFIG.apiUrl || WORLD_CONFIG.url,WORLD_CONFIG.key,{
     auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:`${b.store}:account-check`},
-    global:{fetch:boardFetch(WORLD_CONFIG)},
+    global:{fetch:b.request || boardFetch(WORLD_CONFIG)},
   });
 }
 async function acceptAccount(b, staging, session, user, guest = null) {
