@@ -348,6 +348,8 @@ button.card { transition: transform .12s; }
 .card:is(.t-CAUSAL,.t-GENESIS) .nm { color:#fff8e9; }
 .card:is(.t-CAUSAL,.t-GENESIS) .cd { color:var(--tc); }
 .card:is(.t-CAUSAL,.t-GENESIS) .tier { background:#0b1017; color:var(--tc); box-shadow:inset 0 0 0 1px var(--rim); }
+.card.t-CAUSAL[data-skin="modern"]:not(.v4) { --tc:#c5eee5; --rim:#a77d4b; --plate:#102125; border-color:var(--rim) #478d84 #478d84 var(--rim); }
+.card.t-CAUSAL[data-skin="modern"]:not(.v4) .body { background:linear-gradient(120deg,#0a1418 40%,#163531); border-top-color:#907242; }
 .card.t-LEAK { --tc:#a0e8ad; --rim:#679e74; --plate:#102018; }
 .card:is(.t-N,.t-R,.t-SR,.t-SSR,.t-UR,.t-LR,.t-MR,.t-AGI,.t-ALEPH,.t-Q,.t-BANG,.t-LEAK) .body {
   background:linear-gradient(130deg,var(--plate) 58%,color-mix(in srgb,var(--tc) 19%,var(--plate)));
@@ -361,16 +363,18 @@ button.card { transition: transform .12s; }
   color:var(--tc); background:var(--plate); box-shadow:inset 0 0 0 1px currentColor;
 }
 .card.t-Q .tier, .tier-text.tier-q { text-shadow:-1px 0 #ef577a,1px 0 #5af4f1; }
+.card.t-Q[data-skin="modern"]:not(.v4) { --tc:#d5e6ea; --rim:#71878d; --plate:#17222a; }
+.card.t-Q[data-skin="modern"]:not(.v4) .tier { text-shadow:-1px 0 #65a89b,1px 0 #f5a48b; }
 .detail > .card { align-self:start; }
 
 /* Classic illustrations use the original lab-colour frames and simple nameplates. */
-.card[data-skin="classic"]:not(.t-NULLPOINT,.v4) {
+.card[data-skin="classic"]:not(.t-NULLPOINT,.t-CAUSAL,.v4) {
   border-color:var(--tc); box-shadow:0 6px 18px -12px var(--tc);
 }
-.card[data-skin="classic"]:not(.t-NULLPOINT,.v4) .body {
+.card[data-skin="classic"]:not(.t-NULLPOINT,.t-CAUSAL,.v4) .body {
   background:linear-gradient(180deg,#ffffff08,transparent); border-top-color:#ffffff14;
 }
-.card[data-skin="classic"]:not(.t-NULLPOINT,.v4) .tier {
+.card[data-skin="classic"]:not(.t-NULLPOINT,.t-CAUSAL,.v4) .tier {
   background:var(--tc); color:#0b1412; box-shadow:none;
 }
 .card[data-skin="classic"]:where(:not(.v4)).t-N { --tc:#8c9894; }
@@ -1203,6 +1207,31 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 @keyframes creation-expand { 0% { opacity:0; transform:scale(.09); } 19% { opacity:.86; } to { opacity:0; transform:scale(1.32); } }
 @keyframes causal-seat { 0% { opacity:0; transform:perspective(520px) rotateY(-80deg) scale(.81); } 68% { opacity:1; } }
 @keyframes genesis-seat { 0% { opacity:0; transform:translateY(18px) scale(.58); clip-path:inset(49% 0); } 48% { opacity:1; clip-path:inset(0); } to { clip-path:inset(-15%); } }
+.cine[data-scene=causal-axis] {
+  --cine-card:min(228px,60vw,37dvh); --cine-stage:clamp(640px,105vw,1150px);
+  --cine-entry:axis-seat; --cine-entry-time:.66s;
+}
+.cine[data-scene=causal-axis] .title { font-size:36px; color:#fff4d2; }
+.cine[data-scene=causal-axis] .sub { white-space:pre-line; }
+.sc-axis-field, .sc-unknown-field { opacity:.52; animation:creation-field .64s ease-out both; }
+.sc-axis-rail.axis-in { --axis-x:-170px; --axis-y:-46px; --axis-turn:-11deg; }
+.sc-axis-rail.axis-out { --axis-x:170px; --axis-y:46px; --axis-turn:11deg; }
+.sc-axis-rail { opacity:.65; animation:axis-route var(--cine-cue) cubic-bezier(.35,.04,.38,1) both; }
+.sc-axis-lock { opacity:.62; animation:axis-lock .66s calc(var(--cine-cue) - .19s) var(--cine-ease) both; }
+.sc-axis-pulse { opacity:.24; animation:axis-pulse .84s var(--cine-cue) var(--cine-ease) both; }
+@keyframes axis-route { from { opacity:0; transform:translate(var(--axis-x),var(--axis-y)) rotate(var(--axis-turn)); } 64% { opacity:.94; } }
+@keyframes axis-lock { from { opacity:0; transform:scale(.38) rotate(-34deg); } 55% { opacity:.92; } }
+@keyframes axis-pulse { from { opacity:0; transform:scale(.08); } 32% { opacity:.88; } }
+@keyframes axis-seat { from { opacity:0; transform:translateY(14px) scale(.79); clip-path:inset(0 49%); } 64% { opacity:1; clip-path:inset(-5%); } to { clip-path:inset(-5%); } }
+.cine[data-scene=unknown-signal] { --cine-entry:unknown-seat; --cine-entry-time:.52s; }
+.cine[data-scene=unknown-signal] .title { color:#f5fbff; text-shadow:-2px 1px #3a8f85,2px 0 #b65a49; }
+.sc-unknown-plate.unknown-left { --signal-x:-160px; --signal-y:-55px; --signal-angle:-8deg; }
+.sc-unknown-plate.unknown-right { --signal-x:160px; --signal-y:55px; --signal-angle:8deg; }
+.sc-unknown-plate { opacity:.54; animation:unknown-drift var(--cine-cue) cubic-bezier(.3,.08,.55,1) both; }
+.sc-unknown-read { opacity:.48; animation:unknown-scan .57s calc(var(--cine-cue) - .09s) var(--cine-ease) both; }
+@keyframes unknown-drift { from { opacity:.17; transform:translate(var(--signal-x),var(--signal-y)) rotate(var(--signal-angle)); } 59% { opacity:.87; transform:translateX(calc(var(--signal-x) * .18)); } }
+@keyframes unknown-scan { from { opacity:0; transform:scaleX(.22); } 54% { opacity:.93; } }
+@keyframes unknown-seat { from { opacity:0; transform:translateX(12px) skewX(-10deg) scale(.93); clip-path:inset(34% 0 28%); } 68% { opacity:1; clip-path:inset(0); } to { clip-path:inset(-6%); } }
 .cine:is([data-scene],[data-replay]) .bang-continue {
   display: block; position: absolute; inset-inline-end: max(16px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
   min-width: 68px; min-height: 44px; padding: 0 13px; border-radius: 6px;
@@ -3968,6 +3997,7 @@ function applyOffline(fromTs) {
 }
 
 /* Rarity progression: fabricated hardware, exotic matter, then broken space. */
+const UNKNOWN_TIER = 9;
 const CARD_MATERIALS = [
   ['#101519','#b8c6c4','#677d7e'], ['#0b1d1a','#7ce2ad','#347669'],
   ['#0c192c','#7ad7ff','#496cca'], ['#181128','#d5a9ff','#815afb'],
@@ -4048,6 +4078,57 @@ const CARD_INSTRUMENTS = [
     <path d="M69 57h22l-5 34H74Zm11 39 7 7-7 7-7-7Z" fill="#fff2d9"/>
     <path d="m17 104 17-18-7 16Zm110-47 21-15-11 13Zm-93-2 16-6-10 8Zm78 69 14-8-10 9Z" fill="#ffbc88"/>`
 ];
+
+function omegaCardArt(v) {
+  const [ion, metal, shade] = [['#63e8cf','#f4c979','#59412e'],['#ffa666','#ffe09d','#753c34'],['#70e6fc','#e9c9ff','#44375f'],['#7dffe0','#e2baff','#3f456f']][v] || ['#63e8cf','#f4c979','#59412e'];
+  const crest = 'M55 41 62 49 48 64 43 80 46 93 54 98 64 96 72 85 73 66 80 59 87 66 88 85 96 96 106 98 114 93 117 80 112 64 98 49 105 41 124 56 132 76 131 96 121 110 106 116 91 113 80 104 69 113 54 116 39 110 29 96 28 76 36 56Z';
+  const facet = `<path d="M55 41 62 49 48 64 43 80 46 93 54 98 64 96 53 106 40 100 35 84 40 65Z" fill="url(#omega-bevel)"/>
+    <path d="M28 76 35 84 40 100 53 106 69 104 80 90V104L69 113 54 116 39 110 29 96Z" fill="${shade}"/>
+    <path d="M53 106 64 96 72 85 73 66 80 59V90L69 104Z" fill="url(#omega-ridge)"/>
+    <path d="M40 65 55 47M35 84l5 16 13 6 16-2 11-14" fill="none" stroke="${metal}" stroke-width=".8"/>`;
+  return `<svg viewBox="0 0 160 160" data-art="${OMEGA_TIER}" data-edition="causal-axis" aria-hidden="true">
+    <defs>
+      <linearGradient id="omega-alloy" x2="0" y2="1"><stop stop-color="#fff6da"/><stop offset=".38" stop-color="${metal}"/><stop offset=".57" stop-color="#fff8ec"/><stop offset=".64" stop-color="${metal}"/><stop offset="1" stop-color="${shade}"/></linearGradient>
+      <linearGradient id="omega-bevel" x2="1" y2="1"><stop stop-color="#fff9e7"/><stop offset=".58" stop-color="${metal}"/><stop offset="1" stop-color="${shade}"/></linearGradient>
+      <linearGradient id="omega-ridge" x2="0" y2="1"><stop stop-color="${ion}"/><stop offset=".35" stop-color="#fff9e7"/><stop offset="1" stop-color="${metal}"/></linearGradient>
+      <linearGradient id="omega-horizon"><stop stop-color="${ion}" stop-opacity="0"/><stop offset=".5" stop-color="${ion}"/><stop offset="1" stop-color="${ion}" stop-opacity="0"/></linearGradient>
+      <radialGradient id="omega-field" cy=".48" r=".62"><stop stop-color="#238278"/><stop offset=".43" stop-color="#0e403a"/><stop offset="1" stop-color="#040a10"/></radialGradient>
+    </defs>
+    <path d="M0 0h160v160H0Z" fill="url(#omega-field)"/>
+    <path d="M80 4 85 43 81 58 77 58 75 43Zm0 111 7 16-7 29-7-29Z" fill="${ion}" opacity=".14"/>
+    <path d="M80 16v26m0 83v21" stroke="${ion}" stroke-opacity=".64" stroke-dasharray="1 3 12 4"/>
+    <g transform="rotate(-16 80 80)" fill="none" stroke="url(#omega-horizon)">
+      <ellipse cx="80" cy="80" rx="86" ry="23" stroke-width="6" opacity=".15"/>
+      <ellipse cx="80" cy="80" rx="86" ry="23" stroke-width="1.1" opacity=".74"/>
+      <path d="M1 77c22-12 57-15 93-14m28 33c16-2 30-7 38-12" stroke-width=".6" opacity=".65"/>
+    </g>
+    <path d="M9 46V23L23 9h21m72 142h21l14-14v-23M14 30v-5l11-11h8m94 132h8l11-11v-5" fill="none" stroke="${ion}" stroke-opacity=".55"/>
+    <path d="M21 115h12m-6-6v12m103-80h10m-5-5v10M47 27h5m55 108h6m-78-97h2m85 88h2" fill="none" stroke="${ion}" stroke-opacity=".68"/>
+    <path d="${crest}" transform="translate(0 6)" fill="#040b11" stroke="#071315" stroke-width="4" stroke-linejoin="round"/>
+    <path d="${crest}" fill="url(#omega-alloy)" stroke="${ion}" stroke-opacity=".24" stroke-width="6"/>
+    ${facet}<g transform="translate(160 0) scale(-1 1)">${facet}</g>
+    <path d="${crest}" fill="none" stroke="${metal}" stroke-width=".95"/>
+    <path d="M80 22 84 32 80 40 76 32Z" fill="${ion}"/><path d="M80 26v10" stroke="#effff5"/>
+    <path d="M67 132h5l8 7 8-7h5m-8 6-5 5-5-5" fill="none" stroke="${metal}" stroke-opacity=".7"/>
+  </svg>`;
+}
+
+function anomalyCardArt() {
+  return `<svg viewBox="0 0 160 160" data-art="${UNKNOWN_TIER}" data-edition="unknown-signal" aria-hidden="true">
+    <defs><linearGradient id="qm-metal" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#243b46"/><stop offset=".45" stop-color="#809fa6"/><stop offset=".5" stop-color="#e4faf2"/><stop offset=".73" stop-color="#436770"/><stop offset="1" stop-color="#10212b"/></linearGradient></defs>
+    <path d="M0 0h160v160H0Z" fill="#0b1018"/>
+    <path d="M12 48 36 20h89l16 22-9 21 8 29-13 38-18 8H33L17 119l8-28Z" fill="#131f28" stroke="#203441" stroke-width="13"/>
+    <path d="M10 49V24L28 9H94l-12 15H37L22 42v19ZM103 10h29l19 19v29l-14-7V35l-9-10h-34Zm46 71v48l-21 20h-42l11-14h25l13-14V93ZM10 92l13 8v20l15 15h44l-8 14H31l-21-21Z" fill="url(#qm-metal)" stroke="#91a5ab" stroke-width=".65"/>
+    <path d="M24 48 47 30h39m4 0h26l14 15m3 54-6 20-17 9H81m-12 0H39l-14-12" fill="none" stroke="#8eb2bf" opacity=".73" stroke-dasharray="12 5 1 5"/>
+    <path d="M29 65h27l8-8m18 54h25l20-15m-103 0h19m70-53h21M19 77h31m58 9h32" fill="none" stroke="#54dcc3" stroke-width="1.1" opacity=".7"/>
+    <path d="M47 54 70 41h25l20 16 3 32-12 21-25 13-23-12-13-22Z" fill="#080e15" stroke="#596f7b" stroke-width="1.4"/>
+    <path d="M67 64c5-10 23-12 28-1 5 10-7 15-14 22l-2 7" fill="none" stroke="#19a58d" stroke-width="7" transform="translate(-3 2)"/>
+    <path d="M67 64c5-10 23-12 28-1 5 10-7 15-14 22l-2 7" fill="none" stroke="#fa946f" stroke-width="7" transform="translate(3 1)"/>
+    <path d="M67 64c5-10 23-12 28-1 5 10-7 15-14 22l-2 7" fill="none" stroke="#f1f8f0" stroke-width="6" stroke-linecap="square"/>
+    <path d="M79 99l5 6-5 6-5-6Z" fill="#f1f8f0"/><path d="M59 77h20m16 3h12M56 91h12m28 22h12" stroke="#090f16" stroke-width="2.3"/>
+    <path d="M32 50h11m-14 5h5m91 52h9m-9 5h4m-91 30h18m52-128h16" stroke="#ff9777" stroke-width="1.5"/>
+  </svg>`;
+}
 
 function creationCardArt(m, v, skin) {
   const genesis = m === VOID_CARD, classic = skin === 'classic';
@@ -4241,9 +4322,18 @@ function logoSVG() {
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
 function skinForVariant(v) { return normalizeCardSkin(v === ULTRA_VARIANT ? S.set.ultraSkin : S.set.cardSkin); }
-function cardArt(m, v = 0, skin = v === ULTRA_VARIANT ? 'modern' : skinForVariant(0)) {
+function hasRedesignedArt(m) { return m.t === OMEGA_TIER || m.t === UNKNOWN_TIER; }
+function artSkinForVariant(m, v) {
+  return v === ULTRA_VARIANT && !hasRedesignedArt(m) ? 'modern' : skinForVariant(v);
+}
+function cardArt(m, v = 0, skin = artSkinForVariant(m,v)) {
   if (m === HIDDEN_CARD) return adminCardArt(v, skin);
-  if (m === VOID_CARD || m.t === OMEGA_TIER) return creationCardArt(m, v, skin);
+  if (m === VOID_CARD) return creationCardArt(m, v, skin);
+  if (m.t === OMEGA_TIER) return skin === 'classic' ? creationCardArt(m, v, 'modern') : omegaCardArt(v);
+  if (m.t === UNKNOWN_TIER) {
+    if (skin === 'modern') return anomalyCardArt();
+    if (v === ULTRA_VARIANT) return tierArt(m);
+  }
   return skin === 'classic' ? classicCardArt(m) : tierArt(m);
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
@@ -4259,8 +4349,8 @@ function cardArtUrl(m, v, skin) {
   return artUrls.get(key);
 }
 function sharedArt(m, v = 0) {
-  const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER ? v : 0;
-  const src = cardArtUrl(m, variant, v === ULTRA_VARIANT ? 'modern' : skinForVariant(0));
+  const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER || (m.t === UNKNOWN_TIER && v === ULTRA_VARIANT) ? v : 0;
+  const src = cardArtUrl(m, variant, artSkinForVariant(m,v));
   return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}"${v === ULTRA_VARIANT ? ' data-ultra-art' : ''} src="${src}">`;
 }
 function applyCardSkin() {
@@ -4274,8 +4364,12 @@ function applyCardSkin() {
     const isUltra = card.classList.contains('v4');
     if (isUltra ? ultraChanged : normalChanged) card.dataset.skin = isUltra ? ultra : skin;
   }
-  if (normalChanged) for (const img of $$('img[data-card-art]:not([data-ultra-art])')) {
-    img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), skin);
+  for (const img of $$('img[data-card-art]')) {
+    const isUltra = img.hasAttribute('data-ultra-art');
+    if (isUltra ? !ultraChanged : !normalChanged) continue;
+    const m = modelOrLeak(img.dataset.cardArt);
+    if (isUltra && !hasRedesignedArt(m)) continue;
+    img.src = cardArtUrl(m, Number(img.dataset.artVariant), isUltra ? ultra : skin);
   }
 }
 function ultraFoil() {
@@ -4289,10 +4383,9 @@ function ultraFoil() {
       <path class="u-spark" d="M14 62v11m-5-5h10m127 19v11m-5-5h10M40 15l5-5m70 140 5-5"/>
     </g>
     <g class="u-classic" fill="none" stroke-linecap="square">
-      <path stroke="#73f5f4" d="M5 114V33L34 5h53M14 91V40L40 14h21M98 155h28l29-29V86M6 134h22l106-106h20"/>
-      <path stroke="#ff647d" d="M5 148h28L147 34V7M55 155h74l26-26v-22M7 67V29L29 7h15"/>
-      <path stroke="#ffe4a4" stroke-width="1.65" d="M5 44V27L27 5h36m34 150h36l22-22v-17M9 126h26l93-93h23M24 132l49-49 8 6 24-24 11 2 25-25"/>
-      <path stroke="#fff7e6" stroke-width="2" d="M45 112 72 85l8 6 26-26 10 2 19-19M25 84 71 38h19m-1 83h18l29-29"/>
+      <path stroke="#73f5f4" d="M5 114V33L34 5h53M14 91V40L40 14h21M98 155h28l29-29V86"/>
+      <path stroke="#ff647d" d="M55 155h74l26-26v-22M7 67V29L29 7h15"/>
+      <path stroke="#ffe4a4" stroke-width="1.65" d="M5 44V27L27 5h36m34 150h36l22-22v-17"/>
     </g>
   </svg>`;
 }
@@ -4415,6 +4508,28 @@ const CAUSAL_CINEMATIC = ['causal-fold', .98, () => {
       + '<path d="M-192-86v-21h34m316 0h34v21m0 172v21h-34m-316 0h-34V86" stroke-width="2.7"/>');
 }, ['#0a2c32','#7ce6d3','#ffc28f']];
 
+const CAUSAL_AXIS_CINEMATIC = ['causal-axis', 1.1, () => {
+  const rail = `<path d="M-422-99h125l103 52h116l78 47" stroke-width="9" opacity=".22"/>
+    <path d="M-422-111h125l103 52h116l78 59M-422-87h125l103 52h116L0 0" stroke-width="2.2"/>
+    <path d="M-422-125h136l105 53h63m-304 55h135l61 24h132l41-21" stroke-dasharray="42 7 3 7" opacity=".67"/>
+    <path d="M-321-105h66l104 53h-54Z M-142-42h64l47 28h-54Z" fill="currentColor" opacity=".35"/>`;
+  return cineLayer('axis-field', cineStars(68,18420) + '<path d="M-423 0h846M0-240v480 M-392 0 0-218 392 0 0 218Z" opacity=".39" stroke-dasharray="38 10 2 8"/>')
+    + cineLayer('axis-rail axis-in',rail)
+    + cineLayer('axis-rail axis-out',`<g transform="rotate(180)" color="var(--cine-foil)" stroke="currentColor">${rail}</g>`)
+    + cineLayer('axis-lock','<path d="M0-178 178 0 0 178-178 0Z" stroke="var(--cine-foil)" stroke-width="2.6"/><path d="M0-205 205 0 0 205-205 0Z" stroke-dasharray="62 9 4 6"/><path d="M0-63 13-13 63 0 13 13 0 63-13 13-63 0-13-13Z" fill="var(--cine-foil)" opacity=".7"/>')
+    + cineLayer('axis-pulse','<path d="M-428 0H428" stroke="url(#cine-rail)" stroke-width="5"/><path d="M0-128 128 0 0 128-128 0Z" stroke-width="2.2"/>');
+}, ['#102d2b','#7ce6d3','#ffe29c']];
+
+const UNKNOWN_CINEMATIC = ['unknown-signal', .87, () => {
+  const plate = `<path d="M-401-106h181l51-48h143L9-118l-19 47h-86l-53 49h-196l-42 34h-39" fill="var(--cine-ground)" stroke-width="2.3"/>
+    <path d="M-415-83h202l35-37h92m-277 91h179l39-31h42m-259 96h83l28-18h99" stroke-dasharray="30 5 5 7" opacity=".58"/>
+    <path d="M-198-110h33l25-23h34l-41 37h-53Z M-305-54h78l-14 11h-80Z" fill="currentColor" opacity=".57"/>`;
+  return cineLayer('unknown-field','<path d="M-381-158h106l15-21h149m222 358h149l15-21h106M-386 115h163m446-230h163" stroke-dasharray="14 8 3 8" opacity=".64"/>' + cineStars(42,9929))
+    + cineLayer('unknown-plate unknown-left',plate)
+    + cineLayer('unknown-plate unknown-right',`<g transform="rotate(180)" color="#66c4b8" stroke="currentColor">${plate}</g>`)
+    + cineLayer('unknown-read','<path d="M-405 0h180l29-22h116l31 22h98l31 22h116l29-22h180" stroke="url(#cine-rail)" stroke-width="3.5"/><path d="M-164-81v-47h55m218 0h55v47m0 162v47h-55m-218 0h-55V81" stroke="var(--cine-foil)" stroke-width="1.8"/>');
+}, ['#1b2226','#bdcdd3','#ffa486']];
+
 const GENESIS_CINEMATIC = ['genesis-collapse', 1.34, () => {
   const hex = 'M0-1 .866-.5 .866.5 0 1-.866.5-.866-.5Z';
   const relic = (s, a, extra = '') => `<path d="${hex}" transform="rotate(${a}) scale(${s})" vector-effect="non-scaling-stroke" ${extra}/>`;
@@ -4495,9 +4610,12 @@ function showCine(r, replayFrom = null, pack = null) {
   if ($('#adminCardReveal').open || c.matches('.open[data-replay]') || (!replay && (!S.set.fx || (cineOpen && !priority)))) return;
   const m = modelOrLeak(r.leak ? 'leak' : r.id);
   if (!m) return;
-  const creation = m === VOID_CARD ? GENESIS_CINEMATIC : m.t === OMEGA_TIER ? CAUSAL_CINEMATIC : null;
+  const modern = skinForVariant(r.v) === 'modern';
+  const creation = m === VOID_CARD ? GENESIS_CINEMATIC
+    : m.t === OMEGA_TIER ? (modern ? CAUSAL_AXIS_CINEMATIC : CAUSAL_CINEMATIC) : null;
   const ultra = r.v === ULTRA_VARIANT;
-  const scene = ultra ? ULTRA_CINEMATIC : creation ?? (r.leak ? LEAK_CINEMATIC : TIER_CINEMATICS[r.t]);
+  const scene = ultra ? ULTRA_CINEMATIC : creation ?? (r.leak ? LEAK_CINEMATIC
+    : modern && m.t === UNKNOWN_TIER ? UNKNOWN_CINEMATIC : TIER_CINEMATICS[r.t]);
   const staticScene = !S.set.fx || matchMedia('(prefers-reduced-motion: reduce)').matches;
   clearTimeout(cineCloseTimer);
   c.dataset.tier = r.leak ? '-1' : String(r.t);
@@ -4586,7 +4704,9 @@ function playBangSound(scene) {
   bus.connect(actx.destination);
   const t = actx.currentTime;
   if (scene === 'causal' || scene === 'genesis') {
-    const genesis = scene === 'genesis', cue = genesis ? GENESIS_CINEMATIC[1] : CAUSAL_CINEMATIC[1], impact = t + cue;
+    const genesis = scene === 'genesis';
+    const cue = genesis ? GENESIS_CINEMATIC[1] : $('#cine').dataset.scene === 'causal-axis' ? CAUSAL_AXIS_CINEMATIC[1] : CAUSAL_CINEMATIC[1];
+    const impact = t + cue;
     tone(genesis ? 116 : 210, t, cue-.06, 'sine', .1, bus, genesis ? 33 : 62);
     tone(genesis ? 73 : 109, impact, .92, 'sine', .23, bus, 41);
     const chord = genesis ? [130.8,196,261.6,392,523.2] : [164.8,246.9,329.6,493.9];
