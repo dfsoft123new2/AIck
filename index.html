@@ -2759,7 +2759,7 @@ const TECH = [
   { key: 'doubleOdds', name: '超频采样', desc: '提高变体与权重泄露概率，不改变卡池的固定稀有概率。', max: 4, cost: lv => 10000 * (lv >= 3 ? 2.5 : 1), eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
   { key: 'doubleSpeed', name: '瞬时推理', desc: '提高自动抽卡速度。', max: 4, cost: lv => 12000 * (lv >= 3 ? 2.5 : 1), eff: lv => `自动抽卡速度 ×${1 + lv}` },
   { key: 'doubleNews', name: '热点增幅', desc: '提高热点的数值效果，折后价按倍率再降低。频率和时长不变。', max: 4, cost: lv => 20000 * (lv >= 3 ? 2.5 : 1), eff: lv => `热点强度 ×${1 + lv}` },
-  { key: 'onlineGpu', name: '算力常驻', desc: '在线奖励基础产出 +1 GPU／分钟，云档同步后生效。', max: 1, cost: () => 15000, eff: lv => `在线 GPU 基础产出 +${lv}／分钟` },
+  { key: 'onlineGpu', name: '算力常驻', desc: '在线 GPU 基础产出 ×1.5，云档同步后生效。', max: 1, cost: () => 15000, eff: lv => `在线 GPU 基础产出 ×${lv ? 1.5 : 1}` },
   { key: 'doublePower', name: '战力共振', desc: '评测与排行榜战力翻倍，与红队演练叠乘。', max: 1, cost: () => 25000, eff: lv => `战力 ×${1 + lv}` }
 ];
 
@@ -6935,9 +6935,10 @@ function renderOnlineGPU() {
   line.hidden = !data;
   if (!data) return;
   const rateTenths = data.base_rate_tenths == null ? data.rate_tenths : data.base_rate_tenths*eventMultiplier('gpu');
-  const rate = (rateTenths / 10).toLocaleString('zh-CN',{maximumFractionDigits:3});
+  const formatRate = tenths => (tenths / 10).toLocaleString('zh-CN',{maximumFractionDigits:3});
+  const hidden = data.hidden_bonus_tenths > 0 ? `（隐藏持有 +${formatRate(data.hidden_bonus_tenths)} 基础）` : '';
   const time = navigator.onLine && !pulse.resume ? `${data.seconds}／60 秒` : '已暂停';
-  textIfChanged(line,`在线奖励：${rate} GPU／分钟 · ${time}`);
+  textIfChanged(line,`在线奖励：${formatRate(rateTenths)} GPU／分钟${hidden} · ${time}`);
 }
 
 let eventRetry = 0, eventPoll = null, eventMutation = null, eventRevision = 0, eventOwner = null, eventConnection = 'idle';
