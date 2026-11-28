@@ -7522,7 +7522,7 @@ async function renderAdminPlayerControls(id,box=$('#adminPlayerControls'),args={
     if (!adminDialog.open || adminTarget !== id || !box.isConnected) return;
     const {enabled,qualified,review} = result;
     const reviewPending = review && !review.resolved;
-    box.innerHTML = `<p class="note">发红包：${!enabled ? (reviewPending ? '已关闭 · 待复核' : '已关闭') : qualified ? '已开启' : '未达门槛'}${qualified ? '' : ' · 累计 Token 须超过 1 京'}</p>
+    box.innerHTML = `<p class="note">发红包：${!enabled ? (reviewPending ? '已关闭 · 待复核' : '已关闭') : qualified ? '已开启' : '未达门槛'}${qualified ? '' : ' · 需累计抽卡满 500 万次，且累计 Token 超过 1 京'}</p>
       <div class="world-tools"><button type="button" id="adminPacketToggle" class="btn ghost small"${!enabled && (!qualified || reviewPending) ? ' disabled' : ''}>${enabled ? '关闭发红包' : '开启发红包'}</button></div>
       ${review ? `<p class="note">余额复核：${review.resolved ? '已处理' : '待处理'} · GPU ${esc(fmt(Number(review.gpu)))}（最高 ${esc(fmt(Number(review.peak)))}）${review.tokens == null ? '' : ` · Token ${esc(fmt(Number(review.tokens)))}（最高 ${esc(fmt(Number(review.token_peak)))}）`}</p>
       ${review.resolved ? '' : '<button type="button" id="adminResolveGPU" class="btn ghost small">标记为已处理</button>'}` : ''}`;
@@ -7803,6 +7803,7 @@ function communityError(error) {
   if (error?.message === 'FRONTIER_PACKET_TOTAL_TOO_SMALL') return '总金额不能少于红包份数。';
   if (error?.message === 'FRONTIER_PACKET_FEE_CHANGED') return '手续费已变化，请重新发送。';
   if (error?.message === 'FRONTIER_PACKET_UPDATE_REQUIRED') return '发红包需要刷新到新版。';
+  if (error?.message === 'FRONTIER_PACKET_PULLS') return '累计抽卡满 500 万次后才能发或领红包。';
   if (error?.message === 'FRONTIER_PACKET_LIFETIME') return '累计 Token 超过 1 京后才能发红包。';
   if (error?.message === 'FRONTIER_PACKET_DISABLED') return '该实验室的发红包权限已关闭。';
   if (error?.message === 'FRONTIER_CHAT_RATE') return '发得太快了，请稍后再发。';
@@ -7950,7 +7951,7 @@ async function loadPacketAccess() {
     const data = unwrap(await communityClient().rpc('frontier_packet_access',{}));
     if (!current()) return;
     packetAccess = data;
-    status.textContent = !data.enabled ? '发红包权限已关闭。' : !data.qualified ? '累计 Token 超过 1 京后可发红包。' : '';
+    status.textContent = !data.enabled ? '发红包权限已关闭。' : !data.qualified ? '发红包需累计抽卡满 500 万次，且累计 Token 超过 1 京。' : '';
   } catch (error) {
     if (current()) { packetAccess = null; status.textContent = missingWorldRPC(error) ? '新版发红包暂不可用。' : '未能确认权限，请联网后重新打开。'; }
   } finally { if (current()) renderPacketDebit(); }
