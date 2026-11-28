@@ -363,6 +363,11 @@ button.card { transition: transform .12s; }
 .card:is(.t-CAUSAL,.t-GENESIS) .nm { color:#fff8e9; }
 .card:is(.t-CAUSAL,.t-GENESIS) .cd { color:var(--tc); }
 .card:is(.t-CAUSAL,.t-GENESIS) .tier { background:#0b1017; color:var(--tc); box-shadow:inset 0 0 0 1px var(--rim); }
+.card.t-RELIC { background:var(--plate); border-color:var(--tc) var(--rim) var(--rim) var(--tc); }
+.card.t-RELIC .body { background:linear-gradient(112deg,#080b10 18%,var(--plate)); border-top:1px solid color-mix(in srgb,var(--rim) 65%,#090a12); }
+.card.t-RELIC .nm { color:#fff8ec; }
+.card.t-RELIC .cd { color:var(--tc); opacity:.89; }
+.card.t-RELIC .tier { color:var(--tc); background:#080a12; box-shadow:inset 0 0 0 1px var(--rim); }
 .card.t-CAUSAL[data-skin="modern"]:not(.v4) { --tc:#c5eee5; --rim:#a77d4b; --plate:#102125; border-color:var(--rim) #478d84 #478d84 var(--rim); }
 .card.t-CAUSAL[data-skin="modern"]:not(.v4) .body { background:linear-gradient(120deg,#0a1418 40%,#163531); border-top-color:#907242; }
 .card.t-LEAK { --tc:#a0e8ad; --rim:#679e74; --plate:#102018; }
@@ -1219,47 +1224,25 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   63% { opacity:1; transform:translateY(-3px) scale(1.017); }
   100% { opacity:1; transform:none; }
 }
-.cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) {
+.cine[data-scene=genesis-collapse] {
   --cine-card: min(228px, 60vw, 37dvh);
   --cine-stage: clamp(670px, 110vw, 1150px);
-  --cine-entry: causal-seat;
-  --cine-entry-time: .63s;
+  --cine-entry: genesis-seat;
+  --cine-entry-time: .79s;
 }
-.cine[data-scene=genesis-collapse] { --cine-entry: genesis-seat; --cine-entry-time: .79s; }
-.cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) .title { color: #fff5dd; font-size: 36px; line-height: 1.13; }
-.cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) .sub { white-space: pre-line; color: #f5e9e2; }
+.cine[data-scene=genesis-collapse] .title { color: #fff5dd; font-size: 36px; line-height: 1.13; }
+.cine[data-scene=genesis-collapse] .sub { white-space: pre-line; color: #f5e9e2; }
 .sc-creation-field { opacity: .62; animation: creation-field .64s ease-out both; }
-.sc-causal-left, .sc-causal-right { opacity: .61; animation: causal-converge var(--cine-cue) cubic-bezier(.25,.1,.46,1) both; }
-.sc-causal-left { --turn: -46deg; --shift: -104px; }
-.sc-causal-right { --turn: 46deg; --shift: 104px; }
 .sc-genesis-infall { opacity:0; animation: genesis-infall var(--cine-cue) cubic-bezier(.62,0,.81,.42) both; }
 .sc-genesis-seed { opacity:0; animation: genesis-seed .53s .89s ease-in-out both; }
-.sc-creation-surge, .sc-genesis-birth { opacity:0; animation: creation-expand .88s var(--cine-cue) var(--cine-ease) both; }
-.sc-genesis-birth { animation-duration:1.15s; }
+.sc-genesis-birth { opacity:0; animation: creation-expand 1.15s var(--cine-cue) var(--cine-ease) both; }
 .sc-creation-rails { opacity:.74; animation: creation-field .66s calc(var(--cine-cue) + .19s) ease-out both; }
 @keyframes creation-field { from { opacity:0; } }
-@keyframes causal-converge { from { opacity:0; transform:translateX(var(--shift)) rotate(var(--turn)) scale(.74); } 67% { opacity:.9; } }
 @keyframes genesis-infall { 0% { opacity:0; transform:rotate(-36deg) scale(1.31); } 29% { opacity:.9; } 88% { opacity:.85; } to { opacity:0; transform:rotate(50deg) scale(.04); } }
 @keyframes genesis-seed { 0%,100% { opacity:0; transform:scale(.24); } 66% { opacity:1; transform:scale(.76); } }
 @keyframes creation-expand { 0% { opacity:0; transform:scale(.09); } 19% { opacity:.86; } to { opacity:0; transform:scale(1.32); } }
-@keyframes causal-seat { 0% { opacity:0; transform:perspective(520px) rotateY(-80deg) scale(.81); } 68% { opacity:1; } }
 @keyframes genesis-seat { 0% { opacity:0; transform:translateY(18px) scale(.58); clip-path:inset(49% 0); } 48% { opacity:1; clip-path:inset(0); } to { clip-path:inset(-15%); } }
-.cine[data-scene=causal-axis] {
-  --cine-card:min(228px,60vw,37dvh); --cine-stage:clamp(640px,105vw,1150px);
-  --cine-entry:axis-seat; --cine-entry-time:.66s;
-}
-.cine[data-scene=causal-axis] .title { font-size:36px; color:#fff4d2; }
-.cine[data-scene=causal-axis] .sub { white-space:pre-line; }
 .sc-axis-field, .sc-unknown-field { opacity:.52; animation:creation-field .64s ease-out both; }
-.sc-axis-rail.axis-in { --axis-x:-170px; --axis-y:-46px; --axis-turn:-11deg; }
-.sc-axis-rail.axis-out { --axis-x:170px; --axis-y:46px; --axis-turn:11deg; }
-.sc-axis-rail { opacity:.65; animation:axis-route var(--cine-cue) cubic-bezier(.35,.04,.38,1) both; }
-.sc-axis-lock { opacity:.62; animation:axis-lock .66s calc(var(--cine-cue) - .19s) var(--cine-ease) both; }
-.sc-axis-pulse { opacity:.24; animation:axis-pulse .84s var(--cine-cue) var(--cine-ease) both; }
-@keyframes axis-route { from { opacity:0; transform:translate(var(--axis-x),var(--axis-y)) rotate(var(--axis-turn)); } 64% { opacity:.94; } }
-@keyframes axis-lock { from { opacity:0; transform:scale(.38) rotate(-34deg); } 55% { opacity:.92; } }
-@keyframes axis-pulse { from { opacity:0; transform:scale(.08); } 32% { opacity:.88; } }
-@keyframes axis-seat { from { opacity:0; transform:translateY(14px) scale(.79); clip-path:inset(0 49%); } 64% { opacity:1; clip-path:inset(-5%); } to { clip-path:inset(-5%); } }
 .cine[data-scene=unknown-signal] { --cine-entry:unknown-seat; --cine-entry-time:.52s; }
 .cine[data-scene=unknown-signal] .title { color:#f5fbff; text-shadow:-2px 1px #3a8f85,2px 0 #b65a49; }
 .sc-unknown-plate.unknown-left { --signal-x:-160px; --signal-y:-55px; --signal-angle:-8deg; }
@@ -1416,6 +1399,133 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   100% { transform: scale(1.35); opacity: .2; }
 }
 .cine[data-static][data-scene=weight-leak] .sc-leak-lock { transform: scale(1.35); opacity: .2; }
+.cine[data-feature] {
+  --cine-card:min(238px,60vw,37dvh);
+  --cine-stage:min(1300px,max(128vw,620px),155dvh);
+  --cine-entry:feature-seat;
+  --cine-entry-time:.63s;
+  background:radial-gradient(ellipse at 50% 40%, var(--cine-ground), #0a0d13 48%, #05070a 84%);
+}
+.cine[data-feature] .tier-scene {
+  overflow:visible;
+  mask-image:radial-gradient(ellipse at center,#000 33%,#000 61%,transparent 98%);
+}
+.cine[data-feature] :is(.title,.sub) { animation:none; }
+.cine[data-feature] :is(.title,.sub) > span {
+  display:block;
+  animation:cine-caption .26s calc(var(--cine-cue) + .32s) ease-out both;
+}
+.cine[data-feature] .title { color:var(--cine-foil); font-size:32px; }
+.cine[data-feature] .sub { white-space:pre-line; }
+.cine[data-feature]:is([data-scene=causal-axis],[data-scene=causal-fold]) .title { font-size:36px; }
+.cine[data-mechanism=forge] { --cine-entry:feature-stamp; }
+.cine[data-mechanism=orbit] { --cine-entry:feature-orbit-seat; }
+@media (max-height:480px) {
+  .cine[data-feature] { --cine-card:min(170px,48vw,32dvh); }
+  .cine[data-feature][data-scene] .title { font-size:22px; }
+}
+@keyframes feature-seat {
+  0% { opacity:0; transform:scale(.87); clip-path:inset(0 49%); }
+  48% { opacity:1; clip-path:inset(-4%); }
+  100% { transform:none; clip-path:inset(-12%); }
+}
+@keyframes feature-stamp {
+  0% { opacity:0; transform:translateY(-22px) scale(.8); clip-path:inset(48% 0); }
+  32% { opacity:1; clip-path:inset(-3%); }
+  100% { transform:none; clip-path:inset(-12%); }
+}
+@keyframes feature-orbit-seat {
+  0% { opacity:0; transform:perspective(560px) rotateY(-43deg) scale(.83); }
+  48% { opacity:1; }
+  100% { transform:none; }
+}
+
+.sc-causal-branch,.sc-causal-iris,.sc-causal-lock,.sc-causal-release { opacity:0; }
+.axis-past { --axis-side:-1; }
+.axis-future { --axis-side:1; }
+.sc-causal-branch { animation:causal-branch var(--cine-cue) cubic-bezier(.54,.02,.46,1) both; }
+.causal-tracer { stroke-dasharray:100; animation:relic-trace calc(var(--cine-cue)*.78) .08s cubic-bezier(.45,.07,.5,1) both; }
+.sc-causal-iris { animation:causal-iris .82s calc(var(--cine-cue) - .34s) var(--cine-ease) both; }
+.sc-causal-lock { animation:causal-lock .57s calc(var(--cine-cue) - .36s) ease-in-out both; }
+.sc-causal-release { animation:relic-impact .83s var(--cine-cue) var(--cine-ease) both; }
+.sc-causal-after { opacity:.54; animation:creation-field .68s calc(var(--cine-cue) + .18s) ease-out both; }
+@keyframes causal-branch {
+  0% { opacity:0; transform:translate(calc(var(--axis-side)*175px),calc(var(--axis-side)*80px)) scale(1.16); }
+  53% { opacity:.93; }
+  86% { opacity:.94; transform:translateX(calc(var(--axis-side)*24px)); }
+  100% { opacity:0; transform:translateX(calc(var(--axis-side)*-26px)) scaleX(.88); }
+}
+@keyframes causal-iris {
+  0% { opacity:0; transform:translateX(calc(var(--axis-side)*190px)); }
+  36% { opacity:.96; transform:translateX(0); }
+  100% { opacity:0; transform:translateX(calc(var(--axis-side)*230px)); }
+}
+@keyframes causal-lock {
+  0% { opacity:0; transform:rotate(-17deg) scale(1.33); }
+  54% { opacity:.97; transform:none; }
+  71% { opacity:1; transform:scale(.92); }
+  100% { opacity:0; transform:scale(1.16); }
+}
+
+.sc-relic-field { opacity:.57; animation:creation-field .45s ease-out both; }
+.sc-relic-omen { opacity:0; animation:relic-omen var(--cine-cue) ease-in both; }
+.relic-thread { stroke-dasharray:100; animation:relic-trace calc(var(--cine-cue)*.79) ease-out both; }
+.sc-relic-motion,.sc-relic-orbit-frame,.sc-relic-gate-floor,.sc-relic-splinters { opacity:0; }
+.relic-surge { animation:relic-surge var(--cine-cue) ease-in-out both; }
+.relic-split:nth-of-type(odd) { --split-turn:-19deg; --split-x:-132px; }
+.relic-split:nth-of-type(even) { --split-turn:25deg; --split-x:132px; }
+.relic-split { animation:relic-split var(--cine-cue) cubic-bezier(.37,.07,.56,1) both; }
+.sc-relic-splinters { animation:relic-impact .74s var(--cine-cue) var(--cine-ease) both; }
+.relic-forge { animation:relic-forge calc(var(--cine-cue) - .21s) var(--relic-delay) cubic-bezier(.43,.03,.59,1) both; }
+.sc-relic-orbit-frame { animation:relic-omen var(--cine-cue) linear both; }
+.relic-orbit { animation:relic-omen var(--cine-cue) linear both; }
+.relic-orbit-run { animation:relic-orbit-run var(--cine-cue) cubic-bezier(.37,.02,.26,1) both; }
+.relic-eclipse .relic-orbit-run { animation-name:relic-eclipse; }
+.relic-gate { animation:relic-gate calc(var(--cine-cue)*.71) var(--relic-delay) cubic-bezier(.39,.06,.68,.78) both; }
+.sc-relic-gate-floor { animation:relic-omen var(--cine-cue) ease-in-out both; }
+.sc-relic-core { opacity:0; animation:relic-core .56s calc(var(--cine-cue) - .35s) ease-in-out both; }
+.sc-relic-impact { opacity:0; animation:relic-impact .88s var(--cine-cue) var(--cine-ease) both; }
+.sc-relic-wave { opacity:0; animation:relic-wave .72s calc(var(--cine-cue) + .06s) var(--cine-ease) both; }
+.sc-relic-seal { opacity:.53; animation:creation-field .75s calc(var(--cine-cue) + .14s) ease-out both; }
+@keyframes relic-surge {
+  0% { opacity:0; transform:scaleX(1.29); }
+  32%,76% { opacity:.93; transform:none; }
+  100% { opacity:0; transform:scaleY(.67); }
+}
+@keyframes relic-split {
+  0% { opacity:0; transform:translateX(var(--split-x)) rotate(var(--split-turn)); }
+  57% { opacity:.94; transform:none; }
+  74% { opacity:1; transform:translateX(calc(var(--split-x)*-.12)) scale(1.05); }
+  100% { opacity:0; transform:translateX(calc(var(--split-x)*1.24)) rotate(calc(var(--split-turn)*-1.4)); }
+}
+@keyframes relic-forge {
+  0% { opacity:0; transform:translateY(-192px) scale(1.09); }
+  42% { opacity:.83; }
+  76% { opacity:.94; transform:none; }
+  100% { opacity:0; transform:translateY(37px) scale(.82); }
+}
+@keyframes relic-orbit-run {
+  0% { transform:rotate(calc(var(--orbit-turn)*-3)) scale(1.27); }
+  68% { transform:rotate(var(--orbit-turn)); }
+  100% { transform:rotate(calc(var(--orbit-turn)*1.5)) scale(.18); }
+}
+@keyframes relic-eclipse { from { transform:translateX(105px); } 74%,100% { transform:translateX(-55px); } }
+@keyframes relic-gate {
+  0% { opacity:0; transform:scale(.45); }
+  34% { opacity:.77; }
+  73% { opacity:.88; }
+  100% { opacity:0; transform:scale(1.36,1.52); }
+}
+@keyframes relic-core {
+  0%,100% { opacity:0; transform:scale(.47); }
+  56% { opacity:1; transform:scale(1.05); }
+}
+@keyframes relic-omen { 0%,100% { opacity:0; } 24%,76% { opacity:.9; } }
+@keyframes relic-trace { from { stroke-dashoffset:100; } to { stroke-dashoffset:0; } }
+@keyframes relic-impact { 0% { opacity:0; transform:scale(.43); } 21% { opacity:.93; } 100% { opacity:0; transform:scale(1.25); } }
+@keyframes relic-wave { 0% { opacity:0; transform:scale(.18); } 24% { opacity:.85; } 100% { opacity:0; transform:scale(1.14); } }
+.cine[data-static][data-feature] :is(.sc-causal-branch,.sc-causal-iris,.sc-causal-lock,.sc-causal-release,
+  .sc-relic-omen,.sc-relic-motion,.sc-relic-splinters,.sc-relic-orbit-frame,.sc-relic-gate-floor,.sc-relic-core,.sc-relic-impact,.sc-relic-wave) { display:none; }
 
 #adminCardSlot[hidden], .admin-card-error:empty { display:none; }
 .admin-card-error { display:block; margin-top:4px; font-size:13px; }
@@ -2121,7 +2231,23 @@ const HIDDEN_CARD = Object.freeze({id:'admin-nullpoint', n:'??!!', c:'零点奇�
   base:1e20, lab:'horizon', s:'all', d:'事件视界闭合后留下的最后一道回波。'});
 const VOID_CARD = Object.freeze({id:'void-genesis', n:'Ω', c:'虚空创世', t:OMEGA_TIER + 2,
   base:1e22, lab:'horizon', s:'all', d:'星图坍缩成一点。第一颗新星亮起时，旧宇宙已没有坐标。'});
-const HIDDEN_MODELS = [HIDDEN_CARD, VOID_CARD];
+const HORIZON_RELICS = [
+  ['零号余烬','电弧种子',1e6,1e7,'第一道电弧烧穿晶圆，在断电后仍然发光。'],
+  ['白金脉冲','封存信号',5e6,1e8,'只出现一次的白色脉冲，把八个节点的时钟锁在同一刻。'],
+  ['晶界残响','折射矩阵',1e7,1e9,'反射比入射早一拍，晶体的每个切面都载着一条未发生的历史。'],
+  ['赤冕协议','恒温禁核',2e7,1e10,'冷却管冻结之后，反应堆里的红色冠环才开始转动。'],
+  ['万相棱镜','镜域图谱',3e7,1e11,'棱镜拆开了同一次推理的所有答案，没有一个愿意消失。'],
+  ['苍穹断层','失重裂面',4e7,1e12,'一条青白色断层从机柜背后穿过，两侧的重力指向不同方向。'],
+  ['逆熵王座','回写核心',5e7,1e13,'从废热中取回最后一位信息后，核心开始反向书写时间。'],
+  ['幽海巨构','深层回路',1e8,1e14,'深海之下十二座回路塔同时亮起，汇成一条无人发出的指令。'],
+  ['双星审判','轨道天平',2e8,1e15,'两颗星在同一条轨道上交错，每一次擦肩都改写一次判决。'],
+  ['昼夜天秤','日蚀机芯',3e8,1e16,'白昼与长夜各自占据半枚芯片，中间只有一道灼亮的缝。'],
+  ['熔日神冕','日冕王环',4e8,1e17,'恒星被拆成十二瓣，最内层的日冕被铸进同一枚冠环。'],
+  ['终末界碑','边界原点',5e8,1e18,'穿过最后一道视界后，所有坐标同时归零，只剩这座界碑。'],
+].map(([n,c,odds,base,d],i) => Object.freeze({id:`horizon-relic-${String(i+1).padStart(2,'0')}`,
+  n,c,base,d,odds,relic:i+1,t:OMEGA_TIER+1,lab:'horizon',s:'all'}));
+const HIDDEN_MODELS = [...HORIZON_RELICS,HIDDEN_CARD, VOID_CARD];
+const HIDDEN_BY_ID = new Map(HIDDEN_MODELS.map(m => [m.id,m]));
 const PULLED_HIDDEN_CARD_ID = 'hidden-nullpoint';
 const HIDDEN_CARD_LABEL = '隐藏';
 const TIERS = [
@@ -2729,7 +2855,7 @@ const PACKS = [
     pt: 9, pn: 50000, noPityNews: true },
   { id: 14, name: '造物引擎', hw: '事件视界', cost: 5e37, r: [[8,.99],[9,.01]], pt: 9, pn: 500, noPityNews: true,
     rare: [[EXCLAMATION_TIER,1e-5],[OMEGA_TIER,5e-8]], hiddenChance: 5e-10, hiddenModel: VOID_CARD }
-];
+].map((p,i) => i < HORIZON_RELICS.length ? {...p,hiddenModel:HORIZON_RELICS[i],hiddenChance:1/HORIZON_RELICS[i].odds} : p);
 
 const UPGRADES = [
   { key: 'multi', name: '并行推理', desc: '每级增加基础抽数，费用同比增加。', base: 1e8, g: 20, max: 99, eff: lv => `每批 ${(lv + 1) * techDouble('doubleDraw')} 抽` },
@@ -3172,6 +3298,7 @@ function mergeState(base, saved) {
 function sanitizeState(st) {
   delete st.variantSchema; // Transport metadata is regenerated on upload.
   delete st.gpuResearchSchema;
+  delete st.horizonSchema;
   st.titlePeakTps = Number.isFinite(st.titlePeakTps) && st.titlePeakTps > 0 ? Math.min(st.titlePeakTps, 1e300) : 0;
   if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
   st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
@@ -3187,11 +3314,12 @@ function sanitizeState(st) {
   st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
   const clean = {};
   for (const [id, arr] of Object.entries(st.cards || {})) {
-    if ((!Object.hasOwn(MODEL_BY_ID,id) && id !== VOID_CARD.id) || !Array.isArray(arr)) continue;
-    const counts = VARIANTS.map((_,i) => id === VOID_CARD.id
+    const hidden = id !== HIDDEN_CARD.id && isHiddenCard(id);
+    if ((!Object.hasOwn(MODEL_BY_ID,id) && !hidden) || !Array.isArray(arr)) continue;
+    const counts = VARIANTS.map((_,i) => hidden
       ? (Number.isSafeInteger(arr[i]) && arr[i] > 0 ? arr[i] : 0)
       : Math.max(0, Number(arr[i]) || 0));
-    if (id !== VOID_CARD.id || total(counts)) clean[id] = counts;
+    if (!hidden || total(counts)) clean[id] = counts;
   }
   st.cards = clean;
   for (const k of ['tokens', 'lifetime', 'gpu', 'leaks', 'rebirths', 'stage']) st[k] = Math.max(0, Number(st[k]) || 0);
@@ -3216,7 +3344,7 @@ function sanitizeState(st) {
   st.hiddenCard = copies?.some(Boolean) ? {copies, level:Number.isInteger(hidden.level) && hidden.level >= 0 && hidden.level <= 900 ? hidden.level : 0} : null;
   if (st.hiddenCard && Number.isSafeInteger(hidden.gifted) && hidden.gifted > 0) st.hiddenCard.gifted = Math.min(total(copies),hidden.gifted);
   if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(st.sig === HIDDEN_CARD.id && (st.adminCardProgress || st.hiddenCard))
-    && !(st.sig === VOID_CARD.id && clean[VOID_CARD.id])) st.sig = null;
+    && !clean[st.sig]) st.sig = null;
   if (typeof st.name !== 'string' || !st.name.trim()) st.name = randomLabName();
   st.name = st.name.slice(0, 16);
   return st;
@@ -3326,6 +3454,8 @@ function applyWorldEventReply(payload, sentAt, at = worldEventClock(), personal 
   refreshWorldEvent();
   return true;
 }
+
+/* =================== ECONOMY =================== */
 function addTokens(x) { if (x > 0 && isFinite(x)) { S.tokens += x; S.lifetime += x; } }
 function buffMul(type, lab) {
   let m = 1;
@@ -3413,8 +3543,8 @@ function pickModel(t, up = S.upLab, focus = upChance()) {
   return pick(pool);
 }
 function total(c) { let n = 0; if (c) for (let v = 0; v < VARIANTS.length; v++) n += c[v] ?? 0; return n; }
-function isHiddenCard(id) { return id === HIDDEN_CARD.id || id === VOID_CARD.id; }
-function modelById(id) { return Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : HIDDEN_MODELS.find(m => m.id === id) ?? null; }
+function isHiddenCard(id) { return HIDDEN_BY_ID.has(id); }
+function modelById(id) { return Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : HIDDEN_BY_ID.get(id) ?? null; }
 function modelBase(m) { return m.base ?? TIERS[m.t].base; }
 function hiddenCardInventory() {
   const pulled = S.hiddenCard?.copies;
@@ -3426,7 +3556,7 @@ function owned(m) { return !!m && total(modelInventory(m)) > 0; }
 function featuredModel() {
   const m = modelById(S.sig);
   if (m === HIDDEN_CARD && !S.hiddenCard && !(typeof adminCardProgressMatches === 'function' && adminCardProgressMatches())) return null;
-  return m === VOID_CARD && !owned(m) ? null : m;
+  return m && isHiddenCard(m.id) && !owned(m) ? null : m;
 }
 function bondRate() { return 0.03 + 0.01 * S.tech.bond; }
 function labStats() {
@@ -3488,16 +3618,18 @@ function rebirthMul() { return 1 + S.rebirths; }
 let worldMilestones = 0;
 function worldMul() { return 1 + 0.05 * worldMilestones; }
 function hiddenCardIncomeMul(m) { return owned(m) ? 2 : 1; }
+function hiddenModelCount() { return HIDDEN_MODELS.reduce((n,m) => n + Number(owned(m)),0); }
 function mulParts() {
+  const hidden = hiddenModelCount();
   return [
     ['版本迭代', rebirthMul()], ['图鉴', dexInfo().mul], ['系列收藏', seriesMul()], ['评测', benchMul()], ['API 商业化', priceMul()],
     ['算力复利', compoundMul()], ['全服奇点', worldMul()], ['热点', buffMul('frenzy')],
-    ...HIDDEN_MODELS.map(m => [`持有 ${m.n}`, hiddenCardIncomeMul(m)]).filter(([,mul]) => mul > 1)
+    ...(hidden ? [[`隐藏持有（${hidden} 种）`, 2 ** hidden]] : [])
   ];
 }
 function globalMul() {
   return rebirthMul() * dexInfo().mul * seriesMul() * benchMul() * priceMul() * compoundMul() * worldMul() * buffMul('frenzy') *
-    hiddenCardIncomeMul(HIDDEN_CARD) * hiddenCardIncomeMul(VOID_CARD);
+    2 ** hiddenModelCount();
 }
 function perCard(m) { return TIERS[m.t].base * trainMul(m.id) * labStats()[m.lab].mul * buffMul('lab', m.lab); }
 function rawUnits(c) { let n = 0; for (let v = 0; v < VARIANTS.length; v++) n += (c[v] ?? 0) * VARIANTS[v].mul; return n; }
@@ -3536,7 +3668,9 @@ function hiddenCardBase(m = HIDDEN_CARD) {
 }
 function computeYield() {
   const { sum, best } = production();
-  return (sum + S.leaks * best + hiddenCardBase() + hiddenCardBase(VOID_CARD)) * globalMul();
+  let subtotal = sum + S.leaks * best;
+  for (const m of HIDDEN_MODELS) subtotal += hiddenCardBase(m);
+  return subtotal * globalMul();
 }
 function modelOut(m) { const c = modelInventory(m); return total(c) ? (isHiddenCard(m.id) ? hiddenCardBase(m) : rawUnits(c) * perCard(m)) * globalMul() * eventMultiplier('tokens') : 0; }
 function offlineRate() { return Math.min(1, 0.2 + 0.1 * S.tech.offline); }
@@ -3975,7 +4109,7 @@ function cloudSaveSnapshot(state, stamp = Date.now()) {
     cards[id] = counts.slice(0,length);
   }
   const expandedGpu = Object.entries(EXTRA_GPU_TECH_CAPS).some(([key,max]) => state.tech[key] === max);
-  return structuredClone({...state,cards,lastSave:stamp,variantSchema:VARIANTS.length,...(expandedGpu ? {gpuResearchSchema:1} : {})});
+  return structuredClone({...state,cards,lastSave:stamp,variantSchema:VARIANTS.length,horizonSchema:1,...(expandedGpu ? {gpuResearchSchema:1} : {})});
 }
 
 function continueLocalSaveAfterCutover() {
@@ -4351,6 +4485,241 @@ function classicCardArt(m) {
   return s;
 }
 
+// Each relic has its own engraved silhouette, two material colors and motion direction.
+const RELIC_FACES = [
+  ['#25141a','#ff925d','#ffe5a3',-54,'M9-48-36 5h31l-8 43L36-9H4Z','M-45-24-56-5-39 8M43 25l13-17-18-11M-20-38l-8 17m42 62 12-16'],
+  ['#151e29','#aabffa','#ffefc7',22,'M-47 0-24-36H24L47 0 24 36H-24Z','M-58 0h29l11-21 15 43L13-26 27 0h31M-26-46h52m-52 92h52'],
+  ['#0b2525','#75f7ca','#e3fdff',-35,'M0-49 43-14 33 36 0 51-37 25-44-17Z','M0-49-14-8 0 51 15 1Zm-44 32 30 9L15 1l28-15M-37 25l23-33m29 9 18 35'],
+  ['#2a1021','#fe787e','#ffd5a0',58,'M-48 26-42-30-22-12 0-49 22-12 42-30 48 26 27 41H-27Z','M-33 23h66M-27 9-22-10 0 14 22-10 27 9M0-35v28'],
+  ['#211831','#c4a1ff','#9bf9ff',-78,'M0-54 49 7 24 44h-48L-49 7ZM0-20 27 16 0 41-27 16Z','M0-54v34m49 27-22 9m-76-9 22 9M0 41v13M-57 22l19-9m76 0 19 9'],
+  ['#122737','#81d8ff','#fcf5ce',68,'M-51-23 3-45 49-29 28-2-4 4-24 32-48 26ZM-19 42 7 14 39 7 51 30 3 51Z','M-57 41-31 38-5 11 30 2 52-25M-23-20l21-9m25 63 13-7'],
+  ['#252717','#c8e978','#ffcf83',-105,'M-35-43H31l17 22v46L23 46h-46l-25-21v-46Z','M21-19H-15l-11 11v23l13 13h26l13-13V-2l-9-9H-4l-10 9v10l9 9H8l9-9M21-19l-9-10m9 10-10 9'],
+  ['#102a31','#53e9db','#adb9ff',88,'M-50 31-40-17l16-12v-15L0-52l24 8v15l16 12 10 48-19 16h-62Z','M-35 26h70M-25 14v-20l9-8v-15L0-35l16 6v15l9 8v20M-14 22V5L0-7 14 5v17M0 11v22'],
+  ['#27162d','#f5a6e6','#bcf9fd',-118,'M-51-13C-47-38-12-38-2-12L2 0C13 34 47 37 51 11 56-15 22-28 5-3S-15 35-35 29C-57 23-58 2-51-13Z','M-31-10l5-7 5 7-5 7Zm52 23 5-7 5 7-5 7ZM-52 32 49-31m-3 51 9-6m-110-28 8-6'],
+  ['#251e28','#fdbd8e','#c3dafa',122,'M0-51A51 51 0 1 1 0 51 51 51 0 0 1 0-51ZM0-33A33 33 0 1 0 0 33 24 35 0 0 1 0-33Z','M0-52v104M-47 0h16m62 0h16M11-31 36-18 43 0 36 18 11 31M9-20l15 20-15 20'],
+  ['#341b17','#ff9c59','#fff19a',-145,'M0-53 9-35 27-46 28-26 46-27 37-9 53 0 35 9 46 27 26 28 27 46 9 37 0 53-9 35-27 46-28 26-46 27-37 9-53 0-35-9-46-27-26-28-27-46-9-37Z','M0-27 14-8 10 14 0 26-17 10-10-9ZM-30 0h13m34 0h13M0-30v8m0 44v8'],
+  ['#25192f','#dcbbff','#ffd89c',162,'M0-55 30-33 34 26 49 43H-49l15-17 4-59ZM0-34 11-21 10 20 0 32-10 20-11-21Z','M-30-33-14-29 0-55 14-29 30-33M-34 26l20-4L0 43l14-21 20 4M-45 33h11m68 0h11M0-75v17m0 102v18'],
+];
+function classicRelicCardArt(m) {
+  const [ground,edge,foil,angle,face,engraving] = RELIC_FACES[m.relic-1];
+  const facets = Array.from({length:12},(_,i) => `<path transform="rotate(${30*i})" d="M0-71 8-61 0-49-8-61Z" fill="${i%3===0 ? foil : edge}" opacity="${i%3===0 ? .78 : .25}"/>`).join('');
+  return `<svg viewBox="0 0 160 160" aria-hidden="true" data-relic="${m.relic}">
+    <defs><linearGradient id="alloy" x2=".85" y2="1"><stop stop-color="${foil}"/><stop offset=".3" stop-color="${edge}"/><stop offset=".58" stop-color="${ground}"/><stop offset="1" stop-color="${edge}"/></linearGradient>
+    <radialGradient id="field"><stop stop-color="${ground}"/><stop offset="1" stop-color="#06070d"/></radialGradient></defs>
+    <path fill="url(#field)" d="M0 0h160v160H0z"/>
+    <g transform="translate(80 80)" fill="none" stroke="${edge}" stroke-width=".8">
+      <path d="M-78-48v-21l9-9h21m96 0h21l9 9v21m0 96v21l-9 9H48m-96 0h-21l-9-9V48" stroke-width="2"/>
+      <path d="M-71-25-43-53m114 28L43-53M-71 25l28 28m114-28L43 53M-74 0H74M0-74V74" opacity=".36"/>
+      <path d="M0-71 71 0 0 71-71 0Z" opacity=".7"/><circle r="59" stroke-dasharray="2 4"/>
+      <g transform="rotate(${angle/3})" opacity=".3">${facets}</g>
+      <g transform="scale(${m.relic===12 ? .79 : .94})">
+        <path d="${face}" fill="url(#alloy)" fill-rule="evenodd" stroke="${edge}" stroke-width="6" opacity=".18"/>
+        <path d="${face}" fill="url(#alloy)" fill-rule="evenodd" stroke="${foil}" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="${engraving}" stroke="${ground}" stroke-width="3.4" opacity=".85" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="${engraving}" stroke="${foil}" stroke-width="1.05" stroke-linecap="round"/>
+      </g>
+    </g><text x="11" y="150" fill="${foil}" font-family="monospace" font-size="8">H/${String(m.relic).padStart(2,'0')}</text>
+  </svg>`;
+}
+
+const relicLine = (d, ink = 'var(--ice)', width = 1, opacity = 1) =>
+  `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${width}" opacity="${opacity}"/>`;
+const relicPlate = (d, fill = 'url(#metal)', edge = 'var(--ice)', w = .85) =>
+  `<path d="${d}" fill="${fill}" stroke="${edge}" stroke-width="${w}" stroke-linejoin="round"/>`;
+const relicTrace = (d,w = 1.5) => relicLine(d,'var(--fire)',w*5,.15) + relicLine(d,'var(--light)',w,.92);
+const relicStar = (x,y,s) => `<path d="M0-10 1-2 12 0 1 2 0 10-1 2-12 0-1-2Z" transform="translate(${x} ${y}) scale(${s})" fill="var(--light)"/>`;
+const relicRepeat = (n, draw) => Array.from({length:n},(_,i) => draw(i)).join('');
+const relicField = (n,seed) => {
+  const next = () => ((seed = Math.imul(seed,1664525)+1013904223 >>> 0) / 4294967296);
+  return relicRepeat(n,() => {
+    const x=(next()*160).toFixed(1), y=(next()*151).toFixed(1), a=next();
+    return `<circle cx="${x}" cy="${y}" r="${a>.91 ? 1.02 : .45}" fill="${a>.48 ? 'var(--light)' : 'var(--fire)'}" opacity="${(.19+a*.57).toFixed(2)}"/>`;
+  });
+};
+// Foreground shapes and the source of light are authored per model, not recolored templates.
+const RELIC_ILLUSTRATIONS = [
+  ['#f54d30', .55,.45, () =>
+    relicPlate('M-5 85 47 38 73 63 52 100 94 119 65 160H-5Z','#160e16','var(--fire)') +
+    relicPlate('M165 33 113 52 80 84 103 99 94 120 138 159 165 138Z','url(#metal)') +
+    relicPlate('M113 52 92 70 104 80 134 63 165 57V33Z','#511c24','var(--fire)') +
+    relicLine('M-4 98 38 58l16 14-13 29m-24 38 29-28 21 9-28 32m67-49 22-20 34-6m-50 44 15-14 34 29','var(--ice)',.7,.7) +
+    relicTrace('M133 0 112 39 88 48 93 58 61 86 86 87 77 108 53 121 38 160',2.2) +
+    relicTrace('M61 86 51 78 31 84 15 69M77 108l26 12 19-2 16 16M93 58l25 16 36-6',.72) + relicStar(82,88,1.24)],
+  ['#475efe', .54,.53, () =>
+    relicRepeat(5,i => relicLine(`M-10 ${38+i*8}h32l35 30h52l44-45h17`,'var(--ice)',.53,.21+i*.08)) +
+    relicPlate('M81 16 139 49 139 111 81 145 23 111 23 49Z','#0a122c','var(--ice)',1.3) +
+    relicPlate('M81 21 133 51 118 58 81 37 45 58 29 51Z','url(#metal)') +
+    relicPlate('M28 57 46 62v34l35 20v21l-53-30Z','url(#metal)') +
+    relicPlate('M134 57 116 62v34l-35 20v21l53-30Z','url(#metal)') +
+    relicLine('M81 43 111 61v36l-30 18-31-18V61Z','var(--fire)',1,.8) +
+    relicTrace('M-5 80h53l11-13 8 18 13-32 10 52 11-25h64') + relicStar(80,53,.6)],
+  ['#44ceff', .47,.35, () =>
+    relicPlate('M14 26 60 49 47 85 22 68ZM131 22l21 34-35 17 4-34ZM122 94l33 12-17 27-31 10Z','#132638','var(--ice)') +
+    relicPlate('M83 12 121 68 101 131 66 146 35 87 51 49Z','url(#metal)','var(--light)',1.5) +
+    relicPlate('M83 12 74 63 35 87 51 49Z','#83dad6','var(--light)') +
+    relicPlate('M74 63 121 68 101 131 66 146Z','#15345c','var(--ice)') +
+    relicPlate('M74 63 101 131 121 68Z','url(#metal)') +
+    relicPlate('M83 12 121 68 74 63Z','#39787d','var(--light)') +
+    relicTrace('M0 122 74 63l86-19M74 63l86 63',.85) + relicStar(74,63,1.1)],
+  ['#eb385f', .53,.56, () =>
+    relicRepeat(5,i => `<ellipse cx="80" cy="${91+i*5}" rx="${68+i*5}" ry="${23+i*2}" transform="rotate(-18 80 91)" fill="none" stroke="var(--fire)" opacity="${.48-i*.07}"/>`) +
+    relicPlate('M6 45 38 74 52 57 80 22 108 57 122 74 154 45 135 115 113 132H47L25 115Z','url(#metal)','var(--light)',1.1) +
+    relicPlate('M20 63 51 93l29-48 29 48 31-30-16 44-20 17H56l-20-17Z','#240d24','var(--fire)') +
+    relicPlate('M80 46 100 84 80 113 60 84Z','url(#metal)','var(--light)',1.7) +
+    relicTrace('M12 124h25l14 13h58l15-13h31M80 25v-17',1.05) + relicStar(80,84,1.6)],
+  ['#467bff', .56,.58, () =>
+    relicPlate('M-8 116 77 75 165 110 112 119 75 102 13 136Z','#131936','var(--fire)') +
+    relicPlate('M75 20 146 119 104 112 75 69 48 108 10 118Z','url(#metal)','var(--light)',1.25) +
+    relicPlate('M75 20v49l29 43 42 7Z','#513078','var(--ice)') +
+    relicPlate('M48 108 75 84 104 112 75 133Z','url(#metal)') +
+    relicTrace('M-5 85 78 99l87-55M78 99l87-18M78 99l87 10M78 99l87 34',.92) +
+    relicLine('M17 119 80 111l74 25M75 22l-7-16','var(--ice)',.6,.8) + relicStar(78,99,1.44)],
+  ['#28aaf6', .53,.48, () =>
+    relicPlate('M-8 15H158L129 43l-31 1-17 22H51L30 90-8 83Z','url(#metal)','var(--ice)') +
+    relicPlate('M167 67 121 70 105 94 76 91 53 116 22 118-1 151l168 15Z','url(#metal)','var(--light)') +
+    relicPlate('M-5 35H134l-28 14-34 4-36 29-41-8ZM37 131l25-9 24-22 40-2 31-19v57l-46 11Z','#111b29','var(--ice)') +
+    relicTrace('M-7 123 19 97l37 2 19-22 32 3 18-26h22l21-22',2.15) +
+    relicLine('M19 77l20 6 21-15m33 20 4 8 26 12M53 99l-9 17m72-60 13-24','var(--fire)',1.1,.8) + relicStar(75,77,1.28)],
+  ['#f99143', .50,.58, () =>
+    relicPlate('M1 158 30 110h100l29 48H1Z','#191c24','var(--fire)') +
+    relicRepeat(5,i=>relicLine(`M${13+i*7} ${146-i*7}h${134-i*14}`,'var(--ice)',.63,.18+i*.09)) +
+    relicPlate('M29 54 43 25h75l18 28-9 56-22 18H55l-22-18Z','url(#metal)') +
+    relicPlate('M52 54 69 38h25l16 16v46l-18 15H68l-16-15Z','#172323','var(--light)',1.45) +
+    relicPlate('M61 101 62 64l18-18 18 18 1 37-19 11Z','url(#metal)') +
+    relicTrace('M1 61h34l7 8 36 20 18-20 26-8h39M80 46V13',1.22) + relicStar(80,89,.88)],
+  ['#36a1ff', .50,.63, () =>
+    relicLine('M4 37h151M-6 44h171M-6 57h171','var(--ice)',.6,.34) +
+    relicPlate('M-8 155 15 132 28 95 40 88 48 56 65 46 65 25 80 16 95 25v21l17 10 8 32 12 7 13 37 23 23Z','url(#metal)','var(--light)',.88) +
+    relicPlate('M13 151 34 111 48 102 55 79 67 74 70 51 80 43 90 51 93 74 105 79 112 102 126 111 147 151Z','#0c2536','var(--ice)') +
+    relicPlate('M62 124V90l18-18 18 18v34l-18 14Z','url(#metal)','var(--ice)') +
+    relicTrace('M80 6v135M8 140l35-17 18-26m91 43-35-17-18-26',1.12) + relicStar(80,107,1.3)],
+  ['#7959f3', .51,.50, () =>
+    '<g transform="rotate(-27 80 80)"><ellipse cx="80" cy="80" rx="86" ry="33" fill="none" stroke="var(--fire)" stroke-width="8" opacity=".24"/><ellipse cx="80" cy="80" rx="88" ry="33" fill="none" stroke="var(--ice)" stroke-width=".95"/><ellipse cx="80" cy="80" rx="90" ry="41" fill="none" stroke="var(--light)" stroke-width=".6" stroke-dasharray="2 4"/></g>' +
+    '<circle cx="51" cy="92" r="37" fill="url(#plasma)"/><circle cx="51" cy="92" r="21" fill="url(#metal)" stroke="var(--ice)" stroke-width="1.8"/><circle cx="111" cy="62" r="39" fill="url(#plasma)"/><circle cx="111" cy="62" r="16" fill="#22214b" stroke="var(--light)" stroke-width="1.6"/>' +
+    relicLine('M-5 99C38 115 124 34 165 43M-5 117C56 135 134 60 165 57','var(--ice)',.7,.82) +
+    relicTrace('M-7 132C34 125 102 44 168 49',1.25) + relicStar(50,93,1.1) + relicStar(111,62,1.25)],
+  ['#7999ff', .56,.46, () =>
+    '<circle cx="79" cy="75" r="69" fill="url(#plasma)"/><circle cx="79" cy="75" r="55" fill="url(#metal)" stroke="var(--light)" stroke-width="1.45"/><circle cx="79" cy="75" r="47" fill="#080a14" stroke="var(--ice)" stroke-width=".75"/>' +
+    relicRepeat(26,i=>`<path d="M79 20v${i%3===0 ? 7 : 3}" transform="rotate(${i*360/26} 79 75)" stroke="var(--fire)" stroke-width=".8"/>`) +
+    relicPlate('M79 28A47 47 0 0 0 79 122L102 104 118 75 104 47Z','url(#metal)') +
+    relicPlate('M78 37C48 56 47 96 78 115L90 103 105 75 87 48Z','#080a14','var(--ice)') +
+    relicTrace('M79 -4v37l5 16 5 26-5 26-5 16v45',.95) + relicStar(89,75,1.3)],
+  ['#f53a2b', .51,.52, () =>
+    relicRepeat(12,i=>`<g transform="rotate(${30*i} 80 80)">${relicPlate('M74 48 57 25 74 34 80-3 86 34 103 25 86 48Z','url(#metal)','var(--fire)',.65)}</g>`) +
+    '<circle cx="80" cy="80" r="56" fill="url(#plasma)"/><circle cx="80" cy="80" r="44" fill="#3c1014" stroke="var(--ice)" stroke-width="2"/><ellipse cx="80" cy="80" rx="69" ry="20" transform="rotate(-30 80 80)" fill="none" stroke="var(--light)" stroke-width="1.25"/>' +
+    relicPlate('M80 45 106 69 99 98 80 113 59 98 54 69Z','url(#metal)','var(--light)',1.44) +
+    relicPlate('M80 45 106 69 80 77 54 69Z','#f8a05b','var(--fire)') +
+    relicTrace('M0 110 41 96l23-21 12 10 17-19 22 1 45-24',1.22) + relicStar(81,80,1.24)],
+  ['#7162f1', .51,.44, () =>
+    relicRepeat(4,i=>`<path d="M78 22 127 55v72l-47 25-46-25V55Z" transform="translate(80 80) scale(${1.55-i*.23}) translate(-80 -80)" fill="none" stroke="var(--ice)" stroke-width="${1.35-i*.23}" opacity="${.18+i*.15}"/>`) +
+    relicLine('M-6 163 80 84l87 79M16 161l64-77 62 77M-4 117l84-33 87 33M-4 135l84-51 87 51','var(--fire)',.75,.87) +
+    relicPlate('M80 8 119 42l10 81-49 22-48-22 9-81Z','url(#metal)','var(--light)',1.85) +
+    relicPlate('M80 24 107 49l8 68-35 16-35-16 8-68Z','#0b0920','var(--ice)',1.35) +
+    relicPlate('M80 40 94 57l3 52-17 12-17-12 3-52Z','url(#plasma)','var(--fire)',1.1) +
+    relicTrace('M80-6v171M40 123l40-36 40 36',1.25) + relicStar(80,87,2.15)],
+];
+
+function relicCardArt(m,skin) {
+  if (skin === 'classic') return classicRelicCardArt(m);
+  const [ground,edge,foil,angle] = RELIC_FACES[m.relic-1];
+  const [fire,x,y,draw] = RELIC_ILLUSTRATIONS[m.relic-1];
+  return `<svg viewBox="0 0 160 160" aria-hidden="true" data-relic="${m.relic}" data-scene-art="true" style="--ice:${edge};--light:${foil};--fire:${fire}">
+    <defs>
+      <radialGradient id="space" cx="${x}" cy="${y}" r=".68"><stop stop-color="${ground}"/><stop offset="1" stop-color="#050710"/></radialGradient>
+      <radialGradient id="plasma"><stop stop-color="${foil}" stop-opacity=".76"/><stop offset=".27" stop-color="${fire}" stop-opacity=".74"/><stop offset="1" stop-color="${fire}" stop-opacity="0"/></radialGradient>
+      <linearGradient id="metal" x1=".12" y1=".02" x2=".85" y2=".94"><stop stop-color="${foil}"/><stop offset=".25" stop-color="${edge}"/><stop offset=".48" stop-color="${ground}"/><stop offset=".62" stop-color="#10101c"/><stop offset="1" stop-color="${fire}"/></linearGradient>
+      <linearGradient id="etch"><stop stop-color="${foil}"/><stop offset=".5" stop-color="${edge}" stop-opacity=".1"/><stop offset="1" stop-color="${fire}"/></linearGradient>
+    </defs>
+    <path d="M0 0h160v160H0z" fill="url(#space)"/>
+    <ellipse cx="${x*160}" cy="${y*160}" rx="98" ry="36" transform="rotate(${angle/3} ${x*160} ${y*160})" fill="url(#plasma)" opacity=".4"/>
+    ${relicField(59,1133+m.relic*137)}${draw()}
+    <path d="M4 25V4h22m108 0h22v21m0 110v21h-22m-108 0H4v-21M5 154h8l4-4h36" fill="none" stroke="url(#etch)" stroke-width="1.15"/>
+    <path d="M6 139h34l7 7-7 8H6Z" fill="#080a12" stroke="var(--ice)" stroke-width=".55"/>
+    <text x="10" y="149" fill="var(--light)" font-family="monospace" font-size="7" letter-spacing=".8">H/${String(m.relic).padStart(2,'0')}</text>
+  </svg>`;
+}
+// Each reveal opens along the line of action from its illustration.
+const RELIC_STAGE_PATHS = [
+  ['M-318 204l100-87 90-13 44-92 89-11 32-68 99-19 74-133M-165 107l-21-52-112-23M37-67l72 37 104-7',-149,71],
+  ['M-426 0h234l38-51 46 104L-39-111 25 116 72-29 111 0H426M-324-75h148m352 150h148',-260,0],
+  ['M-396 139-25-12 391-154M-25-12 326 35m-351-47 251 184M-171-97-25-12-3 128',-210,127],
+  ['M-322-91-209 26l68-89 141-77L141-63l68 89L322-91 261 119H-261Z',0,-179],
+  ['M-426 42-24 0 426-128M-24 0 426-36m-450 36 450 57M-24 0 362 171M-113 149-24 0l94-157',-273,-32],
+  ['M-427 152l157-50 122 7 85-81 136-18 64-78 165-24 125-63m-490 183-40-68-84-26m260 76 66 66 113 14',213,-117],
+  ['M-315 91l53-166h138l-20 125 71 88H73l71-88-20-125h138l53 166M-225 146h450m-285-272h120',0,165],
+  ['M-374 153l84-60 59-15 38-81h73l25-73 52-25v-52L0-188l43 35v52l52 25 25 73h73l38 81 59 15 84 60M0-237v389',0,220],
+  ['M-415 62C-343-144 293-194 413-36S-241 203-384 92 275-201 426-27M-377 122C-190 115 150-121 394-85',233,63],
+  ['M1-197a197 197 0 1 1 0 394 197 197 0 1 1 0-394M1-162a162 162 0 1 0 0 324m-1-405v486M-422 0h152m540 0h152',0,-200],
+  ['M-417 210-208 91-134 81-69 27l45 14L17-6l104-21 63-52 233-93M-261-173l125 74L0-165l136 66 125-74M-261 173l125-74L0 165l136-66 125 74',186,-116],
+  ['M0-225 177-113v229L0 214-177 116v-229ZM0-168l115 80v180L0 163-115 92V-88ZM0-270v540m-423-91L0 0l423 179m-788 91L0 0l365 270',0,-195],
+];
+
+const RELIC_MOTION = [
+  ['surge',1.06], ['surge',1.16], ['split',1.26], ['forge',1.34],
+  ['split',1.29], ['split',1.18], ['forge',1.44], ['gate',1.48],
+  ['orbit',1.38], ['orbit',1.51], ['forge',1.53], ['gate',1.69],
+];
+function relicStageMechanism(m, kind, action) {
+  const [fire] = RELIC_ILLUSTRATIONS[m.relic-1];
+  const fill = '<stop stop-color="var(--cine-ground)"/><stop offset=".63" stop-color="var(--cine-edge)" stop-opacity=".29"/><stop offset="1" stop-color="var(--cine-foil)" stop-opacity=".66"/>';
+  const gradient = `<defs><linearGradient id="relic-motion-metal" x1="0" y1="1" x2=".96" y2=".18">${fill}</linearGradient></defs>`;
+  const plate = (d,ink) => `<path d="${d}" fill="url(#relic-motion-metal)" stroke="${ink}" stroke-width="1.28"/>`;
+  const mirrored = (name, draw) => [1,-1].map(s => cineLayer(`relic-motion ${name}`,
+    `<g transform="scale(${s})">${draw(s)}</g>`)).join('');
+  if (kind === 'surge') {
+    const steps = m.relic === 1 ? 'M-424 166-303 81-202 68-137-49-51-42 0 0' : 'M-427 0h240l25-54 55 84 40-86 45 56H0';
+    return mirrored('relic-surge',s=>`<path d="${steps}" stroke="${s===1 ? fire : 'var(--cine-edge)'}" stroke-width="18" opacity=".24"/>
+      <path class="relic-thread" d="${steps}" pathLength="100" stroke="var(--cine-foil)" stroke-width="3.3"/>
+      <path d="${steps}" stroke-width=".75" stroke-dasharray="6 8" opacity=".7"/>`);
+  }
+  if (kind === 'split') {
+    const shape = m.relic === 3 ? 'M-258-93-130-169-43-111-5 0-95 108-215 45Z' :
+      m.relic === 5 ? 'M-80-190 0-12-69 116-301 165-184 21Z' : 'M-437-189-126-103-72-40-9-23-34 13-183-24-298 18-438-18Z';
+    return gradient + mirrored('relic-split',s=>plate(shape,s===1 ? 'currentColor' : 'var(--cine-foil)') +
+      `<path d="${m.relic===6 ? 'M-438-52-298-11-183-55-100-37-72 1-9 18' : 'M-220-53-116-11-52-61-7-3M-116-11l-40 91'}" opacity=".75" stroke-width="2.3"/>`) +
+      cineLayer('relic-splinters',cineSpokes(8,'<path d="M0-224l6-27 14 9-14 30Z" fill="currentColor" opacity=".72"/>',17));
+  }
+  if (kind === 'forge') {
+    const crown = m.relic === 4 ? 'M0-214-42-126-85-144-49-61 0-15 49-61 85-144 42-126Z' :
+      m.relic === 7 ? 'M-40-201h80l46 55-36 78-50 38-50-38-36-78Z' : 'M0-245 19-166 65-162 27-105 0-64-27-105-65-162-19-166Z';
+    return gradient + relicRepeat(m.relic === 11 ? 12 : m.relic === 7 ? 4 : 6,i => {
+      const count = m.relic===11 ? 12 : m.relic===7 ? 4 : 6;
+      return `<g transform="rotate(${360*i/count})"><g class="cine-layer sc-relic-motion relic-forge" style="--relic-delay:${i*.019}s">${plate(crown,i%2 ? 'var(--cine-foil)' : 'currentColor')}
+        <path d="M0-230V-113m-12-38 12 26 12-26" stroke="var(--cine-foil)" opacity=".72"/></g></g>`;
+    });
+  }
+  if (kind === 'orbit') {
+    const eclipse = m.relic === 10;
+    const disk = `<circle r="${eclipse ? 98 : 38}" fill="url(#relic-motion-metal)" stroke="var(--cine-foil)" stroke-width="2.2"/>
+      <circle r="${eclipse ? 86 : 30}" fill="var(--cine-ground)" stroke="currentColor" stroke-width="1.25"/>`;
+    return gradient + cineLayer('relic-orbit-frame',`<g transform="rotate(${eclipse ? -6 : -27})">
+      <ellipse rx="350" ry="${eclipse ? 132 : 78}" stroke-width="3.3"/>
+      <ellipse rx="376" ry="${eclipse ? 149 : 91}" stroke-dasharray="54 12 3 11" stroke="var(--cine-foil)"/></g>`)
+      + mirrored(`relic-orbit${eclipse ? ' relic-eclipse' : ''}`,s=>`<g style="--orbit-turn:${eclipse ? 0 : 29*s}deg" class="relic-orbit-run"><g transform="translate(${eclipse ? 55 : 139} ${eclipse ? 0 : 45})">${disk}</g></g>`);
+  }
+  const gate = m.relic === 12 ? 'M0-210 163-100v207L0 205-163 107v-207Z' : 'M-189 112v-76l47-33 29-94 72-41v-40L0-208l41 36v40l72 41 29 94 47 33v76Z';
+  return gradient + relicRepeat(5,i=>`<g class="cine-layer sc-relic-motion relic-gate" style="--relic-delay:${i*.113}s"><g transform="scale(${1+i*.13})">
+    ${plate(gate,i%2 ? 'currentColor' : 'var(--cine-foil)')}<path d="M0-237v61m-193 285-54 36m440-36 54 36" opacity=".61"/></g></g>`)
+    + cineLayer('relic-gate-floor',`<path d="${action}" stroke-dasharray="51 13 3 9"/>`);
+}
+
+function relicCinematic(m,ultra) {
+  const [ground,edge,foil,angle,face,engraving] = RELIC_FACES[m.relic-1];
+  const [action,x,y] = RELIC_STAGE_PATHS[m.relic-1], [kind,cue] = RELIC_MOTION[m.relic-1];
+  return ['relic-awaken',cue,() => {
+    const insignia = `<path d="${face}" fill-rule="evenodd" fill="var(--cine-ground)" stroke-width="1.45"/><path d="${engraving}" stroke="var(--cine-foil)" stroke-width=".8"/>`;
+    const rails = `<path d="${action}" stroke="var(--cine-edge)" stroke-width="15" opacity=".18"/><path d="${action}" stroke="url(#cine-rail)" stroke-width="${ultra ? 6 : 3.9}"/><path d="${action}" stroke="var(--cine-foil)" stroke-width="1.05"/>`;
+    const wave = `<g transform="rotate(${angle/3})"><ellipse rx="${308 + m.relic*6}" ry="${82 + m.relic*7}" stroke="url(#cine-rail)" stroke-width="${ultra ? 4.6 : 2.8}"/><ellipse rx="${320 + m.relic*6}" ry="${93 + m.relic*7}" stroke-dasharray="22 9 2 9" opacity=".62"/></g>`;
+    return cineLayer('relic-field',cineStars(54,12231+m.relic) + `<path d="${action}" opacity=".27" stroke-dasharray="2 9"/>`)
+      + cineLayer('relic-omen', `<g transform="translate(${x} ${y})"><path d="M-27 0h54M0-27v54" stroke="var(--cine-foil)"/><circle r="11" opacity=".64"/></g><path class="relic-thread" pathLength="100" d="${action}" opacity=".63"/>`)
+      + relicStageMechanism(m,kind,action)
+      + cineLayer('relic-core',`<g transform="scale(1.36)">${insignia}</g><path d="M-89 0H89M0-89v178" stroke="var(--cine-foil)" opacity=".72"/>`)
+      + cineLayer('relic-impact',rails)
+      + (kind === 'split' || kind === 'orbit' ? '' : cineLayer('relic-wave',wave))
+      + cineLayer('relic-seal',`<path d="${action}" opacity=".38"/><g transform="scale(2.9)">${insignia}</g><path d="M-380 58h163l41-41m556-75H217l-41 41" stroke="url(#cine-rail)" stroke-width="2"/>`);
+  },[ground,edge,foil],kind];
+}
+
 /* =================== ART =================== */
 function elementMark(size, sym, no, hue) {
   return `<svg viewBox="0 0 120 120" width="${size}" height="${size}" aria-hidden="true">
@@ -4374,9 +4743,11 @@ function logoSVG() {
 function skinForVariant(v) { return normalizeCardSkin(v === ULTRA_VARIANT ? S.set.ultraSkin : S.set.cardSkin); }
 function hasRedesignedArt(m) { return m.t === OMEGA_TIER || m.t === UNKNOWN_TIER; }
 function artSkinForVariant(m, v) {
+  if (m.relic) return skinForVariant(v);
   return v === ULTRA_VARIANT && !hasRedesignedArt(m) ? 'modern' : skinForVariant(0);
 }
 function cardArt(m, v = 0, skin = artSkinForVariant(m,v)) {
+  if (m.relic) return relicCardArt(m,skin);
   if (m === HIDDEN_CARD) return adminCardArt(v, skin);
   if (m === VOID_CARD) return creationCardArt(m, v, skin);
   if (m.t === OMEGA_TIER) return skin === 'classic' ? creationCardArt(m, v, 'modern') : omegaCardArt(v);
@@ -4396,7 +4767,7 @@ function cardArtUrl(m, v, skin) {
   return artUrls.get(key);
 }
 function sharedArt(m, v = 0) {
-  const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER ? v : 0;
+  const variant = (!m.relic && isHiddenCard(m.id)) || m.t === OMEGA_TIER ? v : 0;
   const src = cardArtUrl(m, variant, artSkinForVariant(m,v));
   return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}"${v === ULTRA_VARIANT ? ' data-ultra-art' : ''} src="${src}">`;
 }
@@ -4411,10 +4782,12 @@ function applyCardSkin() {
     const isUltra = card.classList.contains('v4');
     if (isUltra ? ultraChanged : normalChanged) card.dataset.skin = isUltra ? ultra : skin;
   }
-  if (normalChanged) for (const img of $$('img[data-card-art]')) {
+  for (const img of $$('img[data-card-art]')) {
     const m = modelOrLeak(img.dataset.cardArt);
-    if (img.hasAttribute('data-ultra-art') && !hasRedesignedArt(m)) continue;
-    img.src = cardArtUrl(m, Number(img.dataset.artVariant), skin);
+    const isUltra = img.hasAttribute('data-ultra-art');
+    if (m.relic ? !(isUltra ? ultraChanged : normalChanged) :
+      !normalChanged || (isUltra && !hasRedesignedArt(m))) continue;
+    img.src = cardArtUrl(m, Number(img.dataset.artVariant), m.relic && isUltra ? ultra : skin);
   }
 }
 function ultraFoil() {
@@ -4440,8 +4813,9 @@ function cardFaceArt(m, v) {
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
   const hidden = isHiddenCard(m.id), tierId = hidden ? HIDDEN_CARD_LABEL : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
-  const cls = `card t-${m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
-  const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
+  const cls = `card t-${m.relic ? 'RELIC' : m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
+  const [plate,rim,tc] = m.relic ? RELIC_FACES[m.relic-1] : [];
+  const style = plate || o.delay ? ` style="${plate ? `--plate:${plate};--rim:${rim};--tc:${tc};` : ''}${o.delay ? `animation-delay:${o.delay}ms` : ''}"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" data-model-variant="${v}" aria-label="${esc(m.n)}"` : '';
   return `<${tag} class="${cls}" data-skin="${skinForVariant(v)}"${style}${attrs}><div class="art">${o.deferArt ? '' : cardFaceArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
 }
@@ -4543,27 +4917,39 @@ const LEAK_CINEMATIC = ['weight-leak', .77, () => {
     + cineLayer('leak-lock','<path d="M-103-66v-43h40m126 0h40v43m0 132v43H63m-126 0h-40V66" stroke-width="3"/><path d="M-328 0h230m196 0h230" stroke="url(#cine-rail)" stroke-width="2"/>');
 }];
 
-const CAUSAL_CINEMATIC = ['causal-fold', .98, () => {
-  const loop = '<ellipse rx="278" ry="91" stroke-width="2.4"/><ellipse rx="252" ry="76" stroke-dasharray="59 14 8 9"/><path d="M-270 21q133-124 270-21T270-21" stroke="url(#cine-rail)" stroke-width="5"/>';
-  return cineLayer('creation-field', cineStars(58,14411) + '<circle r="211" opacity=".42" stroke-dasharray="1 7"/><circle r="239" opacity=".34" stroke-dasharray="38 12 3 8"/>')
-    + cineLayer('causal-left', `<g transform="rotate(-27)">${loop}</g>`)
-    + cineLayer('causal-right', `<g transform="rotate(27)" stroke="var(--cine-foil)">${loop}</g>`)
-    + cineLayer('creation-surge','<path d="M-428 0H428" stroke="url(#cine-rail)" stroke-width="7"/><path d="M-114 0 0-87 114 0 0 87Z" stroke-width="2.3"/>')
-    + cineLayer('creation-rails','<path d="M-414-121h127l35 35h54m612 207H287l-35-35h-54M-414 121h127l35-35h54m612-207H287l-35 35h-54" stroke="url(#cine-rail)" stroke-width="2.4"/>'
-      + '<path d="M-192-86v-21h34m316 0h34v21m0 172v21h-34m-316 0h-34V86" stroke-width="2.7"/>');
-}, ['#0a2c32','#7ce6d3','#ffc28f']];
-
-const CAUSAL_AXIS_CINEMATIC = ['causal-axis', 1.1, () => {
-  const rail = `<path d="M-422-99h125l103 52h116l78 47" stroke-width="9" opacity=".22"/>
-    <path d="M-422-111h125l103 52h116l78 59M-422-87h125l103 52h116L0 0" stroke-width="2.2"/>
-    <path d="M-422-125h136l105 53h63m-304 55h135l61 24h132l41-21" stroke-dasharray="42 7 3 7" opacity=".67"/>
-    <path d="M-321-105h66l104 53h-54Z M-142-42h64l47 28h-54Z" fill="currentColor" opacity=".35"/>`;
-  return cineLayer('axis-field', cineStars(68,18420) + '<path d="M-423 0h846M0-240v480 M-392 0 0-218 392 0 0 218Z" opacity=".39" stroke-dasharray="38 10 2 8"/>')
-    + cineLayer('axis-rail axis-in',rail)
-    + cineLayer('axis-rail axis-out',`<g transform="rotate(180)" color="var(--cine-foil)" stroke="currentColor">${rail}</g>`)
-    + cineLayer('axis-lock','<path d="M0-178 178 0 0 178-178 0Z" stroke="var(--cine-foil)" stroke-width="2.6"/><path d="M0-205 205 0 0 205-205 0Z" stroke-dasharray="62 9 4 6"/><path d="M0-63 13-13 63 0 13 13 0 63-13 13-63 0-13-13Z" fill="var(--cine-foil)" opacity=".7"/>')
-    + cineLayer('axis-pulse','<path d="M-428 0H428" stroke="url(#cine-rail)" stroke-width="5"/><path d="M0-128 128 0 0 128-128 0Z" stroke-width="2.2"/>');
-}, ['#102d2b','#7ce6d3','#ffe29c']];
+function causalCinematic(modern, ultra) {
+  const cue = modern ? 1.48 : 1.33;
+  return [modern ? 'causal-axis' : 'causal-fold', cue, () => {
+    const route = modern ? 'M-434-190h104l119 72h79L0 0' : 'M-438-163C-264-169-171-117-134-66S-62 23 0 0';
+    const routeEdge = modern ? 'M-425-206h101l118 71h85l121 116m-402-145h56l120 73h77l93 76' : 'M-427-185c129 0 207 27 281 89s95 136 146 112m-412-158c127 0 203 39 263 96s92 76 116 75';
+    const gate = modern ? 'M0-189 226 0 0 189-226 0Z' : 'M0-190C101-190 199-100 199 0S101 190 0 190-199 100-199 0-101-190 0-190Z';
+    const blade = modern ? 'M-428-244-208-187-48-58 0 0-69-42-257-147-428-173Z' : 'M-432-193C-224-208-92-139 0 0-120-79-251-132-432-139Z';
+    const sign = 'M-60-32C-102 4-92 56-58 56-28 56-9 24 0-1 9 24 28 56 58 56 92 56 102 4 60-32';
+    const branch = (name,ink,flip) => cineLayer(`causal-branch ${name}`, `<g transform="scale(${flip})" style="--time-ink:${ink}">
+      <path d="${blade}" fill="url(#cine-rail)" stroke="var(--time-ink)" opacity=".38"/>
+      <path d="${routeEdge}" stroke="var(--time-ink)" stroke-dasharray="27 9 2 8" opacity=".77"/>
+      <path d="${route}" stroke="var(--time-ink)" stroke-width="15" opacity=".19"/>
+      <path class="causal-tracer" d="${route}" pathLength="100" stroke="var(--time-ink)" stroke-width="${ultra ? 5.6 : 3.8}"/>
+      <path class="causal-tracer" d="${route}" pathLength="100" stroke="#ffffff" stroke-width="1.15"/>
+    </g>`);
+    const iris = 'M-438-198H-211L-67-26 0 0-67 26-211 198H-438L-214 110-122 0-214-110Z';
+    const ticks = cineSpokes(modern ? 24 : 32, '<path d="M0-220v12m0 13v3" opacity=".58"/>', modern ? 7.5 : 0);
+    const extra = ultra ? `<path d="${gate}" stroke="#aaf8ef" stroke-width="2" transform="scale(1.16) rotate(-12)" stroke-dasharray="34 8 2 8"/>
+      <path d="${gate}" stroke="#c6a6ff" stroke-width="1.4" transform="scale(1.22) rotate(12)" stroke-dasharray="62 20 3 16"/>` : '';
+    return cineLayer('axis-field', cineStars(64, modern ? 18420 : 14411) + `<path d="${gate}" stroke-dasharray="1 9" opacity=".51"/>
+      <path d="M-432 0h864M0-245v490" opacity=".26" stroke-dasharray="20 12 3 12"/>`)
+      + branch('axis-past','var(--cine-edge)',1) + branch('axis-future','var(--cine-foil)',-1)
+      + cineLayer('causal-iris axis-past',`<path d="${iris}" fill="url(#cine-rail)" stroke="var(--cine-edge)" opacity=".55"/>`)
+      + cineLayer('causal-iris axis-future',`<path transform="rotate(180)" d="${iris}" fill="url(#cine-rail)" stroke="var(--cine-foil)" opacity=".7"/>`)
+      + cineLayer('causal-lock',`<path d="${gate}" stroke="var(--cine-foil)" stroke-width="1.7"/><path d="${gate}" transform="scale(.82)" opacity=".62" stroke-dasharray="44 6 4 9"/>
+        ${ticks}${extra}<path d="${sign}" stroke="var(--cine-edge)" stroke-width="15" opacity=".33"/>
+        <path d="${sign}" stroke="var(--cine-foil)" stroke-width="5"/>`)
+      + cineLayer('causal-release',`<path d="M-430 0h860L0 10Z" fill="url(#cine-rail)" opacity=".77"/><path d="M0-208V208" stroke="var(--cine-foil)" stroke-width="2"/>
+        <path d="${gate}" stroke="var(--cine-edge)" stroke-width="10" opacity=".23"/><path d="${gate}" stroke="var(--cine-foil)" stroke-width="2.5"/>${extra}`)
+      + cineLayer('causal-after',`<path d="${gate}" stroke="var(--cine-foil)" stroke-width="1.5"/><path d="${gate}" transform="scale(1.16)" stroke-dasharray="79 10 2 12" opacity=".54"/>
+        <path d="M-425 115h182l43-24h56m569-206H243l-43 24h-56" stroke="url(#cine-rail)" stroke-width="2.4"/>${extra}`);
+  }, modern ? ['#102822','#82e9d3','#ffe19c'] : ['#10242e','#87dce8','#ffc28f']];
+}
 
 const UNKNOWN_CINEMATIC = ['unknown-signal', .87, () => {
   const plate = `<path d="M-401-106h181l51-48h143L9-118l-19 47h-86l-53 49h-196l-42 34h-39" fill="var(--cine-ground)" stroke-width="2.3"/>
@@ -4657,10 +5043,11 @@ function showCine(r, replayFrom = null, pack = null) {
   const m = modelOrLeak(r.leak ? 'leak' : r.id);
   if (!m) return;
   const modern = skinForVariant(r.v) === 'modern';
-  const creation = m === VOID_CARD ? GENESIS_CINEMATIC
-    : m.t === OMEGA_TIER ? (modern ? CAUSAL_AXIS_CINEMATIC : CAUSAL_CINEMATIC) : null;
   const ultra = r.v === ULTRA_VARIANT;
-  const scene = ultra ? ULTRA_CINEMATIC : creation ?? (r.leak ? LEAK_CINEMATIC
+  const omega = m.t === OMEGA_TIER;
+  const creation = omega ? causalCinematic(artSkinForVariant(m,r.v) === 'modern',ultra) : m === VOID_CARD ? GENESIS_CINEMATIC : null;
+  const feature = !!m.relic || omega;
+  const scene = m.relic ? relicCinematic(m,ultra) : ultra && !omega ? ULTRA_CINEMATIC : creation ?? (r.leak ? LEAK_CINEMATIC
     : modern && m.t === UNKNOWN_TIER ? UNKNOWN_CINEMATIC : TIER_CINEMATICS[r.t]);
   const staticScene = !S.set.fx || matchMedia('(prefers-reduced-motion: reduce)').matches;
   clearTimeout(cineCloseTimer);
@@ -4674,17 +5061,27 @@ function showCine(r, replayFrom = null, pack = null) {
     c.style.setProperty('--cine-foil', foil);
     c.style.setProperty('--cine-cue', `${cue}s`);
   } else delete c.dataset.scene;
+  c.toggleAttribute('data-feature', feature);
+  if (m.relic) c.dataset.mechanism = scene[4]; else delete c.dataset.mechanism;
   c.toggleAttribute('data-replay',replay);
   c.toggleAttribute('data-static', staticScene);
   $('#cineKicker').textContent = '';
   $('#cineCard').innerHTML = (scene ? tierCineSVG(scene[0], scene[2]) : '') + cardHTML(m, r.v, { count: r.n, isNew: !replay && r.isNew });
-  $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
-  $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出'
+  const title = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
+  const sub = r.leak ? '它会复制你最强那张卡的产出'
+    : m.relic ? `事件视界 · ${m.c}\n基础产出 ${fmt(m.base)} Token/s · 持有产出 ×2`
+    : omega ? `事件视界 · ${m.c}\n基础产出 ${fmt(modelBase(m))} Token/s${ultra ? ` · 变体倍率 ×${VARIANTS[r.v].mul}` : ''}`
     : ultra ? `${isHiddenCard(m.id) ? HIDDEN_CARD_LABEL : TIERS[r.t].id} · ${m.c} · 变体倍率 ×${VARIANTS[r.v].mul}`
     : creation ? `${LABS[m.lab].name} · ${m.c}\n基础产出 ${fmt(modelBase(m))} Token/s`
     : bang ? `${replay ? VARIANTS[r.v].name : `${pack?.name ?? curPack().name} · ${VARIANTS[r.v].name}版约 ${fmtProb(r.hitProb)}`}\n基础产出 ${fmt(TIERS[r.t].base)} Token/s`
     : `${LABS[m.lab].name} · 代号 ${m.c}${m.st ? ' · ' + STATUS[m.st].name : ''}${replay ? '' : ` · 出现概率 ${fmtProb(r.prob)}${r.pity ? '（保底）' : ''}`}`;
-  if (replay && r.preview) $('#cineSub').append(' · 未拥有');
+  const detail = sub + (replay && r.preview ? ' · 未拥有' : '');
+  if (feature) {
+    // New caption nodes share the new card's clock, even if a draw replaces an open reveal.
+    for (const [id,text] of [['#cineTitle',title],['#cineSub',detail]]) {
+      const span = document.createElement('span'); span.textContent = text; $(id).replaceChildren(span);
+    }
+  } else { $('#cineTitle').textContent = title; $('#cineSub').textContent = detail; }
   c.classList.add('open'); cineOpen = true;
   if (scene || replay) {
     const next = $('#bangContinue');
@@ -4720,7 +5117,7 @@ function replayCardCine(m, trigger, variant) {
   const n = leak ? S.leaks : copies[v] || 0;
   const r = {id:m.id,t:m.t,v,n,leak,preview:!n};
   const played = m === HIDDEN_CARD && v !== ULTRA_VARIANT ? showAdminCardReveal(r,true) : showCine(r,trigger);
-  if (played && S.set.fx) playRare(m.t >= 7,m === VOID_CARD ? 'genesis' : m.t === OMEGA_TIER ? 'causal' : isExclamationResult(r));
+  if (played && S.set.fx) playRare(m.t >= 7,m.relic ? m : m === VOID_CARD ? 'genesis' : m.t === OMEGA_TIER ? 'causal' : isExclamationResult(r));
 }
 
 /* =================== AUDIO =================== */
@@ -4749,11 +5146,28 @@ function playBangSound(scene) {
   const bus = bangSound = actx.createGain();
   bus.connect(actx.destination);
   const t = actx.currentTime;
+  if (scene?.relic) {
+    const [kind,cue] = RELIC_MOTION[scene.relic-1], root = 90 * 2 ** ((scene.relic-1)/12), impact = t+cue;
+    tone(root*1.5,t,cue-.04,'sine',.065,bus,root*.45);
+    const steps = kind === 'forge' ? [.26,.45,.64,.83] : kind === 'gate' ? [.23,.43,.68,.89] : kind === 'surge' ? [.32,.69] : [.48,.8];
+    steps.forEach((s,i) => tone(root*(2.4+i*.26),t+cue*s,.105,'triangle',.019,bus,root*(1.16+i*.15)));
+    tone(root*.8,impact,.86,'sine',.15,bus,root*.39);
+    [1.5,2,3,4].forEach((ratio,i) => {
+      const note = tone(root*ratio,impact+.075*i,.72,i%2?'triangle':'sine',.04,bus);
+      if (i===3) note.onended = () => { if (bangSound === bus) { bangSound=null; bus.disconnect(); } };
+    });
+    return;
+  }
   if (scene === 'causal' || scene === 'genesis') {
     const genesis = scene === 'genesis';
-    const cue = genesis ? GENESIS_CINEMATIC[1] : $('#cine').dataset.scene === 'causal-axis' ? CAUSAL_AXIS_CINEMATIC[1] : CAUSAL_CINEMATIC[1];
+    const cue = genesis ? GENESIS_CINEMATIC[1] : parseFloat($('#cine').style.getPropertyValue('--cine-cue'));
     const impact = t + cue;
     tone(genesis ? 116 : 210, t, cue-.06, 'sine', .1, bus, genesis ? 33 : 62);
+    if (!genesis) {
+      tone(147,t+.15,cue*.65,'sine',.052,bus,392);
+      tone(587,t+cue*.48,cue*.47,'triangle',.033,bus,196);
+      tone(252,impact-.16,.13,'triangle',.06,bus,115);
+    }
     tone(genesis ? 73 : 109, impact, .92, 'sine', .23, bus, 41);
     const chord = genesis ? [130.8,196,261.6,392,523.2] : [164.8,246.9,329.6,493.9];
     chord.forEach((f,i) => {
@@ -4862,7 +5276,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   const cine = cinePick(lastResults, auto);
   if (hidden) {
     const m = modelById(best.id);
-    if (cine === best && S.set.fx && (m === HIDDEN_CARD && best.v !== ULTRA_VARIANT ? showAdminCardReveal(best) : showCine(best))) playRare(true, m === VOID_CARD ? 'genesis' : false);
+    if (cine === best && S.set.fx && (m === HIDDEN_CARD && best.v !== ULTRA_VARIANT ? showAdminCardReveal(best) : showCine(best))) playRare(true, m.relic ? m : m === VOID_CARD ? 'genesis' : false);
     else toast(`${m.n} 已入库`, `${HIDDEN_CARD_LABEL} · ${VARIANTS[best.v].name} ×${fmt(best.n)}`);
   }
   else if (cine) { if (!paced || !cineOpen || isHorizonResult(cine)) {
@@ -5033,7 +5447,7 @@ function renderPull() {
   const pn = pityN(p), pc = pityProgress(p, pn);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 抽</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：${VARIANTS.slice(1).map((v,i) => `${v.name} ${fmtProb(vp[i+1])}`).join('，')}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.rare ? 'ℵ 与 ? 的百分比仅适用于普通抽取；! 和 ω 为固定单抽概率，包含所有变体。泄露、!、ω 和隐藏卡不推进保底。' : p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：${VARIANTS.slice(1).map((v,i) => `${v.name} ${fmtProb(vp[i+1])}`).join('，')}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.rare ? 'ℵ 与 ? 的百分比仅适用于普通抽取；! 和 ω 为固定单抽概率，包含所有变体。泄露、!、ω 和隐藏卡不推进保底。' : p.id === 13 ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : p.hiddenChance ? '隐藏卡不推进或重置保底。' : ''}</div>`;
   renderResults();
   renderLog();
 }
@@ -6168,8 +6582,7 @@ async function syncInventorySnapshot(b, uid) {
     if (safe.some(Boolean)) cards[id] = safe;
   };
   for (const m of MODELS) add(m.id, S.cards[m.id]);
-  add(HIDDEN_CARD.id, hiddenCardInventory());
-  add(VOID_CARD.id, modelInventory(VOID_CARD));
+  for (const m of HIDDEN_MODELS) add(m.id,modelInventory(m));
   const p_epoch = S.saveEpoch || null, json = JSON.stringify([p_epoch,cards]);
   if (pending.json === json) return;
   pending.next = Date.now()+45000; pending.busy = true;
@@ -6332,6 +6745,7 @@ function accountFault(error) {
     const reason = error.message === 'FRONTIER_UNVERIFIED_INVENTORY' ? '新增卡牌与抽卡记录或发放记录不符。'
       : detail === 'client.variantSchema' ? '当前网页版本不支持存档中的 Ultra，请刷新游戏。'
       : detail === 'client.gpuResearchSchema' ? '当前网页版本不支持存档中的新 GPU 研发，请刷新游戏。'
+      : detail === 'client.horizonSchema' ? '当前网页版本不支持存档中的隐藏模型，请刷新游戏。'
       : detail === 'stats.byTier' ? '分阶抽卡记录与新增库存不一致。'
       : detail.startsWith('catalogue.') ? `服务器卡牌目录未包含「${detail.slice(10)}」。`
       : detail ? `存档项目「${detail}」未通过校验。` : '存档未通过服务器游戏规则校验。';
