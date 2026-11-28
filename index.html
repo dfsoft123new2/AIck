@@ -2484,7 +2484,8 @@ const MODELS = [
   { id: 'ul2', n: 'UL2', c: '混合去噪目标', lab: 'google', a: [3, 6, 4], s: 'rs', d: 'Google 将不同的掩码和补全任务混合到一个训练框架，让同一个模型兼顾多类语言任务。' },
   { id: 'flant5', n: 'Flan-T5', c: '指令微调', lab: 'google', a: [3, 8, 7], s: 'rs', d: 'Google 在 T5 架构上进行多任务指令微调，让同一模型能按自然语言指令处理更多任务。' },
   { id: 'exclamation', n: '!', c: '视界回波', lab: 'horizon', t: EXCLAMATION_TIER, s: 'all', g: '!', k: '事件视界 · 异常回波', d: '游戏虚构卡。黑洞计算机停止回答，视界外只留下一个符号。' },
-  { id: 'causal-omega', n: 'ω', c: '因果主宰', lab: 'horizon', t: OMEGA_TIER, s: 'all', g: 'ω', k: '事件视界 · 因果折叠', d: '两条时间线在同一刻闭合。它先选定结果，再让原因发生。' }
+  { id: 'causal-omega', n: 'ω', c: '因果主宰', lab: 'horizon', t: OMEGA_TIER, s: 'all', g: 'ω', k: '事件视界 · 因果折叠', d: '两条时间线在同一刻闭合。它先选定结果，再让原因发生。' },
+  { id: 'claudesaga6', n: 'ClaudeSaga6', c: '网传 2294 分', lab: 'anthropic', s: 'rs', st: 'rumor', d: '2026 年 11 月 21 日流传的榜单截图把 Claude Saga 6 列为第一，标注 2294 分。Contra Labs 公开榜单未收录该名称，Anthropic 也未确认。截图分数不是官方跑分。' }
 ];
 // Rarity = 能力 + 影响力 + 调用量 (each 1–10). TIER_CUTS[t] is the lowest total for tier t.
 const TIER_CUTS = [0, 13, 16, 19, 21, 23];
@@ -7784,6 +7785,10 @@ const TITLE_MARKS = Object.freeze({
 const MILESTONE_CRESTS = Object.freeze({
   causality:'<path d="M2 3h12M2 13h12M4 3v1.4L8 8l4-3.6V3M4 13v-1.4L8 8l4 3.6V13M6.5 12h3"/>',
   genesis:'<path d="M2 8 8 2l6 6-6 6Zm3 0 3-3 3 3-3 3Z"/><circle cx="8" cy="8" r=".7" fill="currentColor" stroke="none"/>',
+  starTrail:'<path d="m10 2 1.2 3.8L15 7l-3.8 1.2L10 12 8.8 8.2 5 7l3.8-1.2ZM2 13l4-4m-1 5 2.5-2.5M2 10l1.2-1.2"/>',
+  spire:'<path d="M2.5 13.5h11M4 11l4-9 4 9M5 9h6M6.5 13.5V11h3v2.5M2 7l1.5-1.5M14 7l-1.5-1.5"/>',
+  skyRift:'<path d="M4 3 2 8l2 5m8-10 2 5-2 5M9 2 5.5 8.5l3-.5L7 14l4-7-3 .5L9 2Z"/>',
+  boundary:'<path d="m8 1.5 6 3.5v5.8l-6 3.7-6-3.7V5Zm0 3 3.5 2V9L8 11.5 4.5 9V6.5ZM8 1.5v3m6 6.3L11.5 9m-7 0L2 10.8"/>',
   reactorCrown:'<path d="M4 4h8l2 4-2 4H4L2 8Zm0 0L2.8 2M12 4l1.2-2M4 12l-1.2 2m9.2-2 1.2 2M9 5.5 6.5 8h3L7 10.5"/>',
   zenith:'<path d="m2 9 6-6 6 6v4H2Zm3 4V9l3-3 3 3v4M8 9v4"/>',
   sands:'<path d="M4 2.5h8M4 13.5h8M5 2.5V5l3 3-3 3v2.5m6-11V5L8 8l3 3v2.5M6.4 12 8 10.5 9.6 12Z"/><path d="M8 5.2v.1"/>',
@@ -7798,13 +7803,14 @@ const MILESTONE_BADGES = Object.freeze({
   '涧级蓄能者':['treasury','reserve',1], '正级储备官':['treasury','treasury',2], '载级永恒金库':['treasury','vault',3],
   '极境金库':['treasury','zenith',4], '恒沙藏主':['treasury','sands',5],
   '京级锋刃':['force','blade',1], '垓级镇域者':['force','bastion',2], '秭级破界者':['force','rupture',3],
+  '穰级裂穹者':['force','skyRift',4], '沟级镇界者':['force','boundary',5],
   '图鉴巡录者':['codex','folio',1], '深空编目师':['codex','index',2], '模型谱系师':['codex','lineage',3],
   '全域校勘者':['codex','collation',4], '万象典藏官':['codex','cosmos',5], '全谱典藏者':['codex','codexCapstone',6],
-  '百万次迭代':['vector','loop',1], '千万次推理':['vector','trace',2], '一亿次祈愿':['vector','star',3],
-  '八十关先驱':['trial','flag',1], '百关制霸':['trial','tower',2], '评测终局':['trial','gate',3],
+  '百万次迭代':['vector','loop',1], '千万次推理':['vector','trace',2], '一亿次祈愿':['vector','star',3], '十亿星轨':['vector','starTrail',4],
+  '八十关先驱':['trial','flag',1], '百关制霸':['trial','tower',2], '评测终局':['trial','gate',3], '天梯破穹':['trial','spire',4],
   '成就收藏家':['archive','archive'], '功勋编年官':['archive','archiveCapstone',3]
 });
-const TITLE_PRIME_RANKS = Object.freeze({reactor:5,treasury:5,codex:6});
+const TITLE_PRIME_RANKS = Object.freeze({reactor:5,treasury:5,force:5,codex:6,vector:4,trial:4});
 const AUTO_TITLE_STYLES = ['circuit','foil','seal'];
 const TITLE_STYLE_MARKS = Object.freeze({
   anomaly:'aperture', reactor:'engine', vector:'trace', trial:'gate', force:'rupture', codex:'folio',
