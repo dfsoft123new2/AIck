@@ -2754,11 +2754,13 @@ const TECH = [
   { key: 'distill', name: '知识蒸馏', desc: '微调费用 −8%。', max: 5, cost: lv => 2 + 2 * lv, eff: lv => `微调费用 −${8 * lv}%` },
   { key: 'redteam', name: '红队演练', desc: '评测战力 ×1.25。', max: 8, cost: lv => 3 + 2 * lv, eff: lv => `战力 ×${fmtMul(Math.pow(1.25, lv))}` },
   { key: 'compound', name: '算力复利', desc: '全局产出 ×1.5，可以无限升级。', max: null, cost: lv => Math.ceil(10 * Math.pow(1.7, lv)), eff: lv => `产出 ×${fmtMul(Math.pow(1.5, lv))}` },
-  { key: 'doubleDraw', name: '双核推理', desc: '提高每批独立抽数，Token 费用同比增加。', max: 3, cost: () => 6000, eff: lv => `每批抽数 ×${1 + lv}` },
-  { key: 'doubleCopies', name: '镜像复制', desc: '增加每次命中的卡片份数，不增加抽数或保底进度。', max: 3, cost: () => 8000, eff: lv => `卡片份数 ×${1 + lv}` },
-  { key: 'doubleOdds', name: '超频采样', desc: '提高变体与权重泄露概率，不改变卡池的固定稀有概率。', max: 3, cost: () => 10000, eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
-  { key: 'doubleSpeed', name: '瞬时推理', desc: '提高自动抽卡速度。', max: 3, cost: () => 12000, eff: lv => `自动抽卡速度 ×${1 + lv}` },
-  { key: 'doubleNews', name: '热点增幅', desc: '提高热点的数值效果，折后价按倍率再降低。频率和时长不变。', max: 3, cost: () => 20000, eff: lv => `热点强度 ×${1 + lv}` }
+  { key: 'doubleDraw', name: '双核推理', desc: '提高每批独立抽数，Token 费用同比增加。', max: 4, cost: lv => 6000 * (lv >= 3 ? 2.5 : 1), eff: lv => `每批抽数 ×${1 + lv}` },
+  { key: 'doubleCopies', name: '镜像复制', desc: '增加每次命中的卡片份数，不增加抽数或保底进度。', max: 4, cost: lv => 8000 * (lv >= 3 ? 2.5 : 1), eff: lv => `卡片份数 ×${1 + lv}` },
+  { key: 'doubleOdds', name: '超频采样', desc: '提高变体与权重泄露概率，不改变卡池的固定稀有概率。', max: 4, cost: lv => 10000 * (lv >= 3 ? 2.5 : 1), eff: lv => `稀有变体与泄露概率 ×${1 + lv}` },
+  { key: 'doubleSpeed', name: '瞬时推理', desc: '提高自动抽卡速度。', max: 4, cost: lv => 12000 * (lv >= 3 ? 2.5 : 1), eff: lv => `自动抽卡速度 ×${1 + lv}` },
+  { key: 'doubleNews', name: '热点增幅', desc: '提高热点的数值效果，折后价按倍率再降低。频率和时长不变。', max: 4, cost: lv => 20000 * (lv >= 3 ? 2.5 : 1), eff: lv => `热点强度 ×${1 + lv}` },
+  { key: 'onlineGpu', name: '算力常驻', desc: '在线奖励基础产出 +1 GPU／分钟，云档同步后生效。', max: 1, cost: () => 15000, eff: lv => `在线 GPU 基础产出 +${lv}／分钟` },
+  { key: 'doublePower', name: '战力共振', desc: '评测与排行榜战力翻倍，与红队演练叠乘。', max: 1, cost: () => 25000, eff: lv => `战力 ×${1 + lv}` }
 ];
 
 const BENCHES = [
@@ -3132,6 +3134,8 @@ const LEGACY_PULL_MUTES = ['newCard', 'rareCard', 'autoBench'];
 const DEFAULT_UP_LAB = 'anthropic';
 const UP_SWITCH_COOLDOWN = 10 * 60_000;
 const DOUBLE_TECH_KEYS = ['doubleDraw', 'doubleCopies', 'doubleOdds', 'doubleSpeed', 'doubleNews'];
+const EXTRA_GPU_TECH_CAPS = Object.fromEntries([...DOUBLE_TECH_KEYS, 'onlineGpu', 'doublePower']
+  .map(key => [key, TECH.find(t => t.key === key)?.max ?? (DOUBLE_TECH_KEYS.includes(key) ? 4 : 1)]));
 function normalizeCardSkin(skin) { return skin === 'classic' ? 'classic' : 'modern'; }
 function validPacketDebitCost(kind, cost) {
   return ['gpu','tokens'].includes(kind) && Number.isFinite(cost) && (cost>0 || (kind==='tokens' && cost===0));
@@ -3146,7 +3150,7 @@ function defaultState() {
     cards: { [STARTER.id]: [1, ...emptyCopies().slice(1)] }, train: {}, leaks: 0,
     up: { multi: 0, speed: 0, clone: 0, price: 0 },
     tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, eventDuration: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0,
-      ...Object.fromEntries(DOUBLE_TECH_KEYS.map(key => [key, 0])) },
+      ...Object.fromEntries(Object.keys(EXTRA_GPU_TECH_CAPS).map(key => [key, 0])) },
     pack: 1, upLab: DEFAULT_UP_LAB, upSwitchAt: 0, auto: false, autoReb: false, autoBench: false,
     pity: {}, rebirths: 0, stage: 0, titlePeakTps: 0,
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
@@ -3167,10 +3171,13 @@ function mergeState(base, saved) {
 }
 function sanitizeState(st) {
   delete st.variantSchema; // Transport metadata is regenerated on upload.
+  delete st.gpuResearchSchema;
   st.titlePeakTps = Number.isFinite(st.titlePeakTps) && st.titlePeakTps > 0 ? Math.min(st.titlePeakTps, 1e300) : 0;
   if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
   st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
-  for (const key of DOUBLE_TECH_KEYS) st.tech[key] = Number.isInteger(st.tech[key]) && st.tech[key] >= 0 && st.tech[key] <= 3 ? st.tech[key] : 0;
+  for (const [key,max] of Object.entries(EXTRA_GPU_TECH_CAPS)) {
+    st.tech[key] = Number.isInteger(st.tech[key]) && st.tech[key] >= 0 && st.tech[key] <= max ? st.tech[key] : 0;
+  }
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
   st.set.hideCompleteDex = st.set.hideCompleteDex === true;
   st.set.cardSkin = normalizeCardSkin(st.set.cardSkin);
@@ -3643,7 +3650,9 @@ function buyUpgrade(key) {
   playTick();
   markDirty('research', 'pull', 'hud');
 }
+function canResearchTech(key) { return key !== 'onlineGpu' || (typeof account !== 'undefined' && !!account.uid); }
 function buyTech(key) {
+  if (!canResearchTech(key)) return;
   const t = TECH.find(x => x.key === key);
   const lv = S.tech[key];
   if (t.max !== null && lv >= t.max) return;
@@ -3654,9 +3663,10 @@ function buyTech(key) {
   playTick();
   toast('科技已研发', `${t.name} → ${t.eff(S.tech[key])}`);
   markDirty('research', 'pull', 'bench', 'hud');
+  if (key === 'doublePower') cloudBump(false);
 }
 const researchBulk = gpu => gpu
-  ? {items:TECH, key:'tech', currency:'gpu', price:(item,level) => item.cost(level)}
+  ? {items:TECH.filter(t => canResearchTech(t.key)), key:'tech', currency:'gpu', price:(item,level) => item.cost(level)}
   : {items:UPGRADES, key:'up', currency:'tokens', price:(item,level) => item.base * item.g ** level};
 function nextResearchUpgrade(group, levels) {
   let best = null;
@@ -3689,12 +3699,13 @@ function openResearchBulk(gpu) {
   const cost = `${fmt(quote.cost)} ${gpu ? 'GPU' : 'Token'}`;
   confirmModal(label, `合计 ${cost}`, quote.changes.map(({item,from,to}) => `${esc(item.name)}：Lv.${from} → Lv.${to}`), '确认', () => {
     if (accountPaused() || moderation.level === 2 || S[group.key] !== levels || !Number.isFinite(S[group.currency]) ||
-        S[group.currency] < quote.cost || quote.changes.some(({item,from}) => levels[item.key] !== from)) {
+        S[group.currency] < quote.cost || quote.changes.some(({item,from}) => levels[item.key] !== from || (gpu && !canResearchTech(item.key)))) {
       toast('未执行', '余额或研发进度已变化，请重新确认。'); return;
     }
     S[group.currency] -= quote.cost;
     for (const {item,to} of quote.changes) levels[item.key] = to;
     if (gpu) invalidate();
+    if (gpu && quote.changes.some(({item}) => item.key === 'doublePower')) cloudBump(false);
     resetAutoPull(); playTick();
     markDirty('research','pull','bench','hud');
     saveLocal(); renderActive(true);
@@ -3742,7 +3753,7 @@ function benchInfo(stage) {
 }
 function benchTrainMul(m) { return m.t >= 9 ? 1.3 ** trainLv(m.id) : trainMul(m.id); }
 function cardPower(m, v, count, spec) {
-  return modelBase(m) * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench');
+  return modelBase(m) * VARIANTS[v].mul * benchTrainMul(m) * (1 + 0.5 * Math.log10(Math.max(1, count))) * ((m.s === spec || m.s === 'all') ? 2 : 1) * Math.pow(1.25, S.tech.redteam) * buffMul('bench') * techDouble('doublePower');
 }
 function bestTeam(spec, powerFactor = 1) {
   const cand = [];
@@ -3963,7 +3974,8 @@ function cloudSaveSnapshot(state, stamp = Date.now()) {
     while (length && counts[length-1] === 0) length--;
     cards[id] = counts.slice(0,length);
   }
-  return structuredClone({...state,cards,lastSave:stamp,variantSchema:VARIANTS.length});
+  const expandedGpu = Object.entries(EXTRA_GPU_TECH_CAPS).some(([key,max]) => state.tech[key] === max);
+  return structuredClone({...state,cards,lastSave:stamp,variantSchema:VARIANTS.length,...(expandedGpu ? {gpuResearchSchema:1} : {})});
 }
 
 function continueLocalSaveAfterCutover() {
@@ -5516,9 +5528,10 @@ function renderResearch() {
     <button class="btn" id="rebirthBtn" data-cost="${rc}" ${S.tokens < rc ? 'disabled' : ''}>发布 v${S.rebirths + 2}.0<span class="cost">${fmt(rc)}</span></button></div>`;
   $('#techGrid').innerHTML = TECH.map(t => {
     const lv = S.tech[t.key], maxed = t.max !== null && lv >= t.max, c = t.cost(lv);
+    const locked = !maxed && !canResearchTech(t.key);
     const pins = t.max === null ? '' : `<span class="pins">${Array.from({ length: Math.min(t.max, 10) }, (_, i) => `<i class="${i < lv ? 'on' : ''}"></i>`).join('')}</span>`;
     return `<div class="tech">${pins}<div class="n">${esc(t.name)}${t.max === null ? ` <span class="muted num" style="font-weight:500">Lv.${lv}</span>` : ''}</div><div class="d">${esc(t.desc)}</div><div class="e">${esc(t.eff(lv))}${maxed ? '' : ' → ' + esc(t.eff(lv + 1))}</div>
-      <button class="btn small ghost" data-tech="${t.key}" ${maxed ? 'disabled' : ''} ${!maxed && S.gpu < c ? 'disabled' : ''} data-gpu="${maxed ? '' : c}">${maxed ? '已完成' : `研发<span class="cost">${c} GPU</span>`}</button></div>`;
+      <button class="btn small ghost" data-tech="${t.key}" ${maxed || locked || S.gpu < c ? 'disabled' : ''} data-gpu="${maxed || locked ? '' : c}">${maxed ? '已完成' : `${locked ? '需登录' : '研发'}<span class="cost">${c} GPU</span>`}</button></div>`;
   }).join('');
 }
 
@@ -6318,6 +6331,7 @@ function accountFault(error) {
     const detail = typeof error.details === 'string' && /^[a-z0-9_.-]{1,80}$/i.test(error.details) ? error.details : '';
     const reason = error.message === 'FRONTIER_UNVERIFIED_INVENTORY' ? '新增卡牌与抽卡记录或发放记录不符。'
       : detail === 'client.variantSchema' ? '当前网页版本不支持存档中的 Ultra，请刷新游戏。'
+      : detail === 'client.gpuResearchSchema' ? '当前网页版本不支持存档中的新 GPU 研发，请刷新游戏。'
       : detail.startsWith('catalogue.') ? `服务器卡牌目录未包含「${detail.slice(10)}」。`
       : detail ? `存档项目「${detail}」未通过校验。` : '存档未通过服务器游戏规则校验。';
     toast('云存档未更新', reason + '上一份云存档已保留。');
