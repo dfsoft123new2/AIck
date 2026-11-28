@@ -364,25 +364,25 @@ button.card { transition: transform .12s; }
 .detail > .card { align-self:start; }
 
 /* Classic illustrations use the original lab-colour frames and simple nameplates. */
-.card[data-skin="classic"]:not(.t-NULLPOINT) {
+.card[data-skin="classic"]:not(.t-NULLPOINT,.v4) {
   border-color:var(--tc); box-shadow:0 6px 18px -12px var(--tc);
 }
-.card[data-skin="classic"]:not(.t-NULLPOINT) .body {
+.card[data-skin="classic"]:not(.t-NULLPOINT,.v4) .body {
   background:linear-gradient(180deg,#ffffff08,transparent); border-top-color:#ffffff14;
 }
-.card[data-skin="classic"]:not(.t-NULLPOINT) .tier {
+.card[data-skin="classic"]:not(.t-NULLPOINT,.v4) .tier {
   background:var(--tc); color:#0b1412; box-shadow:none;
 }
-.card[data-skin="classic"].t-N { --tc:#8c9894; }
-.card[data-skin="classic"].t-R { --tc:#4cc383; }
-.card[data-skin="classic"].t-SR { --tc:#4ba2f8; }
-.card[data-skin="classic"].t-SSR { --tc:#a97cff; }
-.card[data-skin="classic"].t-UR { --tc:#f2b533; }
-.card[data-skin="classic"].t-LR { --tc:#ff6a46; }
-.card[data-skin="classic"].t-MR { --tc:#ff4fd8; }
-.card[data-skin="classic"]:is(.t-AGI,.t-Q) { --tc:#fff; }
-.card[data-skin="classic"].t-ALEPH { --tc:#cdbeff; }
-.card[data-skin="classic"].t-BANG { --tc:#ffb68a; }
+.card[data-skin="classic"]:where(:not(.v4)).t-N { --tc:#8c9894; }
+.card[data-skin="classic"]:where(:not(.v4)).t-R { --tc:#4cc383; }
+.card[data-skin="classic"]:where(:not(.v4)).t-SR { --tc:#4ba2f8; }
+.card[data-skin="classic"]:where(:not(.v4)).t-SSR { --tc:#a97cff; }
+.card[data-skin="classic"]:where(:not(.v4)).t-UR { --tc:#f2b533; }
+.card[data-skin="classic"]:where(:not(.v4)).t-LR { --tc:#ff6a46; }
+.card[data-skin="classic"]:where(:not(.v4)).t-MR { --tc:#ff4fd8; }
+.card[data-skin="classic"]:where(:not(.v4)):is(.t-AGI,.t-Q) { --tc:#fff; }
+.card[data-skin="classic"]:where(:not(.v4)).t-ALEPH { --tc:#cdbeff; }
+.card[data-skin="classic"]:where(:not(.v4)).t-BANG { --tc:#ffb68a; }
 
 /* The finish occupies the face. The frame and labels stay put during a sweep. */
 :is(.card.v1,.admin-card-reveal[data-variant="1"]) {
@@ -482,6 +482,7 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .chipsel button[aria-pressed="true"] { border-color: var(--copper); color: var(--copper); font-weight: 700; }
 .chipsel .sw { width: 9px; height: 9px; border-radius: 2px; }
 .vault { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
+.vault-filter { display:flex; align-items:center; gap:8px; color:var(--ink-2); font-size:13px; }
 .vault-item { display: flex; flex-direction: column; gap: 6px; }
 .vault-item.offscreen { content-visibility: auto; contain-intrinsic-block-size: auto 212px; }
 .vault-item.offscreen .card::before, .vault-item.offscreen .card::after, .vault-item.offscreen .art::after, .vault-item.offscreen .card { animation-play-state: paused; }
@@ -585,17 +586,28 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .card.v4:where([data-skin="modern"]) .body {
   background:linear-gradient(128deg,#22262e,#11141b 52%,#292239); border-top-color:#ffdfa77d;
 }
-.card.v4[data-skin="classic"] .var { color:#ffdfa2; background:#262015; box-shadow:inset 0 0 0 1px #ab844e; }
+/* The original Ultra print from 2822ba6. Keep its finish separate from ordinary classic cards. */
+.card.v4:where([data-skin="classic"]) {
+  border-color:#fdedb2 #78dfe9 #ff8a9b #fff6dc;
+  box-shadow:0 8px 24px -12px #fbac61,0 0 0 1px #fff3c341;
+}
+.card.v4[data-skin="classic"] .art > img { filter:saturate(.76) contrast(1.18); }
+.card.v4[data-skin="classic"] .art::after {
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
+  background:linear-gradient(136deg,transparent 42%,#89fbff26 48%,#fff4cd91 50%,#ff437934 52%,transparent 58%);
+  mix-blend-mode:screen; opacity:.56;
+}
+.card.v4[data-skin="classic"] .art > svg.ultra-foil { stroke-width:1.15; filter:drop-shadow(0 0 3px #fff3b179); }
+.card.v4[data-skin="classic"] .var { color:#fff6d6; background:#161118; box-shadow:inset 0 0 0 1px #ffe2a2; }
+.card.v4:where([data-skin="classic"]) .body {
+  background:linear-gradient(128deg,#21151b,#0e1018 58%,#1b3137); border-top-color:#ffdfa77d;
+}
 .variant-choice[data-variant-choice="4"] > span { color:#d6a95a; }
 @media (prefers-reduced-motion:no-preference) {
   html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4[data-skin="modern"] .art::after { animation:ultra-face-sweep .85s var(--cine-cue,.06s) ease-out both; }
-  html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4[data-skin="classic"] .art::after {
-    content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
-    background:linear-gradient(110deg,transparent 43%,#ffe1a847 49%,#fff2d77a 50%,transparent 55%);
-    mix-blend-mode:screen; animation:ultra-classic-glint .7s var(--cine-cue,.06s) ease-out both;
-  }
+  html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4[data-skin="classic"] .art::after { animation:ultra-classic-sweep .9s var(--cine-cue,.12s) ease-out both; }
   @keyframes ultra-face-sweep { from { transform:rotate(-74deg); opacity:.36; } 56% { opacity:1; } }
-  @keyframes ultra-classic-glint { from { transform:translateX(-83%); opacity:.6; } to { transform:translateX(83%); opacity:0; } }
+  @keyframes ultra-classic-sweep { from { transform:translateX(-70%); opacity:.1; } 70% { opacity:.95; } }
 }
 
 /* ========== Bench ========== */
@@ -1350,7 +1362,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .card.t-NULLPOINT .body { background:linear-gradient(116deg,#0b1014 53%,color-mix(in srgb,var(--tc) 16%,#090d11)); border-top-color:color-mix(in srgb,var(--np-foil) 39%,#000); }
 .card.t-NULLPOINT .nm { color:#fff6e5; }
 .card.t-NULLPOINT .cd { color:var(--np-foil); }
-.card.t-NULLPOINT[data-skin="classic"], html[data-card-skin="classic"] #dexHidden .ic { border-radius:0; }
+.card.t-NULLPOINT[data-skin="classic"]:not(.v4), html[data-card-skin="classic"] #dexHidden .ic { border-radius:0; }
 
 .admin-card-reveal {
   --np-heat:#ff9b60; --np-ion:#91f3ee; --np-cream:#fff6e2; --np-impact:.71s;
@@ -1566,7 +1578,10 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
             <button class="btn ghost small hidden" id="openBulkCards" type="button" aria-haspopup="dialog" aria-controls="bulkCards">一键增加全部卡</button>
           </div>
         </div>
-        <div class="toolbar"><div class="chipsel" id="labFilter"></div></div>
+        <div class="toolbar">
+          <div class="vault-filter"><label for="vaultVariant">变体</label><select class="input" id="vaultVariant" aria-controls="vault"><option value="">最高变体</option></select></div>
+          <div class="chipsel" id="labFilter"></div>
+        </div>
         <div class="vault" id="vault"></div>
       </section>
 
@@ -4226,14 +4241,14 @@ function logoSVG() {
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
 function skinForVariant(v) { return normalizeCardSkin(v === ULTRA_VARIANT ? S.set.ultraSkin : S.set.cardSkin); }
-function cardArt(m, v = 0, skin = skinForVariant(v)) {
+function cardArt(m, v = 0, skin = v === ULTRA_VARIANT ? 'modern' : skinForVariant(0)) {
   if (m === HIDDEN_CARD) return adminCardArt(v, skin);
   if (m === VOID_CARD || m.t === OMEGA_TIER) return creationCardArt(m, v, skin);
   return skin === 'classic' ? classicCardArt(m) : tierArt(m);
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
 function modelOrLeak(id) { return id === 'leak' ? LEAK_MODEL : modelById(id); }
-// One image URL per model and skin; the hidden card also has four distinct foils.
+// Both Ultra finishes use the same underlying art from the original release.
 const artUrls = new Map();
 function cardArtUrl(m, v, skin) {
   const key = `${skin}:${m.id}:${v}`;
@@ -4245,7 +4260,7 @@ function cardArtUrl(m, v, skin) {
 }
 function sharedArt(m, v = 0) {
   const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER ? v : 0;
-  const src = cardArtUrl(m, variant, skinForVariant(v));
+  const src = cardArtUrl(m, variant, v === ULTRA_VARIANT ? 'modern' : skinForVariant(0));
   return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}"${v === ULTRA_VARIANT ? ' data-ultra-art' : ''} src="${src}">`;
 }
 function applyCardSkin() {
@@ -4256,13 +4271,11 @@ function applyCardSkin() {
   root.dataset.ultraSkin = ultra;
   // Update mounted results and lazy catalogue art without rebuilding their views.
   for (const card of $$('.card[data-skin]')) {
-    card.dataset.skin = card.classList.contains('v4') ? ultra : skin;
+    const isUltra = card.classList.contains('v4');
+    if (isUltra ? ultraChanged : normalChanged) card.dataset.skin = isUltra ? ultra : skin;
   }
-  for (const img of $$('img[data-card-art]')) {
-    const isUltra = img.hasAttribute('data-ultra-art');
-    if (isUltra ? ultraChanged : normalChanged) {
-      img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), isUltra ? ultra : skin);
-    }
+  if (normalChanged) for (const img of $$('img[data-card-art]:not([data-ultra-art])')) {
+    img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), skin);
   }
 }
 function ultraFoil() {
@@ -4276,9 +4289,10 @@ function ultraFoil() {
       <path class="u-spark" d="M14 62v11m-5-5h10m127 19v11m-5-5h10M40 15l5-5m70 140 5-5"/>
     </g>
     <g class="u-classic" fill="none" stroke-linecap="square">
-      <rect x="5" y="5" width="150" height="150" rx="3" stroke="#e4b671" opacity=".62"/>
-      <path d="M11 54V11h43m52 0h43v43m0 52v43h-43m-52 0H11v-43" stroke="#ffdf9e" stroke-width="2.2"/>
-      <path d="M6 65h11m-11 8h8m-8 8h5m143-16h-11m11 8h-8m8 8h-5M63 148v-9m8 9v-6m18 6v-6m8 6v-9" stroke="#85e2d1" opacity=".82"/>
+      <path stroke="#73f5f4" d="M5 114V33L34 5h53M14 91V40L40 14h21M98 155h28l29-29V86M6 134h22l106-106h20"/>
+      <path stroke="#ff647d" d="M5 148h28L147 34V7M55 155h74l26-26v-22M7 67V29L29 7h15"/>
+      <path stroke="#ffe4a4" stroke-width="1.65" d="M5 44V27L27 5h36m34 150h36l22-22v-17M9 126h26l93-93h23M24 132l49-49 8 6 24-24 11 2 25-25"/>
+      <path stroke="#fff7e6" stroke-width="2" d="M45 112 72 85l8 6 26-26 10 2 19-19M25 84 71 38h19m-1 83h18l29-29"/>
     </g>
   </svg>`;
 }
@@ -4290,7 +4304,7 @@ function cardHTML(m, v, o = {}) {
   const hidden = isHiddenCard(m.id), tierId = hidden ? HIDDEN_CARD_LABEL : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
   const cls = `card t-${m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
-  const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
+  const attrs = o.button ? ` type="button" data-model="${m.id}" data-model-variant="${v}" aria-label="${esc(m.n)}"` : '';
   return `<${tag} class="${cls}" data-skin="${skinForVariant(v)}"${style}${attrs}><div class="art">${o.deferArt ? '' : cardFaceArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
 }
 const RATING_KEYS = ['能力', '影响力', '调用量'];
@@ -4986,6 +5000,9 @@ function makeVaultRow(m, v, count) {
 }
 function renderModels() {
   const grid = $('#vault'), hidden = HIDDEN_MODELS.filter(owned), labs = Object.keys(LABS).filter(k => labStats()[k].own || hidden.some(m => m.lab === k));
+  const select = $('#vaultVariant');
+  if (select.options.length === 1) select.append(...VARIANTS.map((v,i) => new Option(v.name, i)));
+  const variant = select.value === '' ? null : Number(select.value);
   if (!labs.includes(vaultLab)) vaultLab = 'all';
   const key = labs.join('|') + ':' + vaultLab;
   if (filterKey !== key) {
@@ -4994,24 +5011,27 @@ function renderModels() {
   }
   let list = MODELS.filter(owned).filter(m => vaultLab === 'all' || m.lab === vaultLab);
   list.push(...hidden.filter(m => vaultLab === 'all' || m.lab === vaultLab));
+  if (variant !== null) list = list.filter(m => modelInventory(m)[variant] > 0);
   const prod = production(), mul = globalMul();
   const output = m => (m === LEAK_MODEL ? S.leaks * prod.best : isHiddenCard(m.id) ? hiddenCardBase(m) : prod.amounts[m.idx-1]) * mul;
+  const countFor = c => variant === null ? total(c) : c[variant];
   if (vaultSort === 'out') list.sort((a, b) => output(b) - output(a));
   else if (vaultSort === 'tier') list.sort((a, b) => b.t - a.t || bestVar(modelInventory(b)) - bestVar(modelInventory(a)));
-  else list.sort((a, b) => total(modelInventory(b)) - total(modelInventory(a)));
-  if (S.leaks > 0 && vaultLab === 'all') list.unshift(LEAK_MODEL);
+  else list.sort((a, b) => countFor(modelInventory(b)) - countFor(modelInventory(a)));
+  if (variant === null && S.leaks > 0 && vaultLab === 'all') list.unshift(LEAK_MODEL);
   const wanted = new Set(list.map(m => m.id));
   for (const [id,row] of vaultRows) if (!wanted.has(id)) {
     vaultObserver?.unobserve(row.el); row.el.remove(); vaultRows.delete(id);
   }
   if (!list.length) {
-    if (!grid.firstChild) grid.innerHTML = '<div class="empty" style="grid-column:1/-1">这里还空着。去“抽卡”页抽几张吧。</div>';
+    if (!grid.firstChild) grid.innerHTML = '<div class="empty" style="grid-column:1/-1"></div>';
+    textIfChanged(grid.firstElementChild, variant === null ? '这里还空着。去“抽卡”页抽几张吧。' : '没有符合筛选条件的模型。');
     return;
   }
   if (grid.firstElementChild?.classList.contains('empty')) grid.replaceChildren();
   let next = grid.firstElementChild;
   for (const m of list) {
-    const c = modelInventory(m), leak = m === LEAK_MODEL, v = leak ? 3 : bestVar(c), count = leak ? S.leaks : total(c);
+    const c = modelInventory(m), leak = m === LEAK_MODEL, v = leak ? 3 : variant ?? bestVar(c), count = leak ? S.leaks : countFor(c);
     let row = vaultRows.get(m.id);
     if (!row || row.v !== v) {
       const old = row; row = makeVaultRow(m, v, count); vaultRows.set(m.id, row);
@@ -5040,7 +5060,7 @@ function bindCardReplay(el, m, variant) {
   const replay = $('[data-act=replay]',el);
   if (replay) replay.onclick = () => { initAudio(); replayCardCine(m,replay,variant?.()); };
 }
-function openDetail(id) {
+function openDetail(id, initialVariant) {
   if (id === LEAK_MODEL.id && S.leaks > 0) {
     openModal(`<div class="modal-h"><h3>${esc(LEAK_MODEL.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
       <div class="detail">${cardHTML(LEAK_MODEL,3,{count:S.leaks})}<div><p class="desc">${esc(LEAK_MODEL.d)}</p>
@@ -5049,7 +5069,8 @@ function openDetail(id) {
     return;
   }
   const m = modelById(id), hidden = isHiddenCard(id); if (!m || (hidden && !owned(m))) return;
-  let variant = owned(m) ? bestVar(modelInventory(m)) : 0;
+  const copies = modelInventory(m);
+  let variant = validVariant(initialVariant) && copies?.[initialVariant] > 0 ? initialVariant : bestVar(copies);
   const html = () => {
     const c = modelInventory(m) || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
     return `<div class="modal-h"><h3>${esc(m.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
@@ -8970,7 +8991,7 @@ on('#upLab', 'change', e => {
 });
 on('#pullBtn', 'click', e => { initAudio(); doPull(false, e.currentTarget); renderActive(true); });
 on('#autoSw', 'click', () => { initAudio(); S.auto = !S.auto; resetAutoPull(); renderPullBox(); });
-for (const sel of ['#results', '#vault', '#benchHero', '#dexLabs', '#dexSeries']) on(sel, 'click', e => { const b = e.target.closest('[data-model]'); if (b) openDetail(b.dataset.model); });
+for (const sel of ['#results', '#vault', '#benchHero', '#dexLabs', '#dexSeries']) on(sel, 'click', e => { const b = e.target.closest('[data-model]'); if (b) openDetail(b.dataset.model, Number(b.dataset.modelVariant)); });
 on('#dexTier', 'change', filterDexTier);
 on('#jumpDexFilter', 'click', () => {
   $('#dexLabs .dex-labs-head').scrollIntoView({block:'center'});
@@ -8978,6 +8999,7 @@ on('#jumpDexFilter', 'click', () => {
 });
 on('#sortSeg', 'click', e => { const b = e.target.closest('[data-sort]'); if (!b) return; vaultSort = b.dataset.sort; for (const x of $$('#sortSeg button')) x.setAttribute('aria-pressed', x === b); renderModels(); });
 on('#labFilter', 'click', e => { const b = e.target.closest('[data-lab]'); if (!b) return; vaultLab = b.dataset.lab; renderModels(); });
+on('#vaultVariant', 'change', renderModels);
 on('#benchHero', 'click', e => {
   if (e.target.closest('#benchBtn')) { initAudio(); runBench(false); renderActive(true); }
   else if (e.target.closest('#autoBenchSw')) { S.autoBench = !S.autoBench; renderBench(); }
@@ -9147,6 +9169,7 @@ function installSave(st) {
   pullTest.reset();
   resetAutoPull(); lastT = Date.now(); lastSimulationTime = simulationClock(); nextAutoBench = 0; lastBench = null; benchCooldown = 0;
   news = null; nextNewsAt = lastT + 40000; offlineReport = null; vaultLab = 'all';
+  $('#vaultVariant').value = '';
   invalidate(); lastYield = computeYield(); applyTheme(); applyCardSkin(); renderNews();
   $('#results').innerHTML = '<div class="results-empty">点击“抽卡”，你的第一个模型就会出现在这里。</div>';
   $('#resultSide').textContent = ''; markDirty(...VIEWS, 'hud');
