@@ -1026,12 +1026,16 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 
 .modal-back { position: fixed; inset: 0; z-index: 80; background: rgba(4,12,10,.62); display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
 .modal-back.open { display: flex; }
-.modal { width: min(640px, 100%); max-height: calc(100dvh - 40px); overflow: auto; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-l); padding: 20px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.8); animation: modalIn .22s ease-out both; }
+.modal { width: min(640px, 100%); max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow: auto; background: var(--bg-2); border: 1px solid var(--line-2); border-radius: var(--r-l); padding: 20px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.8); animation: modalIn .22s ease-out both; }
 @keyframes modalIn { from { opacity: 0; transform: translateY(10px) scale(.98); } }
 .modal-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .modal-h h3 { margin: 0; font-size: 18px; }
 .x-btn { border: 0; background: var(--bg-3); width: 32px; height: 32px; border-radius: 8px; font-size: 18px; line-height: 1; color: var(--ink-2); }
 .detail { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 18px; }
+.detail-body { display:contents; }
+.detail-body > :first-child { grid-row:span 2; align-self:start; }
+.detail-train-actions { grid-column:2; align-self:start; display:flex; flex-wrap:wrap; gap:8px; }
+.detail-train-actions .btn { min-height:44px; }
 .detail [data-act=replay] { display:inline-flex; align-items:center; gap:7px; min-height:44px; }
 .detail [data-act=replay] svg { width:16px; height:16px; flex:none; }
 .variant-preview { display: grid; align-content: start; gap: 8px; min-width: 0; }
@@ -1117,6 +1121,24 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .vault { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 9px; }
   .vault-item.offscreen { contain-intrinsic-block-size: auto 180px; }
   .detail { grid-template-columns: minmax(0,1fr); }
+  .modal-back.model-detail { z-index:91; }
+  .model-detail .modal { display:flex; flex-direction:column; overflow:hidden; }
+  .model-detail .modal-h { flex:none; }
+  .model-detail .detail { display:flex; flex-direction:column; min-height:0; gap:0; }
+  .detail-body { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; min-height:0; overflow:auto; overscroll-behavior:contain; padding:3px 3px 12px; }
+  .detail-body > :first-child { grid-row:auto; }
+  .detail-body > .card { width:170px; margin:0 auto; }
+  .detail-body [data-act=sig] { min-height:44px; }
+  .detail-train-actions {
+    flex:none; align-self:stretch;
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:8px;
+    border-top:1px solid var(--line);
+  }
+  .detail-train-actions .btn {
+    flex-direction:column; gap:2px; padding:6px; min-height:56px; min-width:0;
+    text-align:center; line-height:1.25; overflow-wrap:anywhere;
+  }
+  .detail-train-actions .cost { font-size:12px; }
   .detail > .card { width: 170px; margin: 0 auto; }
   .variant-preview { width: min(100%, 340px); margin-inline: auto; }
   .variant-face { width: min(180px, 100%); margin-inline: auto; }
@@ -4589,14 +4611,15 @@ function toast(title, desc, category) {
   box.appendChild(el);
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 320); }, 3400);
 }
-function openModal(html, onBind) {
-  const m = $('#modal'); m.innerHTML = html;
-  $('#modalBack').classList.add('open');
+function openModal(html, onBind, modelDetail = false) {
+  const m = $('#modal'), back = $('#modalBack'); m.innerHTML = html;
+  back.classList.toggle('model-detail', modelDetail);
+  back.classList.add('open');
   const x = m.querySelector('.x-btn'); if (x) x.onclick = closeModal;
   if (onBind) onBind(m);
   const f = m.querySelector('button:not(.x-btn), input'); if (f) setTimeout(() => f.focus(), 30);
 }
-function closeModal() { $('#modalBack').classList.remove('open'); $('#modal').innerHTML = ''; }
+function closeModal() { $('#modalBack').classList.remove('open', 'model-detail'); $('#modal').innerHTML = ''; }
 function confirmModal(title, desc, details, okText, onOk) {
   openModal(`<div class="modal-h"><h3>${esc(title)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
     <p class="desc">${esc(desc)}</p>${details && details.length ? `<ul style="margin:12px 0 0;padding-left:20px;color:var(--ink-2);font-size:13.5px">${details.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
@@ -5216,6 +5239,7 @@ function openDetail(id, initialVariant) {
     const c = modelInventory(m) || [0, 0, 0, 0], has = owned(m), ls = labStats()[m.lab];
     return `<div class="modal-h"><h3>${esc(m.n)}</h3><button class="x-btn" aria-label="关闭">×</button></div>
     <div class="detail" data-train-id="${esc(m.id)}">
+      <div class="detail-body">
       ${has ? `<div class="variant-preview">
         <div class="variant-face" data-variant-face>${cardHTML(m, variant, {count:c[variant]})}</div>
         <div class="variant-options" role="group" aria-label="卡片变体">${VARIANTS.map((v,i) =>
@@ -5237,12 +5261,13 @@ function openDetail(id, initialVariant) {
           <dt>微调等级</dt><dd>Lv.${trainLv(m.id)} · 产出 ×${fmtMul(trainMul(m.id))} · 战力 ×${fmtMul(benchTrainMul(m))}</dd>
           <dt>当前总产出</dt><dd style="color:var(--ok)">+${fmt(modelOut(m))}/s</dd>
         </dl>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-          <button class="btn" data-act="train">微调至 Lv.${trainLv(m.id) + 1}<span class="cost"></span></button>
-          <button class="btn ghost" data-act="train-max">一键微调<span class="cost"></span></button>
-          <button class="btn ghost" data-act="sig" ${!has ? 'disabled' : ''}>${featuredModel() === m ? '已是镇馆模型' : '设为镇馆模型'}</button>
-        </div>
+        <button class="btn ghost" type="button" data-act="sig" ${!has ? 'disabled' : ''}>${featuredModel() === m ? '已是镇馆模型' : '设为镇馆模型'}</button>
         <p class="note" style="margin-top:8px">${m.t >= 9 ? '每级微调：评测战力乘以 1.3；挂机产出仍按基础值每级增加 30%。' : '每级微调让该模型全部变体的产出与评测战力增加基础值的 30%。'}</p>
+      </div>
+      </div>
+      <div class="detail-train-actions" role="group" aria-label="模型微调">
+        <button class="btn" type="button" data-act="train"><span>微调至 Lv.${trainLv(m.id) + 1}</span><span class="cost"></span></button>
+        <button class="btn ghost" type="button" data-act="train-max"><span>一键微调</span><span class="cost"></span></button>
       </div>
     </div>`;
   };
@@ -5281,7 +5306,7 @@ function openDetail(id, initialVariant) {
       markDirty('world', 'models'); cloudBump(true); el.innerHTML = html(); bind(el); toast('镇馆模型已设置', m.n);
     };
   };
-  openModal(html(), bind);
+  openModal(html(), bind, true);
 }
 
 /* =================== RENDER: DEX =================== */
