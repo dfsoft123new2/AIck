@@ -500,7 +500,7 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .dex-filter label { color: var(--ink-2); font-size: 13px; }
 #dexTier { flex: none; min-height: 44px; }
 #jumpDexFilter { min-height: 44px; }
-#dexLabs [hidden] { display: none; }
+#dexLabs [hidden], #dexSeries .sic[hidden] { display: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12.5px; color: var(--ink-2); }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .lab-block { border-top: 1px solid var(--line); padding: 14px 0 6px; }
@@ -560,32 +560,34 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .dex-row .cells i.c4.on { background:#fff1bb; border-color:#fff8e0; box-shadow:-1px 0 #69ecf3,1px 0 #ff567d; }
 
 .card.v4, html[data-card-skin="classic"] .card.v4:not(.t-NULLPOINT) {
-  border-color:#fdedb2 #78dfe9 #ff8a9b #fff6dc;
-  box-shadow:0 8px 24px -12px #fbac61, 0 0 0 1px #fff3c341;
+  border-color:#fff2d0 #86dcdf #c3a6ff #f4d6a5;
+  box-shadow:0 0 0 1px #eddfae45,0 6px 22px -10px #93bff5a6;
 }
 .card.v4 .art { position:relative; overflow:hidden; isolation:isolate; }
-.card.v4 .art > img { filter:saturate(.76) contrast(1.18); }
 .card.v4 .art::after {
-  content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
-  background:linear-gradient(136deg, transparent 42%,#89fbff26 48%,#fff4cd91 50%,#ff437934 52%,transparent 58%);
-  mix-blend-mode:screen; opacity:.56;
+  content:""; position:absolute; inset:-24%; pointer-events:none; z-index:2;
+  background:conic-gradient(from -52deg,transparent 0 7%,#9ff4ff66 12%,#fff2dba8 15%,transparent 20% 56%,#b58aff85 68%,#e6d3ff8f 70%,transparent 75%);
+  mask-image:radial-gradient(circle,transparent 0 41%,#000 58%);
+  mix-blend-mode:screen; opacity:.62;
 }
 .card.v4 .art > svg.ultra-foil {
   position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none;
-  stroke-width:1.15; filter:drop-shadow(0 0 3px #fff3b179);
+  stroke-width:1.1; filter:drop-shadow(0 0 2px #070b12);
 }
-.ultra-foil .u-cyan { stroke:#73f5f4; }
-.ultra-foil .u-red { stroke:#ff647d; }
-.ultra-foil .u-gold { stroke:#ffe4a4; stroke-width:1.65; }
-.ultra-foil .u-bright { stroke:#fff7e6; stroke-width:2; }
-.card.v4 .var { color:#fff6d6; background:#161118; box-shadow:inset 0 0 0 1px #ffe2a2; }
+.ultra-foil .u-shell { stroke:#d1ba91; opacity:.62; }
+.ultra-foil .u-cyan { stroke:#8cecf1; opacity:.88; }
+.ultra-foil .u-violet { stroke:#c2a2ff; opacity:.86; }
+.ultra-foil .u-rail { stroke:#ffefd0; stroke-width:1.75; }
+.ultra-foil .u-metal { fill:#e8d2ab; stroke:#fffcdf; }
+.ultra-foil .u-spark { stroke:#fffdf0; stroke-width:1.6; }
+.card.v4 .var { color:#fff4d6; background:#14141c; box-shadow:inset 0 0 0 1px #ffeac1; }
 .card.v4 .body, html[data-card-skin="classic"] .card.v4:not(.t-NULLPOINT) .body {
-  background:linear-gradient(128deg,#21151b,#0e1018 58%,#1b3137); border-top-color:#ffdfa77d;
+  background:linear-gradient(128deg,#22262e,#11141b 52%,#292239); border-top-color:#ffdfa77d;
 }
 .variant-choice[data-variant-choice="4"] > span { color:#d6a95a; }
 @media (prefers-reduced-motion:no-preference) {
-  .card.v4:not(.mini) .art::after { animation:ultra-face-sweep .9s .12s ease-out both; }
-  @keyframes ultra-face-sweep { from { transform:translateX(-70%); opacity:.1; } 70% { opacity:.95; } }
+  html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4 .art::after { animation:ultra-face-sweep .85s var(--cine-cue,.06s) ease-out both; }
+  @keyframes ultra-face-sweep { from { transform:rotate(-74deg); opacity:.36; } 56% { opacity:1; } }
 }
 
 /* ========== Bench ========== */
@@ -1121,20 +1123,41 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .cine[data-scene] .sub { color: #d4dfeb; line-height: 1.35; }
 .cine[data-scene=horizon] .sub { color: #f4d9ca; white-space: pre-line; }
 .cine[data-scene=horizon] .title { color: #fff1d9; font-size: 38px; }
-.cine[data-scene=ultra-prism] { --cine-entry:ultra-seat; --cine-entry-time:.57s; }
-.cine[data-scene=ultra-prism] .title { color:#fff2c8; text-shadow:-2px 0 #40cad7,2px 0 #a23e50,0 4px 16px #05070a; }
-.sc-ultra-scope { opacity:.54; animation:ultra-in .53s ease-out both; }
-.sc-ultra-cyan, .sc-ultra-red { transform-box:fill-box; transform-origin:center; animation:ultra-split .94s ease-out both; }
-.sc-ultra-cyan { stroke:#68faff; --split:-190px; }
-.sc-ultra-red { stroke:#ff6586; --split:190px; }
-.sc-ultra-shards { opacity:.62; animation:ultra-burst .86s .79s var(--cine-ease) both; }
-.sc-ultra-crown { opacity:.68; animation:ultra-in .51s 1.11s ease-out both; }
+.cine[data-scene=ultra-prism] { --cine-entry:ultra-seat; --cine-entry-time:.64s; }
+.cine[data-scene=ultra-prism] .title { color:#fff2d3; text-shadow:0 0 18px #4b9c9c,0 4px 16px #05070a; }
+.sc-ultra-field { opacity:.54; animation:ultra-in .54s ease-out both; }
+.sc-ultra-infall { opacity:0; animation:ultra-infall .88s cubic-bezier(.42,.04,.73,.72) both; }
+.sc-ultra-core { opacity:0; animation:ultra-core .54s .42s ease-out both; }
+.sc-ultra-crack { opacity:.19; animation:ultra-crack .93s .78s var(--cine-ease) both; }
+.sc-ultra-debris { opacity:.29; animation:ultra-debris .9s .91s var(--cine-ease) both; }
+.sc-ultra-crown { opacity:.55; animation:ultra-in .72s 1.01s ease-out both; }
 @keyframes ultra-in { from { opacity:0; } }
-@keyframes ultra-split { 0% { opacity:0; transform:translateX(var(--split)) scale(.58); } 72% { opacity:.92; } 100% { opacity:.4; } }
-@keyframes ultra-burst { 0% { opacity:0; transform:scale(.12,.26); } 32% { opacity:.96; } 100% { transform:scale(1.06); } }
-@keyframes ultra-seat { from { opacity:0; transform:translateY(14px) scale(.84) rotate(-4deg); } }
-.cine[data-static] :is(.sc-ultra-scope,.sc-ultra-cyan,.sc-ultra-red,.sc-ultra-shards,.sc-ultra-crown) { animation:none; }
-.cine[data-static] .card.v4 .art::after { animation:none; }
+@keyframes ultra-infall {
+  0% { opacity:0; transform:scale(1.48) rotate(-36deg); }
+  28% { opacity:.92; }
+  79% { opacity:1; transform:scale(.36) rotate(36deg); }
+  100% { opacity:0; transform:scale(.11) rotate(48deg); }
+}
+@keyframes ultra-core {
+  0% { opacity:0; transform:scale(.18); }
+  68% { opacity:.95; transform:scale(.62); }
+  100% { opacity:0; transform:scale(1.2); }
+}
+@keyframes ultra-crack {
+  0% { opacity:0; transform:scale(.08); }
+  26% { opacity:.88; }
+  100% { transform:scale(1); }
+}
+@keyframes ultra-debris {
+  0% { opacity:0; transform:scale(.34); }
+  34% { opacity:.75; }
+  100% { transform:scale(1.04) rotate(9deg); }
+}
+@keyframes ultra-seat {
+  0% { opacity:0; transform:translateY(24px) scale(.78) rotate(-7deg); }
+  63% { opacity:1; transform:translateY(-3px) scale(1.017); }
+  100% { opacity:1; transform:none; }
+}
 .cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) {
   --cine-card: min(228px, 60vw, 37dvh);
   --cine-stage: clamp(670px, 110vw, 1150px);
@@ -4225,7 +4248,19 @@ function applyCardSkin() {
   }
 }
 function ultraFoil() {
-  return `<svg class="ultra-foil" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><g fill="none" stroke-linecap="square"><path class="u-cyan" d="M5 114V33L34 5h53M14 91V40L40 14h21M98 155h28l29-29V86M6 134h22l106-106h20"/><path class="u-red" d="M5 148h28L147 34V7M55 155h74l26-26v-22M7 67V29L29 7h15"/><path class="u-gold" d="M5 44V27L27 5h36m34 150h36l22-22v-17M9 126h26l93-93h23M24 132l49-49 8 6 24-24 11 2 25-25"/><path class="u-bright" d="M45 112 72 85l8 6 26-26 10 2 19-19M25 84 71 38h19m-1 83h18l29-29"/></g></svg>`;
+  return `<svg class="ultra-foil" viewBox="0 0 160 160" aria-hidden="true" focusable="false">
+    <g fill="none" stroke-linecap="square">
+      <path class="u-shell" d="M3 31 31 3h85l9 9h17l15 15v102l-28 28H44l-9-9H18L3 133Z M7 36 36 7h78l9 9h17l13 13v95l-29 29H46l-9-9H20L7 131Z"/>
+      <path class="u-cyan" d="M17 103A67 67 0 0 1 59 16m43 129a69 69 0 0 0 44-51M8 112V50m43 102h36m59-31 7-7V86"/>
+      <path class="u-violet" d="M49 142a69 69 0 0 1-32-34m86-93a69 69 0 0 1 42 44M109 8l15 14h15l8 8m-13 124h-27M8 122l19 19"/>
+      <path class="u-rail" d="M17 75A64 64 0 0 1 83 16m60 69a64 64 0 0 1-66 59M11 61V35l24-24h29m32 138h29l24-24V99"/>
+      <path class="u-metal" d="M4 40v-9L31 4h29l-6 4H33L8 33v18Zm152 80v9l-27 27h-29l6-4h21l25-25v-18Z"/>
+      <path class="u-spark" d="M14 62v11m-5-5h10m127 19v11m-5-5h10M40 15l5-5m70 140 5-5"/>
+    </g>
+  </svg>`;
+}
+function cardFaceArt(m, v) {
+  return sharedArt(m,v) + (v === ULTRA_VARIANT ? ultraFoil() : '');
 }
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
@@ -4233,7 +4268,7 @@ function cardHTML(m, v, o = {}) {
   const cls = `card t-${m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
-  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m,v)}${v === ULTRA_VARIANT ? ultraFoil() : ''}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
+  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : cardFaceArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
 }
 const RATING_KEYS = ['能力', '影响力', '调用量'];
 function ratingHTML(m) {
@@ -4356,14 +4391,18 @@ const GENESIS_CINEMATIC = ['genesis-collapse', 1.34, () => {
       + relic(225,0,'opacity=".38"') + '<path d="M-420 0h222m396 0h222" stroke="url(#cine-rail)" stroke-width="3"/>');
 }, ['#2b1527','#ffc994','#f4a3ab']];
 
-const ULTRA_CINEMATIC = ['ultra-prism', .96, () => {
-  const shard = '<path d="M0-242-8-211l8 87 10-63Z" fill="currentColor" opacity=".36"/><path d="M0-258v-18M0-117v-22" stroke="var(--cine-foil)"/>';
-  const split = '<path d="M-420 160h141L-96-23l58 24 75-75 51 30 153-153h182" stroke-width="4"/><path d="M-395 188h150L-86 29l51 16L129-119h86L330-234" opacity=".5"/>';
-  return cineLayer('ultra-scope', cineStars(92,90825) + '<path d="M-338 0 0-204 338 0 0 204Z M-258 0 0-162 258 0 0 162Z" stroke-dasharray="28 7 2 7" opacity=".6"/>')
-    + cineLayer('ultra-cyan', split) + cineLayer('ultra-red', `<g transform="scale(-1)">${split}</g>`)
-    + cineLayer('ultra-shards', cineSpokes(12,shard,15) + '<path d="M-415 0H415" stroke="url(#cine-rail)" stroke-width="8"/>')
-    + cineLayer('ultra-crown','<path d="M-292 71h85l39-39m460-103h-85l-39 39M-101-119l101-67 101 67m-202 238 101 67 101-67" stroke="var(--cine-foil)" stroke-width="2.5"/>');
-}, ['#1b1422','#a9f9ff','#fff0c3']];
+const ULTRA_CINEMATIC = ['ultra-prism', 1.06, () => {
+  const arc = '<path d="M-146-63A159 159 0 0 1 142-71M146 63A159 159 0 0 1-142 71" stroke-width="3.6"/><circle r="169" stroke-dasharray="2 7 16 5" opacity=".6"/>';
+  const split = '<path d="M0 0l35-16 31 6 38-38 33 4 52-60 53 5 48-48 114-24" stroke-width="4.5"/><path d="M30-18l30-28 11-37m30 37 33-36 3-24m52 2 60-29 15-28M66-10l39 17 51-18 33 11" opacity=".68"/>';
+  const shard = '<path d="M-7-209 2-242 8-215 1-183Z" fill="currentColor" opacity=".62"/><path d="M0-263v-12m0 93v-8" opacity=".7"/>';
+  const lip = '<path d="M-178-35A181 181 0 0 1-40-177m80 0A181 181 0 0 1 178-35M178 35A181 181 0 0 1 40 177m-80 0A181 181 0 0 1-178 35"/>';
+  return cineLayer('ultra-field', cineStars(76,90825) + '<path d="M-410 0H410M0-239v478" opacity=".29"/><ellipse rx="253" ry="119" opacity=".4" stroke-dasharray="64 7 1 8"/><ellipse rx="209" ry="175" opacity=".46" stroke-dasharray="2 10"/>')
+    + cineLayer('ultra-infall', arc + `<g transform="rotate(90)" stroke="var(--cine-foil)">${arc}</g>` + '<circle r="108" stroke="var(--cine-foil)" opacity=".74" stroke-width="1.8"/>')
+    + cineLayer('ultra-core','<path d="M0-57 11-13 53 0 11 13 0 57-11 13-53 0-11-13Z" fill="var(--cine-foil)" stroke="#fffdf1" stroke-width="2"/><path d="M-78 0h156M0-78v156" stroke="var(--cine-edge)" stroke-width="1.4"/>')
+    + cineLayer('ultra-crack', `<g stroke="#8af6fa">${split}</g><g transform="rotate(180)" stroke="#c4a6ff">${split}</g><path d="M-423 0H423" stroke="url(#cine-rail)" stroke-width="3.5"/>`)
+    + cineLayer('ultra-debris', cineSpokes(10,shard,18) + '<ellipse rx="273" ry="126" stroke="url(#cine-rail)" stroke-width="2.6"/>')
+    + cineLayer('ultra-crown', `<g stroke="var(--cine-foil)" stroke-width="2.8">${lip}</g><g transform="rotate(-24) scale(1.13)" opacity=".58" stroke-dasharray="10 4 1 6">${lip}</g><path d="M-275 68h51l38-38m461-98h-51l-38 38" stroke="url(#cine-rail)" stroke-width="2.4"/>`);
+}, ['#181720','#96f0f3','#fff1cd']];
 
 function tierCineSVG(scene, draw) {
   return `<svg class="tier-scene${scene === 'horizon' ? ' bang-scene' : ''}" viewBox="0 0 860 540" aria-hidden="true" focusable="false">
@@ -4908,7 +4947,7 @@ const vaultRows = new Map();
 function vaultVisibility(item, near) {
   item.classList.toggle('offscreen', !near);
   const art = item.querySelector('.art');
-  if (near && !art.firstChild) art.innerHTML = sharedArt(modelOrLeak(item.dataset.id),Number(item.dataset.variant));
+  if (near && !art.firstChild) art.innerHTML = cardFaceArt(modelOrLeak(item.dataset.id),Number(item.dataset.variant));
   if (!near && art.firstChild) art.replaceChildren();
 }
 function makeVaultRow(m, v, count) {
@@ -5065,9 +5104,14 @@ function openDetail(id) {
 // is only attached near the viewport; labels and buttons always exist.
 let dexGrid;
 const DEX_COMPLETE = (1 << VARIANTS.length) - 1;
+function dexVariantMask(copies) {
+  let mask = 0;
+  if (copies) for (let v = 0; v < VARIANTS.length; v++) if (copies[v] > 0) mask |= 1 << v;
+  return mask;
+}
 function syncHiddenDex() {
   const slot = $('#dexHidden');
-  const rows = HIDDEN_MODELS.map(m => ({m, mask:modelInventory(m)?.reduce((n,c,v) => n | (c > 0 ? 1 << v : 0),0) || 0}))
+  const rows = HIDDEN_MODELS.map(m => ({m, mask:dexVariantMask(modelInventory(m))}))
     .filter(({mask}) => mask && (!S.set.hideCompleteDex || mask !== DEX_COMPLETE));
   const key = rows.map(({m,mask}) => `${m.id}:${mask}`).join('|');
   if (dexGrid.hiddenMask !== key) {
@@ -5094,7 +5138,7 @@ function mountDex() {
   }, { rootMargin: '240px' }) : null;
   for (const el of $$('[data-thumb]', root)) { if (observer) observer.observe(el); else paint(el); }
   const minis = $('.lab-minis', root);
-  return { rows, labs, heads, sets, observer, minis, smallLabs: labs.filter(lab => lab.el.parentElement === minis) };
+  return { rows, byId: new Map(rows.map(row => [row.id, row])), labs, heads, sets, observer, minis, smallLabs: labs.filter(lab => lab.el.parentElement === minis) };
 }
 function filterDexTier() {
   if (!dexGrid) return;
@@ -5111,6 +5155,10 @@ function filterDexTier() {
       if (show) { matches++; any = true; }
     }
     if (el.hidden === any) el.hidden = !any;
+  }
+  for (const {icons} of dexGrid.sets) for (const icon of icons) {
+    const hide = hideComplete && dexGrid.byId.get(icon.dataset.model)?.mask === DEX_COMPLETE;
+    if (icon.hidden !== hide) icon.hidden = hide;
   }
   dexGrid.minis.hidden = dexGrid.smallLabs.every(lab => lab.el.hidden);
   $('#dexEmpty').hidden = matches > 0;
@@ -5133,8 +5181,7 @@ function syncDex() {
   textIfChanged($('#dexSetBonus'), '×' + fmtMul(si.mul));
   textIfChanged($('#dexSeries .side'), `已完成 ${si.done}/${SERIES.length}，凑齐一组即生效`);
   for (const r of dexGrid.rows) {
-    const c = S.cards[r.id]; let mask = 0;
-    if (c) for (let v = 0; v < VARIANTS.length; v++) if (c[v] > 0) mask |= 1 << v;
+    const mask = dexVariantMask(S.cards[r.id]);
     if (r.mask === mask) continue;
     r.mask = mask; r.icon.classList.toggle('off', !mask);
     r.cells.forEach((el, i) => el.classList.toggle('on', !!(mask & (1 << i))));
@@ -5166,7 +5213,7 @@ function renderDex() {
   const block = k => {
     const L = LABS[k], st = ls[k];
     const rows = LAB_MODELS[k].slice().sort((a, b) => a.t - b.t).map(m => {
-      const c = S.cards[m.id] || [0, 0, 0, 0], has = total(c) > 0;
+      const c = S.cards[m.id] || [], has = total(c) > 0;
       return `<button class="dex-row" data-model="${m.id}" type="button"><span data-thumb="${m.id}" class="ic${has ? '' : ' off'}"></span><span style="min-width:0"><span class="t1">${tierTag(m.t)}<span>${esc(m.n)}</span></span><span class="cells">${VARIANTS.map((variant,v) => `<i class="c${v}${c[v] > 0 ? ' on' : ''}" title="${variant.name}"></i>`).join('')}${m.st ? `<b class="st-mini st-${m.st}">${STATUS[m.st].stamp}</b>` : ''}</span></span></button>`;
     }).join('');
     return `<div class="lab-block"><div class="lab-head" data-lab-key="${k}">${elementMark(34, L.sym, L.no, L.hue)}<span class="name">${esc(L.name)}</span><span class="prog">${st.own}/${st.total}</span><span class="bonus${st.full ? ' full' : ''}">羁绊 ×${fmtMul(st.mul)}${st.full ? '，已集齐' : ''}</span></div><div class="dex-grid">${rows}</div></div>`;
