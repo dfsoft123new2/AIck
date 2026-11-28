@@ -364,25 +364,25 @@ button.card { transition: transform .12s; }
 .detail > .card { align-self:start; }
 
 /* Classic illustrations use the original lab-colour frames and simple nameplates. */
-html[data-card-skin="classic"] .card:not(.t-NULLPOINT) {
+.card[data-skin="classic"]:not(.t-NULLPOINT) {
   border-color:var(--tc); box-shadow:0 6px 18px -12px var(--tc);
 }
-html[data-card-skin="classic"] .card:not(.t-NULLPOINT) .body {
+.card[data-skin="classic"]:not(.t-NULLPOINT) .body {
   background:linear-gradient(180deg,#ffffff08,transparent); border-top-color:#ffffff14;
 }
-html[data-card-skin="classic"] .card:not(.t-NULLPOINT) .tier {
+.card[data-skin="classic"]:not(.t-NULLPOINT) .tier {
   background:var(--tc); color:#0b1412; box-shadow:none;
 }
-html[data-card-skin="classic"] .card.t-N { --tc:#8c9894; }
-html[data-card-skin="classic"] .card.t-R { --tc:#4cc383; }
-html[data-card-skin="classic"] .card.t-SR { --tc:#4ba2f8; }
-html[data-card-skin="classic"] .card.t-SSR { --tc:#a97cff; }
-html[data-card-skin="classic"] .card.t-UR { --tc:#f2b533; }
-html[data-card-skin="classic"] .card.t-LR { --tc:#ff6a46; }
-html[data-card-skin="classic"] .card.t-MR { --tc:#ff4fd8; }
-html[data-card-skin="classic"] .card:is(.t-AGI,.t-Q) { --tc:#fff; }
-html[data-card-skin="classic"] .card.t-ALEPH { --tc:#cdbeff; }
-html[data-card-skin="classic"] .card.t-BANG { --tc:#ffb68a; }
+.card[data-skin="classic"].t-N { --tc:#8c9894; }
+.card[data-skin="classic"].t-R { --tc:#4cc383; }
+.card[data-skin="classic"].t-SR { --tc:#4ba2f8; }
+.card[data-skin="classic"].t-SSR { --tc:#a97cff; }
+.card[data-skin="classic"].t-UR { --tc:#f2b533; }
+.card[data-skin="classic"].t-LR { --tc:#ff6a46; }
+.card[data-skin="classic"].t-MR { --tc:#ff4fd8; }
+.card[data-skin="classic"]:is(.t-AGI,.t-Q) { --tc:#fff; }
+.card[data-skin="classic"].t-ALEPH { --tc:#cdbeff; }
+.card[data-skin="classic"].t-BANG { --tc:#ffb68a; }
 
 /* The finish occupies the face. The frame and labels stay put during a sweep. */
 :is(.card.v1,.admin-card-reveal[data-variant="1"]) {
@@ -559,12 +559,12 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .dex-row .cells i.c3.on { background: linear-gradient(90deg,#ff7aa8,#ffd36e,#7dffb8,#7cc9ff,#c28bff); border-color: transparent; }
 .dex-row .cells i.c4.on { background:#fff1bb; border-color:#fff8e0; box-shadow:-1px 0 #69ecf3,1px 0 #ff567d; }
 
-.card.v4, html[data-card-skin="classic"] .card.v4:not(.t-NULLPOINT) {
+.card.v4:where([data-skin="modern"]) {
   border-color:#fff2d0 #86dcdf #c3a6ff #f4d6a5;
   box-shadow:0 0 0 1px #eddfae45,0 6px 22px -10px #93bff5a6;
 }
 .card.v4 .art { position:relative; overflow:hidden; isolation:isolate; }
-.card.v4 .art::after {
+.card.v4[data-skin="modern"] .art::after {
   content:""; position:absolute; inset:-24%; pointer-events:none; z-index:2;
   background:conic-gradient(from -52deg,transparent 0 7%,#9ff4ff66 12%,#fff2dba8 15%,transparent 20% 56%,#b58aff85 68%,#e6d3ff8f 70%,transparent 75%);
   mask-image:radial-gradient(circle,transparent 0 41%,#000 58%);
@@ -574,6 +574,7 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
   position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none;
   stroke-width:1.1; filter:drop-shadow(0 0 2px #070b12);
 }
+.card.v4[data-skin="modern"] .u-classic, .card.v4[data-skin="classic"] .u-modern { display:none; }
 .ultra-foil .u-shell { stroke:#d1ba91; opacity:.62; }
 .ultra-foil .u-cyan { stroke:#8cecf1; opacity:.88; }
 .ultra-foil .u-violet { stroke:#c2a2ff; opacity:.86; }
@@ -581,13 +582,20 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .ultra-foil .u-metal { fill:#e8d2ab; stroke:#fffcdf; }
 .ultra-foil .u-spark { stroke:#fffdf0; stroke-width:1.6; }
 .card.v4 .var { color:#fff4d6; background:#14141c; box-shadow:inset 0 0 0 1px #ffeac1; }
-.card.v4 .body, html[data-card-skin="classic"] .card.v4:not(.t-NULLPOINT) .body {
+.card.v4:where([data-skin="modern"]) .body {
   background:linear-gradient(128deg,#22262e,#11141b 52%,#292239); border-top-color:#ffdfa77d;
 }
+.card.v4[data-skin="classic"] .var { color:#ffdfa2; background:#262015; box-shadow:inset 0 0 0 1px #ab844e; }
 .variant-choice[data-variant-choice="4"] > span { color:#d6a95a; }
 @media (prefers-reduced-motion:no-preference) {
-  html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4 .art::after { animation:ultra-face-sweep .85s var(--cine-cue,.06s) ease-out both; }
+  html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4[data-skin="modern"] .art::after { animation:ultra-face-sweep .85s var(--cine-cue,.06s) ease-out both; }
+  html:not([data-static-cards]) :is(.modal-back.open,.cine.open) .card.v4[data-skin="classic"] .art::after {
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
+    background:linear-gradient(110deg,transparent 43%,#ffe1a847 49%,#fff2d77a 50%,transparent 55%);
+    mix-blend-mode:screen; animation:ultra-classic-glint .7s var(--cine-cue,.06s) ease-out both;
+  }
   @keyframes ultra-face-sweep { from { transform:rotate(-74deg); opacity:.36; } 56% { opacity:1; } }
+  @keyframes ultra-classic-glint { from { transform:translateX(-83%); opacity:.6; } to { transform:translateX(83%); opacity:0; } }
 }
 
 /* ========== Bench ========== */
@@ -1342,7 +1350,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .card.t-NULLPOINT .body { background:linear-gradient(116deg,#0b1014 53%,color-mix(in srgb,var(--tc) 16%,#090d11)); border-top-color:color-mix(in srgb,var(--np-foil) 39%,#000); }
 .card.t-NULLPOINT .nm { color:#fff6e5; }
 .card.t-NULLPOINT .cd { color:var(--np-foil); }
-html[data-card-skin="classic"] :is(.card.t-NULLPOINT,#dexHidden .ic) { border-radius:0; }
+.card.t-NULLPOINT[data-skin="classic"], html[data-card-skin="classic"] #dexHidden .ic { border-radius:0; }
 
 .admin-card-reveal {
   --np-heat:#ff9b60; --np-ion:#91f3ee; --np-cream:#fff6e2; --np-impact:.71s;
@@ -3062,7 +3070,7 @@ function defaultState() {
     stats: { pulls: 0, maxTier: 0, maxVar: 0, news: 0, spent: 0, topPack: 0, byTier: TIERS.map(() => 0) },
     ach: {}, daily: { last: '', streak: 0 }, redeemed: [],
     name: randomLabName(), sig: null, adminCardProgress: null, hiddenCard: null, log: [], rare: [], saveEpoch: '', itemReceipts: [], packetDebit: null,
-    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cardSkin: 'modern', cine: undefined, mutedInfo: undefined }
+    set: { sfx: true, rareSfx: true, fx: true, toast: true, autoCine: true, hideCompleteDex: false, theme: 'auto', cardSkin: 'modern', ultraSkin: 'modern', cine: undefined, mutedInfo: undefined }
   };
 }
 function mergeState(base, saved) {
@@ -3084,6 +3092,7 @@ function sanitizeState(st) {
   if (!st.set || typeof st.set !== 'object' || Array.isArray(st.set)) st.set = defaultState().set;
   st.set.hideCompleteDex = st.set.hideCompleteDex === true;
   st.set.cardSkin = normalizeCardSkin(st.set.cardSkin);
+  st.set.ultraSkin = normalizeCardSkin(st.set.ultraSkin);
   const cine = st.set.cine;
   st.set.cine = Array.isArray(cine?.tiers) ? {custom: cine.custom === true, tiers: CINE_TIERS.filter(id => cine.tiers.includes(id))} : undefined;
   st.set.mutedInfo = Array.isArray(st.set.mutedInfo) ? Object.keys(INFO_GROUPS).filter(k => st.set.mutedInfo.includes(k)) : undefined;
@@ -4216,7 +4225,8 @@ function logoSVG() {
   <path d="M38 76 L52 50 L62 64 L82 38" fill="none" stroke="#F2C94C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
   <circle cx="82" cy="38" r="6" fill="#F2C94C"/><circle cx="38" cy="76" r="4" fill="var(--copper)"/>`;
 }
-function cardArt(m, v = 0, skin = normalizeCardSkin(S.set.cardSkin)) {
+function skinForVariant(v) { return normalizeCardSkin(v === ULTRA_VARIANT ? S.set.ultraSkin : S.set.cardSkin); }
+function cardArt(m, v = 0, skin = skinForVariant(v)) {
   if (m === HIDDEN_CARD) return adminCardArt(v, skin);
   if (m === VOID_CARD || m.t === OMEGA_TIER) return creationCardArt(m, v, skin);
   return skin === 'classic' ? classicCardArt(m) : tierArt(m);
@@ -4235,27 +4245,40 @@ function cardArtUrl(m, v, skin) {
 }
 function sharedArt(m, v = 0) {
   const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER ? v : 0;
-  const src = cardArtUrl(m, variant, normalizeCardSkin(S.set.cardSkin));
-  return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}" src="${src}">`;
+  const src = cardArtUrl(m, variant, skinForVariant(v));
+  return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}"${v === ULTRA_VARIANT ? ' data-ultra-art' : ''} src="${src}">`;
 }
 function applyCardSkin() {
-  const skin = normalizeCardSkin(S.set.cardSkin), root = document.documentElement;
-  if (root.dataset.cardSkin === skin) return;
+  const skin = skinForVariant(0), ultra = skinForVariant(ULTRA_VARIANT), root = document.documentElement;
+  const normalChanged = root.dataset.cardSkin !== skin, ultraChanged = root.dataset.ultraSkin !== ultra;
+  if (!normalChanged && !ultraChanged) return;
   root.dataset.cardSkin = skin;
+  root.dataset.ultraSkin = ultra;
   // Update mounted results and lazy catalogue art without rebuilding their views.
+  for (const card of $$('.card[data-skin]')) {
+    card.dataset.skin = card.classList.contains('v4') ? ultra : skin;
+  }
   for (const img of $$('img[data-card-art]')) {
-    img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), skin);
+    const isUltra = img.hasAttribute('data-ultra-art');
+    if (isUltra ? ultraChanged : normalChanged) {
+      img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), isUltra ? ultra : skin);
+    }
   }
 }
 function ultraFoil() {
   return `<svg class="ultra-foil" viewBox="0 0 160 160" aria-hidden="true" focusable="false">
-    <g fill="none" stroke-linecap="square">
+    <g class="u-modern" fill="none" stroke-linecap="square">
       <path class="u-shell" d="M3 31 31 3h85l9 9h17l15 15v102l-28 28H44l-9-9H18L3 133Z M7 36 36 7h78l9 9h17l13 13v95l-29 29H46l-9-9H20L7 131Z"/>
       <path class="u-cyan" d="M17 103A67 67 0 0 1 59 16m43 129a69 69 0 0 0 44-51M8 112V50m43 102h36m59-31 7-7V86"/>
       <path class="u-violet" d="M49 142a69 69 0 0 1-32-34m86-93a69 69 0 0 1 42 44M109 8l15 14h15l8 8m-13 124h-27M8 122l19 19"/>
       <path class="u-rail" d="M17 75A64 64 0 0 1 83 16m60 69a64 64 0 0 1-66 59M11 61V35l24-24h29m32 138h29l24-24V99"/>
       <path class="u-metal" d="M4 40v-9L31 4h29l-6 4H33L8 33v18Zm152 80v9l-27 27h-29l6-4h21l25-25v-18Z"/>
       <path class="u-spark" d="M14 62v11m-5-5h10m127 19v11m-5-5h10M40 15l5-5m70 140 5-5"/>
+    </g>
+    <g class="u-classic" fill="none" stroke-linecap="square">
+      <rect x="5" y="5" width="150" height="150" rx="3" stroke="#e4b671" opacity=".62"/>
+      <path d="M11 54V11h43m52 0h43v43m0 52v43h-43m-52 0H11v-43" stroke="#ffdf9e" stroke-width="2.2"/>
+      <path d="M6 65h11m-11 8h8m-8 8h5m143-16h-11m11 8h-8m8 8h-5M63 148v-9m8 9v-6m18 6v-6m8 6v-9" stroke="#85e2d1" opacity=".82"/>
     </g>
   </svg>`;
 }
@@ -4268,7 +4291,7 @@ function cardHTML(m, v, o = {}) {
   const cls = `card t-${m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
-  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : cardFaceArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
+  return `<${tag} class="${cls}" data-skin="${skinForVariant(v)}"${style}${attrs}><div class="art">${o.deferArt ? '' : cardFaceArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
 }
 const RATING_KEYS = ['能力', '影响力', '调用量'];
 function ratingHTML(m) {
@@ -5339,11 +5362,13 @@ function renderPrefs() {
   const cine = S.set.cine ?? defaultCinePrefs();
   const tiers = CINE_TIERS.map(id => `<label><input type="checkbox" data-cine-tier="${id}" ${cine.tiers.includes(id) ? 'checked' : ''}>${id === 'LEAK' ? '权重泄露' : id}</label>`).join('');
   const mutes = Object.entries(INFO_GROUPS).map(([key, name]) => `<label><input type="checkbox" data-mute="${key}" ${isInfoMuted(key) ? 'checked' : ''}>${name}</label>`).join('');
+  const skinPref = (label, key, attr) => `<div class="pref"><div class="n" id="${key}Label">${label}</div><div class="seg" role="group" aria-labelledby="${key}Label">${[['modern','新版'],['classic','旧版']].map(([k,n]) => `<button type="button" ${attr}="${k}" aria-pressed="${S.set[key] === k}">${n}</button>`).join('')}</div></div>`;
   $('#prefList').innerHTML = PREFS.map(([k, n, d]) => `<div class="pref"><div><div class="n">${n}</div><div class="d">${d}</div></div><button class="switch" role="switch" aria-checked="${!!S.set[k]}" data-pref="${k}" aria-label="${n}"></button></div>`).join('') +
     `<div class="pref cine-pref"><div class="mode"><div class="n" id="cineModeLabel">抽卡过场稀有度</div><div class="seg" role="group" aria-labelledby="cineModeLabel">${[['default','原规则'],['custom','自选档位']].map(([mode,label]) => `<button data-cine-mode="${mode}" aria-pressed="${(mode === 'custom') === cine.custom}">${label}</button>`).join('')}</div></div><div id="cineTiers" class="pref-checks" role="group" aria-label="播放过场的档位" ${cine.custom ? '' : 'hidden'}>${tiers}</div></div>
     <div class="pref cine-pref"><div class="n" id="muteLabel">屏蔽次要信息</div><div class="pref-checks" role="group" aria-labelledby="muteLabel">${mutes}</div></div>` +
-    `<div class="pref"><div class="n" id="cardSkinLabel">卡面皮肤</div><div class="seg" role="group" aria-labelledby="cardSkinLabel">${[['modern','新版'],['classic','旧版']].map(([k,n]) => `<button type="button" data-card-skin-opt="${k}" aria-pressed="${S.set.cardSkin === k}">${n}</button>`).join('')}</div></div>
-    <div class="pref"><div><div class="n">主题</div><div class="d">默认跟随系统</div></div><div class="seg" id="themeSeg">${[['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme-opt="${k}" aria-pressed="${S.set.theme === k}">${n}</button>`).join('')}</div></div>`;
+    skinPref('普通卡面皮肤', 'cardSkin', 'data-card-skin-opt') +
+    skinPref('Ultra 卡面', 'ultraSkin', 'data-ultra-skin-opt') +
+    `<div class="pref"><div><div class="n">主题</div><div class="d">默认跟随系统</div></div><div class="seg" id="themeSeg">${[['auto', '跟随系统'], ['light', '浅色'], ['dark', '深色']].map(([k, n]) => `<button data-theme-opt="${k}" aria-pressed="${S.set.theme === k}">${n}</button>`).join('')}</div></div>`;
   $('#saveSide').textContent = '每 5 秒自动保存到本机' + (account.uid ? '，并同步到账号' : '');
   renderAccountPanel();
 }
@@ -8998,11 +9023,12 @@ on('#prefList', 'click', e => {
     if (k === 'fx') applyTheme();
     saveLocal(); return;
   }
-  const skin = e.target.closest('[data-card-skin-opt]');
+  const skin = e.target.closest('[data-card-skin-opt], [data-ultra-skin-opt]');
   if (skin) {
-    S.set.cardSkin = normalizeCardSkin(skin.dataset.cardSkinOpt);
+    const ultra = skin.hasAttribute('data-ultra-skin-opt');
+    S.set[ultra ? 'ultraSkin' : 'cardSkin'] = normalizeCardSkin(ultra ? skin.dataset.ultraSkinOpt : skin.dataset.cardSkinOpt);
     applyCardSkin();
-    for (const b of $$('[data-card-skin-opt]')) b.setAttribute('aria-pressed', b === skin);
+    for (const b of $$('button', skin.parentElement)) b.setAttribute('aria-pressed', b === skin);
     saveLocal(); return;
   }
   const t = e.target.closest('[data-theme-opt]');
