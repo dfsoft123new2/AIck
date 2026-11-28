@@ -2732,8 +2732,8 @@ const PACKS = [
 ];
 
 const UPGRADES = [
-  { key: 'multi', name: '并行推理', desc: '每级增加基础抽数，费用同比增加。', base: 1e8, g: 20, max: 49, eff: lv => `每批 ${(lv + 1) * techDouble('doubleDraw')} 抽` },
-  { key: 'speed', name: '推理加速', desc: '自动抽卡间隔 ×0.95。', base: 1e6, g: 12, max: 50, eff: lv => `间隔 ${basePullInterval(lv).toFixed(3)}s` },
+  { key: 'multi', name: '并行推理', desc: '每级增加基础抽数，费用同比增加。', base: 1e8, g: 20, max: 99, eff: lv => `每批 ${(lv + 1) * techDouble('doubleDraw')} 抽` },
+  { key: 'speed', name: '推理加速', desc: '自动抽卡间隔 ×0.95。', base: 1e6, g: 12, max: 60, eff: lv => `间隔 ${basePullInterval(lv).toFixed(3)}s` },
   { key: 'clone', name: '数据增强', desc: '每级增加 1 张基础卡片份数。', base: 1e12, g: 100, max: null, eff: lv => `每张 ×${(lv + 1) * techDouble('doubleCopies')}` },
   { key: 'price', name: 'API 商业化', desc: '全局产出 ×1.2。', base: 1e9, g: 20, max: null, eff: lv => `产出 ×${fmtMul(Math.pow(1.2, lv))}` }
 ];
