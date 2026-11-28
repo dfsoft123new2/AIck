@@ -6332,6 +6332,7 @@ function accountFault(error) {
     const reason = error.message === 'FRONTIER_UNVERIFIED_INVENTORY' ? '新增卡牌与抽卡记录或发放记录不符。'
       : detail === 'client.variantSchema' ? '当前网页版本不支持存档中的 Ultra，请刷新游戏。'
       : detail === 'client.gpuResearchSchema' ? '当前网页版本不支持存档中的新 GPU 研发，请刷新游戏。'
+      : detail === 'stats.byTier' ? '分阶抽卡记录与新增库存不一致。'
       : detail.startsWith('catalogue.') ? `服务器卡牌目录未包含「${detail.slice(10)}」。`
       : detail ? `存档项目「${detail}」未通过校验。` : '存档未通过服务器游戏规则校验。';
     toast('云存档未更新', reason + '上一份云存档已保留。');
@@ -6529,6 +6530,32 @@ function finishAccountSwitch() {
   $('.shell').inert = moderation.booting;
   accountMark();
   void boardTick(true);
+}
+async function resetAccountProgress() {
+  const b = cloud.board, uid = account.uid;
+  if (!b?.client || !uid || uid !== cloud.uid || !moderation.ready || !navigator.onLine || accountPaused())
+    throw Error('请联网并等账号同步完成后再重置。');
+  beginAccountSwitch();
+  try {
+    await waitForBoard(b);
+    if (account.uid !== uid || account.blocked || moderation.level === 2 || S.packetDebit)
+      throw Error('账号状态已变化，请重新确认后再重置。');
+    const data = unwrap(await b.client.rpc('frontier_reset_progress',{p_revision:account.revision}));
+    const st = parseSave(JSON.stringify(data.save));
+    st.set = S.set; st.name = S.name;
+    account.revision = data.revision; account.savedAt = data.saved_at;
+    account.retry = null; account.rejectedProgress = false; account.next = 0;
+    moderationRevision++;
+    moderation.next = 0;
+    cloud.lastPlayerWrite = 0;
+    b.pending = []; b.changed = true; persistHits(b); resetBoardRanks(b);
+    installSave(st); saveLocal();
+  } catch (error) {
+    accountFault(error);
+    if (missingWorldRPC(error)) throw Error('服务器尚未更新，云档未重置。');
+    if (error?.message === 'FRONTIER_PACKET_PENDING') throw Error('请先联网确认上一笔红包再重置。');
+    throw error;
+  } finally { finishAccountSwitch(); }
 }
 function reconnectAccountBoard(b, uid) {
   if (cloud.uid !== uid) {
@@ -9265,10 +9292,16 @@ on('#prefList', 'change', e => {
 });
 on('#resetBtn', 'click', () => {
   if (S.packetDebit) return toast('红包尚未确认', '请联网确认红包结果后再重置。');
-  confirmModal('重置进度', '全部卡片、升级、科技和成就都会被清空，并且无法恢复。', null, '确认重置', () => {
+  confirmModal('重置进度', '全部卡片、升级、科技和成就都会被清空，并且无法恢复。', null, '确认重置', async () => {
     if (moderation.level === 2 || S.packetDebit) return;
-    const fresh = defaultState(); fresh.set = S.set; fresh.saveEpoch = S.saveEpoch; fresh.itemReceipts = S.itemReceipts; installSave(fresh);
-    saveLocal(); cloudTick(true); cloudBump(true);
+    if (account.uid) {
+      try { await resetAccountProgress(); }
+      catch (error) { toast('清档未确认', error instanceof Error ? error.message : '请检查账号同步状态。'); return; }
+    } else {
+      if (accountPaused()) return;
+      const fresh = defaultState(); fresh.set = S.set; fresh.saveEpoch = S.saveEpoch; fresh.itemReceipts = S.itemReceipts; installSave(fresh);
+      saveLocal(); cloudTick(true); cloudBump(true);
+    }
     markDirty(...VIEWS, 'hud'); renderActive(true); toast('进度已重置', `从一张 N 级标准版 ${STARTER.n} 重新开始`);
   });
 });
