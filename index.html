@@ -295,6 +295,21 @@ button.hud-chip:hover { border-color: var(--line-2); }
 .pull-btn .l2 { font-family: var(--font-num); font-size: 14px; font-weight: 600; opacity: .9; }
 .pull-btn:disabled { filter: grayscale(.5); opacity: .55; cursor: not-allowed; }
 .pull-btn:not(:disabled):active { transform: scale(.99); }
+html[data-pure-mode] .shell { grid-template-columns:minmax(0,1fr); }
+html[data-pure-mode] :is(.rail,.hud,#toasts,#modalBack,#cine,#flash,.burst),
+html[data-pure-mode] #view-pull > :not(.view-head,#packs,#pullControls),
+html[data-pure-mode] #view-pull :is(.view-sub,.pack .ptop),
+html[data-pure-mode] #pullControls > :not(.pull-box),
+html[data-pure-mode] #pullControls .pull-box > :not(#pullBtn) { display:none; }
+html[data-pure-mode] .views { max-width:1040px; margin-inline:auto; padding:16px 14px 0; }
+html[data-pure-mode] #view-pull .view-head { align-items:center; flex-wrap:nowrap; }
+#pureModeBtn { min-height:44px; flex:none; }
+html[data-pure-mode] #pullControls {
+  position:sticky; bottom:0; z-index:4; grid-template-columns:minmax(0,1fr);
+  padding:10px 0 max(12px, env(safe-area-inset-bottom)); background:var(--bg); border-top:1px solid var(--line);
+}
+html[data-pure-mode] #pullControls .pull-box { padding:0; border:0; background:none; box-shadow:none; }
+html[data-pure-mode] #pullBtn { min-height:64px; }
 .pull-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .meta-cell { background: var(--bg-3); border: 1px solid var(--line); border-radius: var(--r-m); padding: 8px 10px; }
 .meta-cell .k { font-size: 12px; color: var(--ink-3); }
@@ -1551,6 +1566,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
             <h2 class="view-title" id="h-pull">算力集群</h2>
             <p class="view-sub">选一座集群开始抽卡。集群越大，抽出高稀有度模型的概率越高。每张卡都会持续为你产出 Token。</p>
           </div>
+          <button class="btn ghost small" id="pureModeBtn" type="button">纯净模式</button>
         </div>
         <div class="up-banner" id="upBanner">
           <span class="el" id="upMark" aria-hidden="true"></span>
@@ -1564,7 +1580,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
           </div>
         </div>
         <div class="packs" id="packs"></div>
-        <div class="grid-2" style="margin-top:14px">
+        <div class="grid-2" id="pullControls" style="margin-top:14px">
           <div class="panel">
             <div class="panel-h"><h3 id="packTitle">卡池概率</h3><span class="side" id="packSide"></span></div>
             <div class="rates" id="rates"></div>
@@ -4324,21 +4340,18 @@ function logoSVG() {
 function skinForVariant(v) { return normalizeCardSkin(v === ULTRA_VARIANT ? S.set.ultraSkin : S.set.cardSkin); }
 function hasRedesignedArt(m) { return m.t === OMEGA_TIER || m.t === UNKNOWN_TIER; }
 function artSkinForVariant(m, v) {
-  return v === ULTRA_VARIANT && !hasRedesignedArt(m) ? 'modern' : skinForVariant(v);
+  return v === ULTRA_VARIANT && !hasRedesignedArt(m) ? 'modern' : skinForVariant(0);
 }
 function cardArt(m, v = 0, skin = artSkinForVariant(m,v)) {
   if (m === HIDDEN_CARD) return adminCardArt(v, skin);
   if (m === VOID_CARD) return creationCardArt(m, v, skin);
   if (m.t === OMEGA_TIER) return skin === 'classic' ? creationCardArt(m, v, 'modern') : omegaCardArt(v);
-  if (m.t === UNKNOWN_TIER) {
-    if (skin === 'modern') return anomalyCardArt();
-    if (v === ULTRA_VARIANT) return tierArt(m);
-  }
+  if (m.t === UNKNOWN_TIER && skin === 'modern') return anomalyCardArt();
   return skin === 'classic' ? classicCardArt(m) : tierArt(m);
 }
 const LEAK_MODEL = { id: 'leak', n: '权重泄露', c: '复制你最强的单卡产出', lab: 'humanity', t: 7, s: 'all', idx: 0, d: '一份来路不明的权重文件。它会复制你最强那张卡的产出。' };
 function modelOrLeak(id) { return id === 'leak' ? LEAK_MODEL : modelById(id); }
-// Both Ultra finishes use the same underlying art from the original release.
+// Cache the illustration independently from the Ultra finish.
 const artUrls = new Map();
 function cardArtUrl(m, v, skin) {
   const key = `${skin}:${m.id}:${v}`;
@@ -4349,7 +4362,7 @@ function cardArtUrl(m, v, skin) {
   return artUrls.get(key);
 }
 function sharedArt(m, v = 0) {
-  const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER || (m.t === UNKNOWN_TIER && v === ULTRA_VARIANT) ? v : 0;
+  const variant = isHiddenCard(m.id) || m.t === OMEGA_TIER ? v : 0;
   const src = cardArtUrl(m, variant, artSkinForVariant(m,v));
   return `<img alt="" decoding="async" width="100" height="100" data-card-art="${m.id}" data-art-variant="${variant}"${v === ULTRA_VARIANT ? ' data-ultra-art' : ''} src="${src}">`;
 }
@@ -4364,12 +4377,10 @@ function applyCardSkin() {
     const isUltra = card.classList.contains('v4');
     if (isUltra ? ultraChanged : normalChanged) card.dataset.skin = isUltra ? ultra : skin;
   }
-  for (const img of $$('img[data-card-art]')) {
-    const isUltra = img.hasAttribute('data-ultra-art');
-    if (isUltra ? !ultraChanged : !normalChanged) continue;
+  if (normalChanged) for (const img of $$('img[data-card-art]')) {
     const m = modelOrLeak(img.dataset.cardArt);
-    if (isUltra && !hasRedesignedArt(m)) continue;
-    img.src = cardArtUrl(m, Number(img.dataset.artVariant), isUltra ? ultra : skin);
+    if (img.hasAttribute('data-ultra-art') && !hasRedesignedArt(m)) continue;
+    img.src = cardArtUrl(m, Number(img.dataset.artVariant), skin);
   }
 }
 function ultraFoil() {
@@ -4568,7 +4579,7 @@ function tierCineSVG(scene, draw) {
 
 /* =================== TOAST / MODAL / FX =================== */
 function toast(title, desc, category) {
-  if (isInfoMuted(category)) return;
+  if (pureMode || isInfoMuted(category)) return;
   const box = $('#toasts');
   while (box.children.length >= 4) box.firstElementChild.remove();
   const el = document.createElement('div');
@@ -4736,6 +4747,7 @@ function playRare(big, bang = false) {
 
 let lastResults = [];
 let lastResultMeta = null;
+let pureMode = false;
 let nextFastNotice = 0;
 const manualPullTimes = new Float64Array(100).fill(-Infinity);
 let manualPullSlot = 0, nextManualLimitNotice = 0;
@@ -4792,7 +4804,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   const rareBatch = hits.map(r => ({event:newEventId(), pack:p.id, id:r.leak ? 'leak' : r.id,
     v:r.v, chance:r.hitProb, ts:now, name:S.name}));
   lastResults = res.sort((a, b) => resultScore(b) - resultScore(a));
-  lastResultMeta = { auto, pack: p.id, count, at: now, fly: !auto };
+  lastResultMeta = { auto, pack: p.id, count, at: now, fly: !auto && !pureMode };
   // log & rare broadcast
   const logBatch = [];
   for (const r of lastResults) {
@@ -4811,7 +4823,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   const hidden = isHiddenCard(best?.id);
   if (hidden) { saveLocal(); cloudBump(true); }
   markDirty('pullLite', 'models', 'bench', 'hud');
-  if (background) return;
+  if (background || pureMode) return;
   const cine = cinePick(lastResults, auto);
   if (hidden) {
     const m = modelById(best.id);
@@ -4905,6 +4917,7 @@ function markDirty(...v) { for (const x of v) dirty.add(x); }
 let currentView = 'pull';
 let hud;
 function renderHUD() {
+  if (pureMode) return;
   hud ??= Object.fromEntries(['hudTokens','hudRate','hudGpu','hudMul','hudBuffs','dotFeats','dotResearch'].map(id => [id, document.getElementById(id)]));
   textIfChanged(hud.hudTokens, fmt(S.tokens));
   textIfChanged(hud.hudRate, '+' + fmt(lastYield*eventMultiplier('tokens')) + '/s');
@@ -4956,8 +4969,9 @@ function renderUpBanner() {
   renderUpCooldown();
 }
 function renderPull() {
-  renderUpBanner();
-  $('#packs').innerHTML = PACKS.map((p, pi) => {
+  const packs = $('#packs');
+  const focusedPack = pureMode && packs.contains(document.activeElement) ? document.activeElement.dataset.pack : null;
+  packs.innerHTML = PACKS.map((p, pi) => {
     const top = p.rare?.at(-1) ?? (p.special ? [p.special.t, p.special.chance] : p.r.at(-1));
     const cost = pullCost(p);
     return `<button class="pack${S.tokens < cost ? ' locked' : ''}" aria-pressed="${S.pack === p.id}" data-pack="${p.id}" data-cost="${cost}">
@@ -4967,6 +4981,10 @@ function renderPull() {
       <span class="ptop">最高 ${TIERS[top[0]].id} ${fmtProb(top[1])}</span>
     </button>`;
   }).join('');
+  if (focusedPack) packs.querySelector(`[data-pack="${focusedPack}"]`)?.focus({preventScroll:true});
+  renderPullBox();
+  if (pureMode) return;
+  renderUpBanner();
   const p = curPack();
   $('#packTitle').textContent = p.name;
   $('#packSide').textContent = p.hw + '，单张 ' + fmt(packCost(p));
@@ -4981,11 +4999,11 @@ function renderPull() {
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 抽</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
     <div class="note" style="margin-top:10px">变体概率：${VARIANTS.slice(1).map((v,i) => `${v.name} ${fmtProb(vp[i+1])}`).join('，')}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.rare ? 'ℵ 与 ? 的百分比仅适用于普通抽取；! 和 ω 为固定单抽概率，包含所有变体。泄露、!、ω 和隐藏卡不推进保底。' : p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
-  renderPullBox();
   renderResults();
   renderLog();
 }
 function renderAutoInfo() {
+  if (pureMode) return;
   const pullSpeed = autoPullSpeed();
   let text = '';
   if (S.auto) {
@@ -5000,6 +5018,7 @@ function renderPullBox() {
   btn.dataset.cost = cost;
   btn.disabled = S.tokens < cost;
   $('#pullCost').textContent = `${multi()} 张 · ${fmt(cost)} Token`;
+  if (pureMode) return;
   $('#autoSw').setAttribute('aria-checked', S.auto);
   renderAutoInfo();
   $('#metaMulti').textContent = multi() + ' 张';
@@ -5030,6 +5049,7 @@ function deferBulkPanel(el, render) {
   return state.pending;
 }
 function renderResults() {
+  if (pureMode) return;
   const box = $('#results');
   if (!lastResults.length) return;
   if (deferBulkPanel(box, renderResults)) return;
@@ -5066,6 +5086,7 @@ function renderResults() {
 }
 let previousLogHead, previousLogMinute;
 function renderLog() {
+  if (pureMode) return;
   const el = $('#pullLog');
   const panel = el.closest('.panel');
   panel.hidden = isInfoMuted('log');
@@ -9064,8 +9085,22 @@ const VIEWS = ['pull', 'models', 'dex', 'bench', 'research', 'world', 'chat', 'f
 const RENDER = { pull: renderPull, models: renderModels, dex: renderDex, bench: renderBench, research: renderResearch, world: renderWorld, chat: renderChatView, feats: renderFeats, prefs: renderPrefs };
 const MIN_GAP = { pull: 250, models: 1200, dex: 1500, bench: 800, research: 400, world: 1000, chat: 600, feats: 600, prefs: 300 };
 let lastRender = 0, pointerDown = false;
+function setPureMode(enabled) {
+  pureMode = enabled;
+  document.documentElement.toggleAttribute('data-pure-mode', enabled);
+  const toggle = $('#pureModeBtn');
+  toggle.textContent = enabled ? '退出纯净模式' : '纯净模式';
+  if (enabled) {
+    closeBuffTip(); setNewsTip(false); closeCine(); closeModal();
+    $('#toasts').replaceChildren();
+  }
+  showView('pull');
+  if (!enabled) renderHUD();
+  window.scrollTo(0, 0);
+  toggle.focus({preventScroll:true});
+}
 function showView(v) {
-  if (!VIEWS.includes(v) || (v === 'chat' && !WORLD_CONFIG)) v = 'pull';
+  if (pureMode || !VIEWS.includes(v) || (v === 'chat' && !WORLD_CONFIG)) v = 'pull';
   const changed = v !== currentView;
   if (changed && currentView === 'chat') leaveChatView();
   currentView = v;
@@ -9083,7 +9118,8 @@ function renderActive(force) {
     lastRender = now; dirty.delete(currentView); dirty.delete('pullLite');
     try { RENDER[currentView](); } catch (e) { console.error(e); }
   } else if (lite) {
-    lastRender = now; dirty.delete('pullLite'); renderPullBox(); renderResults(); renderLog(); renderPityOnly();
+    lastRender = now; dirty.delete('pullLite'); renderPullBox();
+    if (!pureMode) { renderResults(); renderLog(); renderPityOnly(); }
   }
 }
 function renderPityOnly() {
@@ -9110,6 +9146,7 @@ on('#upLab', 'change', e => {
   saveLocal();
 });
 on('#pullBtn', 'click', e => { initAudio(); doPull(false, e.currentTarget); renderActive(true); });
+on('#pureModeBtn', 'click', () => setPureMode(!pureMode));
 on('#autoSw', 'click', () => { initAudio(); S.auto = !S.auto; resetAutoPull(); renderPullBox(); });
 for (const sel of ['#results', '#vault', '#benchHero', '#dexLabs', '#dexSeries']) on(sel, 'click', e => { const b = e.target.closest('[data-model]'); if (b) openDetail(b.dataset.model, Number(b.dataset.modelVariant)); });
 on('#dexTier', 'change', filterDexTier);
@@ -9208,6 +9245,7 @@ on('#bangContinue', 'keydown', e => { if (e.key === 'Tab') e.preventDefault(); }
 on('#modalBack', 'click', e => { if (e.target.id === 'modalBack') closeModal(); });
 document.addEventListener('keydown', e => {
   if ($('#adminCardReveal').open) return;
+  if (e.key === 'Escape' && pureMode && !$('dialog[open]')) { e.preventDefault(); setPureMode(false); return; }
   if (e.key === 'Escape' && openBuff) { closeBuffTip(); return; }
   if (e.key === 'Escape') { setNewsTip(false); if ($('#cine').classList.contains('open')) closeCine(); else if ($('#modalBack').classList.contains('open')) closeModal(); return; }
   const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName);
