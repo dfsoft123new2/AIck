@@ -557,6 +557,36 @@ html:not([data-static-cards]) :is(.cine.open .card,.card.fly):is(.v1,.v2,.v3) .a
 .series-foot { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); }
 .series-foot .bar { flex: 1; height: 5px; }
 .dex-row .cells i.c3.on { background: linear-gradient(90deg,#ff7aa8,#ffd36e,#7dffb8,#7cc9ff,#c28bff); border-color: transparent; }
+.dex-row .cells i.c4.on { background:#fff1bb; border-color:#fff8e0; box-shadow:-1px 0 #69ecf3,1px 0 #ff567d; }
+
+.card.v4, html[data-card-skin="classic"] .card.v4:not(.t-NULLPOINT) {
+  border-color:#fdedb2 #78dfe9 #ff8a9b #fff6dc;
+  box-shadow:0 8px 24px -12px #fbac61, 0 0 0 1px #fff3c341;
+}
+.card.v4 .art { position:relative; overflow:hidden; isolation:isolate; }
+.card.v4 .art > img { filter:saturate(.76) contrast(1.18); }
+.card.v4 .art::after {
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
+  background:linear-gradient(136deg, transparent 42%,#89fbff26 48%,#fff4cd91 50%,#ff437934 52%,transparent 58%);
+  mix-blend-mode:screen; opacity:.56;
+}
+.card.v4 .art > svg.ultra-foil {
+  position:absolute; inset:0; width:100%; height:100%; z-index:3; pointer-events:none;
+  stroke-width:1.15; filter:drop-shadow(0 0 3px #fff3b179);
+}
+.ultra-foil .u-cyan { stroke:#73f5f4; }
+.ultra-foil .u-red { stroke:#ff647d; }
+.ultra-foil .u-gold { stroke:#ffe4a4; stroke-width:1.65; }
+.ultra-foil .u-bright { stroke:#fff7e6; stroke-width:2; }
+.card.v4 .var { color:#fff6d6; background:#161118; box-shadow:inset 0 0 0 1px #ffe2a2; }
+.card.v4 .body, html[data-card-skin="classic"] .card.v4:not(.t-NULLPOINT) .body {
+  background:linear-gradient(128deg,#21151b,#0e1018 58%,#1b3137); border-top-color:#ffdfa77d;
+}
+.variant-choice[data-variant-choice="4"] > span { color:#d6a95a; }
+@media (prefers-reduced-motion:no-preference) {
+  .card.v4:not(.mini) .art::after { animation:ultra-face-sweep .9s .12s ease-out both; }
+  @keyframes ultra-face-sweep { from { transform:translateX(-70%); opacity:.1; } 70% { opacity:.95; } }
+}
 
 /* ========== Bench ========== */
 .bench-hero { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 18px; align-items: center; }
@@ -1049,7 +1079,7 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
   .detail > .card { width: 170px; margin: 0 auto; }
   .variant-preview { width: min(100%, 340px); margin-inline: auto; }
   .variant-face { width: min(180px, 100%); margin-inline: auto; }
-  .variant-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .variant-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .bench-stage { font-size: 44px; }
   .toasts { bottom: calc(80px + env(safe-area-inset-bottom, 0px)); right: 10px; left: 10px; align-items: stretch; }
   .toast { max-width: none; }
@@ -1091,6 +1121,20 @@ textarea.input { width: 100%; min-height: 90px; resize: vertical; font-family: v
 .cine[data-scene] .sub { color: #d4dfeb; line-height: 1.35; }
 .cine[data-scene=horizon] .sub { color: #f4d9ca; white-space: pre-line; }
 .cine[data-scene=horizon] .title { color: #fff1d9; font-size: 38px; }
+.cine[data-scene=ultra-prism] { --cine-entry:ultra-seat; --cine-entry-time:.57s; }
+.cine[data-scene=ultra-prism] .title { color:#fff2c8; text-shadow:-2px 0 #40cad7,2px 0 #a23e50,0 4px 16px #05070a; }
+.sc-ultra-scope { opacity:.54; animation:ultra-in .53s ease-out both; }
+.sc-ultra-cyan, .sc-ultra-red { transform-box:fill-box; transform-origin:center; animation:ultra-split .94s ease-out both; }
+.sc-ultra-cyan { stroke:#68faff; --split:-190px; }
+.sc-ultra-red { stroke:#ff6586; --split:190px; }
+.sc-ultra-shards { opacity:.62; animation:ultra-burst .86s .79s var(--cine-ease) both; }
+.sc-ultra-crown { opacity:.68; animation:ultra-in .51s 1.11s ease-out both; }
+@keyframes ultra-in { from { opacity:0; } }
+@keyframes ultra-split { 0% { opacity:0; transform:translateX(var(--split)) scale(.58); } 72% { opacity:.92; } 100% { opacity:.4; } }
+@keyframes ultra-burst { 0% { opacity:0; transform:scale(.12,.26); } 32% { opacity:.96; } 100% { transform:scale(1.06); } }
+@keyframes ultra-seat { from { opacity:0; transform:translateY(14px) scale(.84) rotate(-4deg); } }
+.cine[data-static] :is(.sc-ultra-scope,.sc-ultra-cyan,.sc-ultra-red,.sc-ultra-shards,.sc-ultra-crown) { animation:none; }
+.cine[data-static] .card.v4 .art::after { animation:none; }
 .cine:is([data-scene=causal-fold],[data-scene=genesis-collapse]) {
   --cine-card: min(228px, 60vw, 37dvh);
   --cine-stage: clamp(670px, 110vw, 1150px);
@@ -1514,6 +1558,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
               <span><i style="background:#F2C94C"></i>思考 +1%</span>
               <span><i style="background:#7FE3FF"></i>满血 +2%</span>
               <span><i style="background:linear-gradient(90deg,#ff7aa8,#7cc9ff)"></i>全息 +4%</span>
+              <span><i style="background:linear-gradient(135deg,#73f5f4,#fff1bb 52%,#ff647d)"></i>Ultra +8%</span>
               <span><i style="background:var(--ink)"></i>权重泄露 +50%</span>
             </div>
           </div>
@@ -1845,7 +1890,7 @@ html[data-card-skin="classic"] .admin-card-cine-face { --np-face-clip:inset(1%);
   <form id="bulkCardsForm" class="world-dialog-body">
     <div class="admin-tools">
       <label>每款增加数量<input class="input" name="amount" type="number" min="1" max="1000000000" step="1" inputmode="numeric" required autofocus></label>
-      <label class="admin-check"><input type="checkbox" name="allVariants">每种变体各加同样数量</label>
+      <label class="admin-check"><input type="checkbox" name="allVariants">原四种变体各加同样数量</label>
     </div>
     <p class="note" id="bulkCardsSummary"></p>
     <p class="note notice-status" id="bulkCardsStatus" role="status"></p>
@@ -1991,11 +2036,15 @@ const TIER_RULE = {
 };
 
 const VARIANTS = [
-  { key: 'std',   name: '标准', mul: 1,  p: 0.889, dex: 0.005 },
+  { key: 'std',   name: '标准', mul: 1,  p: 0.8889, dex: 0.005 },
   { key: 'think', name: '思考', mul: 3,  p: 0.10,  dex: 0.01 },
   { key: 'max',   name: '满血', mul: 10, p: 0.01,  dex: 0.02 },
-  { key: 'holo',  name: '全息', mul: 50, p: 0.001, dex: 0.04 }
+  { key: 'holo',  name: '全息', mul: 50, p: 0.001, dex: 0.04 },
+  { key: 'ultra', name: 'Ultra', mul: 250, p: 0.0001, dex: 0.08 }
 ];
+const ULTRA_VARIANT = 4;
+const emptyCopies = () => Array(VARIANTS.length).fill(0);
+const validVariant = v => Number.isInteger(v) && v >= 0 && v < VARIANTS.length;
 
 const SPECS = {
   rs: { name: '推理' }, cd: { name: '编码' }, ag: { name: '智能体' }, mm: { name: '多模态' }, ef: { name: '效率' }, all: { name: '全能' }
@@ -2577,7 +2626,7 @@ const UPGRADES = [
 ];
 
 const TECH = [
-  { key: 'luck', name: '量子采样', desc: '思考、满血、全息变体概率提高 25%。', max: 10, cost: lv => 3 + 2 * lv, eff: lv => `变体概率 ×${(1 + 0.25 * lv).toFixed(2)}` },
+  { key: 'luck', name: '量子采样', desc: '非标准变体概率提高 25%。', max: 10, cost: lv => 3 + 2 * lv, eff: lv => `变体概率 ×${(1 + 0.25 * lv).toFixed(2)}` },
   { key: 'offline', name: '离线推理', desc: '离线收益比例 +10%。', max: 8, cost: lv => 2 + lv, eff: lv => `离线收益 ${20 + 10 * lv}%` },
   { key: 'pity', name: '保底协议', desc: '所有卡池的保底所需抽数 −10%。', max: 5, cost: lv => 4 + 3 * lv, eff: lv => `保底 ×${(1 - 0.1 * lv).toFixed(1)}` },
   { key: 'discount', name: '算力团购', desc: '所有卡池费用 −3%。', max: 10, cost: lv => 3 + 2 * lv, eff: lv => `卡池费用 −${3 * lv}%` },
@@ -2682,7 +2731,7 @@ const ACH = [
   { id: 'dex400', n: '活体百科', d: '图鉴点亮 400 格', r: 12, ok: () => dexCount() >= 400 },
   { id: 'dex800', n: '万物有灵', d: '图鉴点亮 800 格', r: 20, ok: () => dexCount() >= 800 },
   { id: 'dex1200', n: '全知图鉴', d: '图鉴点亮 1200 格', r: 25, ok: () => dexCount() >= 1200 },
-  { id: 'dexAll', n: '模型百科', d: '图鉴全部点亮', r: 20, ok: () => dexCount() >= MODELS.length * 4 },
+  { id: 'dexAll', n: '模型百科', d: '普通图鉴全部点亮', r: 20, ok: () => dexCount() >= MODELS.length * VARIANTS.length },
   { id: 'tps1k', n: '小有产能', d: '每秒产出达到 1,000 Token', r: 1, ok: () => lastYield >= 1e3 },
   { id: 'tps1m', n: '百万吞吐', d: '每秒产出达到 100 万 Token', r: 3, ok: () => lastYield >= 1e6 },
   { id: 'tps1b', n: '十亿吞吐', d: '每秒产出达到 10 亿 Token', r: 5, ok: () => lastYield >= 1e9 },
@@ -2981,7 +3030,7 @@ function defaultState() {
   return {
     v: 1, created: Date.now(), lastSave: Date.now(),
     tokens: 1000, lifetime: 0, gpu: 0,
-    cards: { [STARTER.id]: [1, 0, 0, 0] }, train: {}, leaks: 0,
+    cards: { [STARTER.id]: [1, ...emptyCopies().slice(1)] }, train: {}, leaks: 0,
     up: { multi: 0, speed: 0, clone: 0, price: 0 },
     tech: { luck: 0, offline: 0, pity: 0, discount: 0, news: 0, eventDuration: 0, leak: 0, autoBench: 0, autoReb: 0, curate: 0, bond: 0, upfocus: 0, distill: 0, redteam: 0, compound: 0,
       ...Object.fromEntries(DOUBLE_TECH_KEYS.map(key => [key, 0])) },
@@ -3004,6 +3053,7 @@ function mergeState(base, saved) {
   return base;
 }
 function sanitizeState(st) {
+  delete st.variantSchema; // Transport metadata is regenerated on upload.
   st.titlePeakTps = Number.isFinite(st.titlePeakTps) && st.titlePeakTps > 0 ? Math.min(st.titlePeakTps, 1e300) : 0;
   if (!st.tech || typeof st.tech !== 'object' || Array.isArray(st.tech)) st.tech = defaultState().tech;
   st.tech.eventDuration = Math.max(0, Math.min(5, Math.floor(Number(st.tech.eventDuration) || 0)));
@@ -3017,7 +3067,7 @@ function sanitizeState(st) {
   const clean = {};
   for (const [id, arr] of Object.entries(st.cards || {})) {
     if ((!Object.hasOwn(MODEL_BY_ID,id) && id !== VOID_CARD.id) || !Array.isArray(arr)) continue;
-    const counts = [0, 1, 2, 3].map(i => id === VOID_CARD.id
+    const counts = VARIANTS.map((_,i) => id === VOID_CARD.id
       ? (Number.isSafeInteger(arr[i]) && arr[i] > 0 ? arr[i] : 0)
       : Math.max(0, Number(arr[i]) || 0));
     if (id !== VOID_CARD.id || total(counts)) clean[id] = counts;
@@ -3041,7 +3091,7 @@ function sanitizeState(st) {
   st.adminCardProgress = exclusive && typeof exclusive.uid === 'string' && /^[0-9a-f-]{36}$/i.test(exclusive.uid) &&
     Number.isInteger(exclusive.level) && exclusive.level >= 0 && exclusive.level <= 900 ? {uid:exclusive.uid,level:exclusive.level} : null;
   const hidden = st.hiddenCard;
-  const copies = Array.isArray(hidden?.copies) ? [0,1,2,3].map(i => Number.isSafeInteger(hidden.copies[i]) && hidden.copies[i] > 0 ? hidden.copies[i] : 0) : null;
+  const copies = Array.isArray(hidden?.copies) ? VARIANTS.map((_,i) => Number.isSafeInteger(hidden.copies[i]) && hidden.copies[i] > 0 ? hidden.copies[i] : 0) : null;
   st.hiddenCard = copies?.some(Boolean) ? {copies, level:Number.isInteger(hidden.level) && hidden.level >= 0 && hidden.level <= 900 ? hidden.level : 0} : null;
   if (st.hiddenCard && Number.isSafeInteger(hidden.gifted) && hidden.gifted > 0) st.hiddenCard.gifted = Math.min(total(copies),hidden.gifted);
   if (st.sig && !Object.hasOwn(MODEL_BY_ID,st.sig) && !(st.sig === HIDDEN_CARD.id && (st.adminCardProgress || st.hiddenCard))
@@ -3185,21 +3235,23 @@ function leakChance(p = curPack(), event = activeGameplayEvent()) {
     1e-4 * Math.pow(2, S.tech.leak) * techDouble('doubleOdds') * buffMul('leak') * odds);
 }
 function varLuck(event = activeGameplayEvent()) { return (1 + 0.25 * S.tech.luck) * techDouble('doubleOdds') * buffMul('luck') * eventMultiplier('odds',event); }
-const VARIANT_CAPS = Object.freeze({thinking:0.5, fullPower:0.3});
+const VARIANT_CAPS = Object.freeze({thinking:0.5, fullPower:0.3, holo:0.1});
 function variantProbs(event = activeGameplayEvent()) {
   const L = varLuck(event);
-  const h = Math.min(1, 0.001 * L);
-  const mx = Math.min(VARIANT_CAPS.fullPower, 0.01 * L), th = Math.min(VARIANT_CAPS.thinking, 0.1 * L);
-  // Reserve the holographic odds first; shrink the other variants only when the roll is full.
-  if (th + mx > 1 - h) {
-    const scale = (1 - h) / (th + mx);
-    return [0, th * scale, mx * scale, h];
-  }
-  return [Math.max(0, 1 - h - mx - th), th, mx, h];
+  // Ultra takes its odds from uncapped holographic odds. When the roll fills,
+  // preserve the rarest variants first and divide the remainder between max and think.
+  const u = Math.min(1, VARIANTS[ULTRA_VARIANT].p * L);
+  const h = Math.min(1 - u, VARIANT_CAPS.holo, VARIANTS[3].p * L);
+  const mx = Math.min(VARIANT_CAPS.fullPower, VARIANTS[2].p * L), th = Math.min(VARIANT_CAPS.thinking, VARIANTS[1].p * L);
+  const remaining = 1 - u - h, scale = th + mx > remaining ? remaining / (th + mx) : 1;
+  return [Math.max(0, remaining - mx - th), th * scale, mx * scale, h, u];
 }
 function rollVariant(p = variantProbs()) {
   const r = Math.random();
-  if (r < p[3]) return 3; if (r < p[3] + p[2]) return 2; return r < 1 - p[0] ? 1 : 0;
+  if (p[4] > 0 && r >= 1 - p[4]) return ULTRA_VARIANT;
+  if (r < p[3]) return 3;
+  if (r < p[3] + p[2]) return 2;
+  return r < 1 - p[0] - (p[4] ?? 0) ? 1 : 0;
 }
 const drawTables = new Map(PACKS.map(p => {
   let sum = 0;
@@ -3239,14 +3291,14 @@ function pickModel(t, up = S.upLab, focus = upChance()) {
   if (upPool.length && upPool.length < pool.length && Math.random() < focus) return pick(upPool);
   return pick(pool);
 }
-function total(c) { return c ? c[0] + c[1] + c[2] + c[3] : 0; }
+function total(c) { let n = 0; if (c) for (let v = 0; v < VARIANTS.length; v++) n += c[v] ?? 0; return n; }
 function isHiddenCard(id) { return id === HIDDEN_CARD.id || id === VOID_CARD.id; }
 function modelById(id) { return Object.hasOwn(MODEL_BY_ID,id) ? MODEL_BY_ID[id] : HIDDEN_MODELS.find(m => m.id === id) ?? null; }
 function modelBase(m) { return m.base ?? TIERS[m.t].base; }
 function hiddenCardInventory() {
   const pulled = S.hiddenCard?.copies;
   const grant = typeof hasAdminCard === 'function' && hasAdminCard() ? ADMIN_CARD_COPIES : null;
-  return pulled && grant ? pulled.map((n, v) => n + grant[v]) : pulled || grant;
+  return pulled && grant ? VARIANTS.map((_,v) => (pulled[v] ?? 0) + (grant[v] ?? 0)) : pulled || grant;
 }
 function modelInventory(m) { return m === HIDDEN_CARD ? hiddenCardInventory() : S.cards[m.id]; }
 function owned(m) { return !!m && total(modelInventory(m)) > 0; }
@@ -3281,7 +3333,7 @@ for (const se of SERIES) for (const id of se.ids) (SERIES_OF[id] = SERIES_OF[id]
 function dexInfo() {
   if (caches.dex) return caches.dex;
   let n = 0, b = 0;
-  for (const m of MODELS) { const c = S.cards[m.id]; if (!c) continue; for (let v = 0; v < 4; v++) if (c[v] > 0) { n++; b += VARIANTS[v].dex; } }
+  for (const m of MODELS) { const c = S.cards[m.id]; if (!c) continue; for (let v = 0; v < VARIANTS.length; v++) if (c[v] > 0) { n++; b += VARIANTS[v].dex; } }
   if (S.leaks > 0) b += 0.5;
   return caches.dex = { n, mul: 1 + b };
 }
@@ -3327,8 +3379,8 @@ function globalMul() {
     hiddenCardIncomeMul(HIDDEN_CARD) * hiddenCardIncomeMul(VOID_CARD);
 }
 function perCard(m) { return TIERS[m.t].base * trainMul(m.id) * labStats()[m.lab].mul * buffMul('lab', m.lab); }
-function rawUnits(c) { return c[0] + c[1] * 3 + c[2] * 10 + c[3] * 50; }
-function bestVar(c) { return c[3] > 0 ? 3 : c[2] > 0 ? 2 : c[1] > 0 ? 1 : 0; }
+function rawUnits(c) { let n = 0; for (let v = 0; v < VARIANTS.length; v++) n += (c[v] ?? 0) * VARIANTS[v].mul; return n; }
+function bestVar(c) { for (let v = VARIANTS.length - 1; v > 0; v--) if (c?.[v] > 0) return v; return 0; }
 // Inventory, training and lab buffs affect the subtotal. Global multipliers
 // stay live so world milestones, benchmarks and timed events apply immediately.
 function production() {
@@ -3373,8 +3425,8 @@ function upCost(u) { return u.base * Math.pow(u.g, S.up[u.key]); }
 
 /* =================== PULL =================== */
 // A slot is used only while settling this synchronous batch. Never retain the previous result list.
-const drawSlots = new Array((MODELS.length + 1 + HIDDEN_MODELS.length) * 4);
-function drawSlot(m, v) { return (m.idx ?? MODELS.length + 1 + HIDDEN_MODELS.indexOf(m)) * 4 + v; }
+const drawSlots = new Array((MODELS.length + 1 + HIDDEN_MODELS.length) * VARIANTS.length);
+function drawSlot(m, v) { return (m.idx ?? MODELS.length + 1 + HIDDEN_MODELS.indexOf(m)) * VARIANTS.length + v; }
 let bulkOdds;
 function oddsForUpLab(lab, focus) {
   if (!bulkOdds || bulkOdds.lab !== lab || bulkOdds.focus !== focus) {
@@ -3403,11 +3455,11 @@ function settlePull(p, compact = false, event = activeGameplayEvent()) {
     if (hiddenChance && ticket >= hiddenCutoff) {
       const v = rollVariant(variants);
       const copies = hiddenModel === HIDDEN_CARD
-        ? (S.hiddenCard ??= {copies:[0,0,0,0], level:0}).copies
-        : (cards[hiddenModel.id] ??= [0,0,0,0]);
+        ? (S.hiddenCard ??= {copies:emptyCopies(), level:0}).copies
+        : (cards[hiddenModel.id] ??= emptyCopies());
       const isNew = !total(copies);
       if (!copies[v]) structural = true;
-      copies[v] += hiddenCopies;
+      copies[v] = (copies[v] ?? 0) + hiddenCopies;
       if (v > stats.maxVar) stats.maxVar = v;
       const slot = drawSlot(hiddenModel, v);
       if (compact && drawSlots[slot]) drawSlots[slot].n += hiddenCopies;
@@ -3441,10 +3493,10 @@ function settlePull(p, compact = false, event = activeGameplayEvent()) {
     const prob = (specialHit ? specialHit.chance : table.rates[t]) * variants[v];
     const hitProb = specialHit ? prob : normalChance * (viaPity ? 1 : table.rates[t]) * (odds ? odds[m.idx] : modelChance(m, up, focus)) * variants[v];
     let c = cards[m.id];
-    if (!c) c = cards[m.id] = [0, 0, 0, 0];
-    const isNew = c[v] === 0 && !total(c);
-    if (c[v] === 0) structural = true;
-    c[v] += clone;
+    if (!c) c = cards[m.id] = emptyCopies();
+    const isNew = !c[v] && !total(c);
+    if (!c[v]) structural = true;
+    c[v] = (c[v] ?? 0) + clone;
     if (!compact && !structural) updateDuplicate(m, c);
     stats.byTier[t]++;
     if (t > stats.maxTier) stats.maxTier = t;
@@ -3585,7 +3637,7 @@ function bestTeam(spec, powerFactor = 1) {
     const m = MODELS[index] ?? HIDDEN_MODELS[index - MODELS.length];
     const c = modelInventory(m); if (!total(c)) continue;
     let best = null;
-    for (let v = 0; v < 4; v++) if (c[v] > 0) { const pw = cardPower(m, v, c[v], spec); if (!best || pw > best.pw) best = { m, v, pw, match: m.s === spec || m.s === 'all' }; }
+    for (let v = 0; v < VARIANTS.length; v++) if (c[v] > 0) { const pw = cardPower(m, v, c[v], spec); if (!best || pw > best.pw) best = { m, v, pw, match: m.s === spec || m.s === 'all' }; }
     // Only five models can enter; on ties keep the earlier catalogue entry.
     if (cand.length === 5 && best.pw <= cand[4].pw) continue;
     let i = cand.length;
@@ -3791,13 +3843,13 @@ function loadLocal() {
 
 function cloudSaveSnapshot(state, stamp = Date.now()) {
   const cards = {};
-  // parseSave already expands short arrays to all four variants, including in older clients.
+  // Omit trailing zeros; parseSave restores all variant slots.
   for (const [id, counts] of Object.entries(state.cards)) {
     let length = counts.length;
     while (length && counts[length-1] === 0) length--;
     cards[id] = counts.slice(0,length);
   }
-  return structuredClone({...state,cards,lastSave:stamp});
+  return structuredClone({...state,cards,lastSave:stamp,variantSchema:VARIANTS.length});
 }
 
 function continueLocalSaveAfterCutover() {
@@ -4172,13 +4224,16 @@ function applyCardSkin() {
     img.src = cardArtUrl(modelOrLeak(img.dataset.cardArt), Number(img.dataset.artVariant), skin);
   }
 }
+function ultraFoil() {
+  return `<svg class="ultra-foil" viewBox="0 0 160 160" aria-hidden="true" focusable="false"><g fill="none" stroke-linecap="square"><path class="u-cyan" d="M5 114V33L34 5h53M14 91V40L40 14h21M98 155h28l29-29V86M6 134h22l106-106h20"/><path class="u-red" d="M5 148h28L147 34V7M55 155h74l26-26v-22M7 67V29L29 7h15"/><path class="u-gold" d="M5 44V27L27 5h36m34 150h36l22-22v-17M9 126h26l93-93h23M24 132l49-49 8 6 24-24 11 2 25-25"/><path class="u-bright" d="M45 112 72 85l8 6 26-26 10 2 19-19M25 84 71 38h19m-1 83h18l29-29"/></g></svg>`;
+}
 function cardHTML(m, v, o = {}) {
   const tag = o.button ? 'button' : 'div';
   const hidden = isHiddenCard(m.id), tierId = hidden ? HIDDEN_CARD_LABEL : m.id === 'leak' ? 'LEAK' : TIERS[m.t].id;
   const cls = `card t-${m === VOID_CARD ? 'GENESIS' : hidden ? 'NULLPOINT' : m.id === 'leak' ? 'LEAK' : (TIERS[m.t].css || tierId)} v${v}${o.mini ? ' mini' : ''}${o.fly ? ' fly' : ''}${o.locked ? ' locked' : ''}`;
   const style = o.delay ? ` style="animation-delay:${o.delay}ms"` : '';
   const attrs = o.button ? ` type="button" data-model="${m.id}" aria-label="${esc(m.n)}"` : '';
-  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m,v)}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
+  return `<${tag} class="${cls}"${style}${attrs}><div class="art">${o.deferArt ? '' : sharedArt(m,v)}${v === ULTRA_VARIANT ? ultraFoil() : ''}</div><span class="tier">${tierId}</span>${v ? `<span class="var">${VARIANTS[v].name}</span>` : ''}${o.count ? `<span class="cnt">×${fmt(o.count)}</span>` : ''}${o.isNew ? '<span class="newb">NEW</span>' : ''}<div class="body"><div class="nm">${esc(m.n)}</div><div class="cd">${esc(m.c)}</div></div></${tag}>`;
 }
 const RATING_KEYS = ['能力', '影响力', '调用量'];
 function ratingHTML(m) {
@@ -4301,6 +4356,15 @@ const GENESIS_CINEMATIC = ['genesis-collapse', 1.34, () => {
       + relic(225,0,'opacity=".38"') + '<path d="M-420 0h222m396 0h222" stroke="url(#cine-rail)" stroke-width="3"/>');
 }, ['#2b1527','#ffc994','#f4a3ab']];
 
+const ULTRA_CINEMATIC = ['ultra-prism', .96, () => {
+  const shard = '<path d="M0-242-8-211l8 87 10-63Z" fill="currentColor" opacity=".36"/><path d="M0-258v-18M0-117v-22" stroke="var(--cine-foil)"/>';
+  const split = '<path d="M-420 160h141L-96-23l58 24 75-75 51 30 153-153h182" stroke-width="4"/><path d="M-395 188h150L-86 29l51 16L129-119h86L330-234" opacity=".5"/>';
+  return cineLayer('ultra-scope', cineStars(92,90825) + '<path d="M-338 0 0-204 338 0 0 204Z M-258 0 0-162 258 0 0 162Z" stroke-dasharray="28 7 2 7" opacity=".6"/>')
+    + cineLayer('ultra-cyan', split) + cineLayer('ultra-red', `<g transform="scale(-1)">${split}</g>`)
+    + cineLayer('ultra-shards', cineSpokes(12,shard,15) + '<path d="M-415 0H415" stroke="url(#cine-rail)" stroke-width="8"/>')
+    + cineLayer('ultra-crown','<path d="M-292 71h85l39-39m460-103h-85l-39 39M-101-119l101-67 101 67m-202 238 101 67 101-67" stroke="var(--cine-foil)" stroke-width="2.5"/>');
+}, ['#1b1422','#a9f9ff','#fff0c3']];
+
 function tierCineSVG(scene, draw) {
   return `<svg class="tier-scene${scene === 'horizon' ? ' bang-scene' : ''}" viewBox="0 0 860 540" aria-hidden="true" focusable="false">
     <defs><linearGradient id="cine-rail" gradientUnits="userSpaceOnUse" x1="-420" x2="420" y1="0" y2="0">
@@ -4356,7 +4420,8 @@ function showCine(r, replayFrom = null, pack = null) {
   const m = modelOrLeak(r.leak ? 'leak' : r.id);
   if (!m) return;
   const creation = m === VOID_CARD ? GENESIS_CINEMATIC : m.t === OMEGA_TIER ? CAUSAL_CINEMATIC : null;
-  const scene = creation ?? (r.leak ? LEAK_CINEMATIC : TIER_CINEMATICS[r.t]);
+  const ultra = r.v === ULTRA_VARIANT;
+  const scene = ultra ? ULTRA_CINEMATIC : creation ?? (r.leak ? LEAK_CINEMATIC : TIER_CINEMATICS[r.t]);
   const staticScene = !S.set.fx || matchMedia('(prefers-reduced-motion: reduce)').matches;
   clearTimeout(cineCloseTimer);
   c.dataset.tier = r.leak ? '-1' : String(r.t);
@@ -4375,6 +4440,7 @@ function showCine(r, replayFrom = null, pack = null) {
   $('#cineCard').innerHTML = (scene ? tierCineSVG(scene[0], scene[2]) : '') + cardHTML(m, r.v, { count: r.n, isNew: !replay && r.isNew });
   $('#cineTitle').textContent = (r.v && !r.leak ? VARIANTS[r.v].name + '版 ' : '') + m.n;
   $('#cineSub').textContent = r.leak ? '它会复制你最强那张卡的产出'
+    : ultra ? `${isHiddenCard(m.id) ? HIDDEN_CARD_LABEL : TIERS[r.t].id} · ${m.c} · 变体倍率 ×${VARIANTS[r.v].mul}`
     : creation ? `${LABS[m.lab].name} · ${m.c}\n基础产出 ${fmt(modelBase(m))} Token/s`
     : bang ? `${replay ? VARIANTS[r.v].name : `${pack?.name ?? curPack().name} · ${VARIANTS[r.v].name}版约 ${fmtProb(r.hitProb)}`}\n基础产出 ${fmt(TIERS[r.t].base)} Token/s`
     : `${LABS[m.lab].name} · 代号 ${m.c}${m.st ? ' · ' + STATUS[m.st].name : ''}${replay ? '' : ` · 出现概率 ${fmtProb(r.prob)}${r.pity ? '（保底）' : ''}`}`;
@@ -4410,10 +4476,10 @@ function closeCine() {
 function replayCardCine(m, trigger, variant) {
   const leak = m === LEAK_MODEL, copies = leak ? null : modelInventory(m);
   if (leak ? !(S.leaks > 0) : !owned(m)) return;
-  const v = leak ? 3 : VARIANTS[variant] ? variant : bestVar(copies);
+  const v = leak ? 3 : validVariant(variant) ? variant : bestVar(copies);
   const n = leak ? S.leaks : copies[v] || 0;
   const r = {id:m.id,t:m.t,v,n,leak,preview:!n};
-  const played = m === HIDDEN_CARD ? showAdminCardReveal(r,true) : showCine(r,trigger);
+  const played = m === HIDDEN_CARD && v !== ULTRA_VARIANT ? showAdminCardReveal(r,true) : showCine(r,trigger);
   if (played && S.set.fx) playRare(m.t >= 7,m === VOID_CARD ? 'genesis' : m.t === OMEGA_TIER ? 'causal' : isExclamationResult(r));
 }
 
@@ -4502,14 +4568,16 @@ function doPull(auto, originEl, paced = false, event = activeGameplayEvent(), ba
 }
 function isExclamationResult(r) { return !r.leak && TIERS[r.t]?.id === '!'; }
 function isHorizonResult(r) { return !r.leak && r.t >= EXCLAMATION_TIER; }
-function resultScore(r) { return isHorizonResult(r) ? 2e9 + r.t * 4 + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
+function resultScore(r) { return isHorizonResult(r) ? 2e9 + r.t * VARIANTS.length + r.v : r.leak ? 1e9 : r.t * 10 + r.v * 3 + (r.isNew ? 1 : 0); }
 function cinePick(sorted, auto) {
   if (auto && !S.set.autoCine) return;
   if (isHiddenCard(sorted[0]?.id)) return sorted[0];
   const prefs = S.set.cine;
   if (prefs?.custom) return sorted.find(r => prefs.tiers.includes(r.leak ? 'LEAK' : TIERS[r.t].id));
+  const ultra = sorted.find(r => r.v === ULTRA_VARIANT);
   const r = sorted[0];
   if (r && (r.leak || r.t >= 6 || ((r.isNew || r.v === 3) && r.t >= 4) || r.prob <= 1e-4)) return r;
+  return ultra;
 }
 function afterPull(res, auto, p, originEl, paced = false, hits = null, count = res.length, background = false) {
   const now = Date.now();
@@ -4551,7 +4619,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
   const cine = cinePick(lastResults, auto);
   if (hidden) {
     const m = modelById(best.id);
-    if (cine === best && S.set.fx && (m === HIDDEN_CARD ? showAdminCardReveal(best) : showCine(best))) playRare(true, m === VOID_CARD ? 'genesis' : false);
+    if (cine === best && S.set.fx && (m === HIDDEN_CARD && best.v !== ULTRA_VARIANT ? showAdminCardReveal(best) : showCine(best))) playRare(true, m === VOID_CARD ? 'genesis' : false);
     else toast(`${m.n} 已入库`, `${HIDDEN_CARD_LABEL} · ${VARIANTS[best.v].name} ×${fmt(best.n)}`);
   }
   else if (cine) { if (!paced || !cineOpen || isHorizonResult(cine)) {
@@ -4561,7 +4629,7 @@ function afterPull(res, auto, p, originEl, paced = false, hits = null, count = r
     if (!auto) playPull();
     for (const r of lastResults.slice(0, 3)) {
       if (r.leak) continue;
-      if (auto && !((r.isNew && r.t >= 3) || r.t >= 6 || (r.v === 3 && r.t >= 3))) continue;
+      if (auto && !((r.isNew && r.t >= 3) || r.t >= 6 || (r.v === 3 && r.t >= 3) || r.v === ULTRA_VARIANT)) continue;
       if (paced && now < nextFastNotice) break;
       const m = MODEL_BY_ID[r.id];
       if (r.isNew && r.t >= 2) toast('新模型入库', `${TIERS[r.t].id} ${m.n}${r.v ? ' · ' + VARIANTS[r.v].name : ''}`, 'newCard');
@@ -4716,7 +4784,7 @@ function renderPull() {
   const pn = pityN(p), pc = pityProgress(p, pn);
   $('#pity').innerHTML = `<div class="pity-top"><span>距保底 <b>${TIERS[p.pt].id}</b> 还有 <b class="num">${fmt(pn - pc)}</b> 抽</span><span class="num">${fmt(pc)}/${fmt(pn)}</span></div>
     <div class="bar gold"><i style="width:${pc / pn * 100}%"></i></div>
-    <div class="note" style="margin-top:10px">变体概率：思考 ${fmtProb(vp[1])}，满血 ${fmtProb(vp[2])}，全息 ${fmtProb(vp[3])}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.rare ? 'ℵ 与 ? 的百分比仅适用于普通抽取；! 和 ω 为固定单抽概率，包含所有变体。泄露、!、ω 和隐藏卡不推进保底。' : p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
+    <div class="note" style="margin-top:10px">变体概率：${VARIANTS.slice(1).map((v,i) => `${v.name} ${fmtProb(vp[i+1])}`).join('，')}。权重泄露 ${fmtProb(leakChance(p))}。${p.special ? '! 含所有变体，单抽 1/1亿，不消耗保底。常规抽取的未知档合计 1/20万，五款各 1/100万；保底只给 ℵ。' : ''}${p.rare ? 'ℵ 与 ? 的百分比仅适用于普通抽取；! 和 ω 为固定单抽概率，包含所有变体。泄露、!、ω 和隐藏卡不推进保底。' : p.hiddenChance ? '表中概率以未触发泄露和保底为前提。基础保底 50,000 抽，受「保底协议」减免。泄露和隐藏卡不推进保底；抽到任一 ? 档或 ! 时重置。' : ''}</div>`;
   renderPullBox();
   renderResults();
   renderLog();
@@ -5060,7 +5128,7 @@ function syncDex() {
     return;
   }
   dexGrid.snapshot = di;
-  textIfChanged($('#dexCount'), `${di.n}/${MODELS.length * 4}`);
+  textIfChanged($('#dexCount'), `${di.n}/${MODELS.length * VARIANTS.length}`);
   textIfChanged($('#dexBonus'), '×' + fmtMul(di.mul));
   textIfChanged($('#dexSetBonus'), '×' + fmtMul(si.mul));
   textIfChanged($('#dexSeries .side'), `已完成 ${si.done}/${SERIES.length}，凑齐一组即生效`);
@@ -5089,7 +5157,7 @@ function syncDex() {
 function renderDex() {
   if (dexGrid) { syncDex(); return; }
   const di = dexInfo();
-  $('#dexCount').textContent = `${di.n}/${MODELS.length * 4}`;
+  $('#dexCount').textContent = `${di.n}/${MODELS.length * VARIANTS.length}`;
   $('#dexBonus').textContent = '×' + fmtMul(di.mul);
   renderTierRules();
   renderSeries();
@@ -5099,7 +5167,7 @@ function renderDex() {
     const L = LABS[k], st = ls[k];
     const rows = LAB_MODELS[k].slice().sort((a, b) => a.t - b.t).map(m => {
       const c = S.cards[m.id] || [0, 0, 0, 0], has = total(c) > 0;
-      return `<button class="dex-row" data-model="${m.id}" type="button"><span data-thumb="${m.id}" class="ic${has ? '' : ' off'}"></span><span style="min-width:0"><span class="t1">${tierTag(m.t)}<span>${esc(m.n)}</span></span><span class="cells">${[0, 1, 2, 3].map(v => `<i class="c${v}${c[v] > 0 ? ' on' : ''}" title="${VARIANTS[v].name}"></i>`).join('')}${m.st ? `<b class="st-mini st-${m.st}">${STATUS[m.st].stamp}</b>` : ''}</span></span></button>`;
+      return `<button class="dex-row" data-model="${m.id}" type="button"><span data-thumb="${m.id}" class="ic${has ? '' : ' off'}"></span><span style="min-width:0"><span class="t1">${tierTag(m.t)}<span>${esc(m.n)}</span></span><span class="cells">${VARIANTS.map((variant,v) => `<i class="c${v}${c[v] > 0 ? ' on' : ''}" title="${variant.name}"></i>`).join('')}${m.st ? `<b class="st-mini st-${m.st}">${STATUS[m.st].stamp}</b>` : ''}</span></span></button>`;
     }).join('');
     return `<div class="lab-block"><div class="lab-head" data-lab-key="${k}">${elementMark(34, L.sym, L.no, L.hue)}<span class="name">${esc(L.name)}</span><span class="prog">${st.own}/${st.total}</span><span class="bonus${st.full ? ' full' : ''}">羁绊 ×${fmtMul(st.mul)}${st.full ? '，已集齐' : ''}</span></div><div class="dex-grid">${rows}</div></div>`;
   };
@@ -5218,7 +5286,7 @@ const PREFS = [
   ['rareSfx', '稀有音效', '稀有卡、成就和热点时播放'],
   ['fx', '视觉特效', '稀有卡过场、粒子与卡片动效'],
   ['autoCine', '自动抽卡过场', '自动抽卡也按选定的过场规则播放'],
-  ['hideCompleteDex', '图鉴隐藏已集齐模型', '只隐藏四种变体都拥有的模型']
+  ['hideCompleteDex', '图鉴隐藏已集齐模型', '只隐藏五种变体都拥有的模型']
 ];
 function renderPrefs() {
   const cine = S.set.cine ?? defaultCinePrefs();
@@ -5287,7 +5355,7 @@ function publicTeam(rows, player) {
   const seen = new Set();
   return rows.slice(0,5).filter(c => {
     if (!c || typeof c.id !== 'string' || !publicModel(c.id,player) || seen.has(c.id) ||
-        ![0,1,2,3].includes(c.v) || !Number.isFinite(c.pw) || c.pw < 0 ||
+        !validVariant(c.v) || !Number.isFinite(c.pw) || c.pw < 0 ||
         !Number.isInteger(c.lv) || c.lv < 0 || !Number.isInteger(c.count) || c.count < 1) return false;
     seen.add(c.id); return true;
   }).map(({id,v,pw,lv,count}) => ({id,v,pw,lv,count})).sort((a,b)=>b.pw-a.pw);
@@ -5297,7 +5365,7 @@ function sanitizePlayer(id, d) {
   const rare = Array.isArray(d.rare) ? d.rare.slice(0, 8).filter(validWorldHit) : [];
   return {
     id, name: String(d.name || '无名实验室').slice(0, 16), sig: publicModel(d.sig,id) ? d.sig : null,
-    sigV: [0, 1, 2, 3].includes(d.sigV) ? d.sigV : 0,
+    sigV: validVariant(d.sigV) ? d.sigV : 0,
     tps: num(d.tps, 1e300), dex: num(d.dex, 4000), stage: num(d.stage, 1e6), pulls: num(d.pulls, 1e15), reb: num(d.reb, 1e6),
     power: d.power == null ? null : num(d.power, 1e300), achievements: d.achievements == null ? null : num(d.achievements, 1e6),
     lifetime: d.lifetime == null ? null : num(d.lifetime, 1e300),
@@ -5485,7 +5553,7 @@ function newEventId() {
 function validWorldHit(r) {
   return r && typeof r.event === 'string' && /^[a-f\d]{8}-(?:[a-f\d]{4}-){3}[a-f\d]{12}$/i.test(r.event) &&
     PACKS.some(p => p.id === r.pack) && (Object.hasOwn(MODEL_BY_ID, r.id) || r.id === 'leak') &&
-    [0, 1, 2, 3].includes(r.v) && isBroadcastHit(r.chance) && Number.isSafeInteger(r.ts) && r.ts > 0 &&
+    validVariant(r.v) && isBroadcastHit(r.chance) && Number.isSafeInteger(r.ts) && r.ts > 0 &&
     typeof r.name === 'string' && r.name.trim().length > 0 && r.name.length <= 16;
 }
 function queueWorldHits(hits) {
@@ -5824,7 +5892,7 @@ async function syncInventorySnapshot(b, uid) {
   const cards = {};
   const add = (id, counts) => {
     if (!counts) return;
-    const safe = VARIANTS.map((_,v) => num(Math.floor(counts[v]),Number.MAX_SAFE_INTEGER));
+    const safe = VARIANTS.map((_,v) => num(Math.floor(counts[v] ?? 0),Number.MAX_SAFE_INTEGER));
     if (safe.some(Boolean)) cards[id] = safe;
   };
   for (const m of MODELS) add(m.id, S.cards[m.id]);
@@ -5988,7 +6056,11 @@ function accountFault(error) {
   }
   else if (invalidCloudProgress(error) && !account.rejectedProgress) {
     account.rejectedProgress = true;
-    const reason = error.message === 'FRONTIER_UNVERIFIED_INVENTORY' ? '新增卡牌与抽卡记录或发放记录不符。' : '存档数值超出游戏规则。';
+    const detail = typeof error.details === 'string' && /^[a-z0-9_.-]{1,80}$/i.test(error.details) ? error.details : '';
+    const reason = error.message === 'FRONTIER_UNVERIFIED_INVENTORY' ? '新增卡牌与抽卡记录或发放记录不符。'
+      : detail === 'client.variantSchema' ? '当前网页版本不支持存档中的 Ultra，请刷新游戏。'
+      : detail.startsWith('catalogue.') ? `服务器卡牌目录未包含「${detail.slice(10)}」。`
+      : detail ? `存档项目「${detail}」未通过校验。` : '存档未通过服务器游戏规则校验。';
     toast('云存档未更新', reason + '上一份云存档已保留。');
   }
 }
@@ -6362,9 +6434,9 @@ function applyModerationStatus(data) {
 
 function bulkCardInventory(amount, allVariants) {
   if (!Number.isInteger(amount) || amount < 1 || amount > BULK_CARD_LIMIT) return null;
-  const cards = {...S.cards}, count = allVariants ? VARIANTS.length : 1;
+  const cards = {...S.cards}, count = allVariants ? 4 : 1;
   for (const m of MODELS) {
-    const copies = [...(cards[m.id] ?? [0,0,0,0])];
+    const copies = VARIANTS.map((_,v) => cards[m.id]?.[v] ?? 0);
     for (let v = 0; v < count; v++) {
       copies[v] += amount;
       if (!Number.isSafeInteger(copies[v])) return null;
@@ -6392,8 +6464,8 @@ function applyItemOrder(order) {
   if (S.itemReceipts.includes(order.id)) return true;
   if (order.kind === 'gpu') S.gpu = amount;
   else if (order.kind === 'tokens') S.tokens = amount;
-  else if (order.kind === 'card' && Object.hasOwn(MODEL_BY_ID,order.model) && [0,1,2,3].includes(order.variant)) {
-    const c = S.cards[order.model] ??= [0,0,0,0]; c[order.variant] = amount;
+  else if (order.kind === 'card' && Object.hasOwn(MODEL_BY_ID,order.model) && validVariant(order.variant)) {
+    const c = S.cards[order.model] ??= emptyCopies(); c[order.variant] = amount;
     if (!total(c) && S.sig === order.model) S.sig = null;
   } else return false;
   S.itemReceipts.push(order.id); S.itemReceipts = S.itemReceipts.slice(-200);
@@ -6416,11 +6488,12 @@ function storePrivateGift(order) {
   if (kind === 'gpu' || kind === 'tokens') {
     next[kind] += amount;
     if (!Number.isFinite(next[kind]) || next[kind] <= S[kind]) return false;
-  } else if (kind === 'card' && [0,1,2,3].includes(order.variant)) {
+  } else if (kind === 'card' && validVariant(order.variant)) {
     const oldHidden = order.model === PULLED_HIDDEN_CARD_ID;
     const m = oldHidden ? HIDDEN_CARD : modelById(order.model);
     if (!m || (!oldHidden && m === HIDDEN_CARD)) return false;
-    const counts = [...((oldHidden ? S.hiddenCard?.copies : S.cards[m.id]) ?? [0,0,0,0])];
+    const current = oldHidden ? S.hiddenCard?.copies : S.cards[m.id];
+    const counts = VARIANTS.map((_,v) => current?.[v] ?? 0);
     counts[order.variant] += amount;
     if (!Number.isSafeInteger(counts[order.variant])) return false;
     if (oldHidden) next.hiddenCard = {copies:counts,level:S.hiddenCard?.level ?? 0,gifted:(S.hiddenCard?.gifted ?? 0)+amount};
@@ -6483,7 +6556,7 @@ async function readModerationStatus(b) {
         if (isNew) toast('批量加卡未写入', '请检查存储空间或卡片数量上限。');
         break;
       }
-      if (isNew) toast('批量加卡已入库', `每款模型的${order.variant === 0 ? '标准卡' : '每种变体'}各增加 ${fmt(order.amount)} 张。`);
+      if (isNew) toast('批量加卡已入库', `每款模型的${order.variant === 0 ? '标准卡' : '原四种变体'}各增加 ${fmt(order.amount)} 张。`);
       if (!await beforeAccountAck()) return;
       unwrap(await b.client.rpc('frontier_session', {p_action:'ack',p_order:order.id}));
       continue;
@@ -6861,7 +6934,7 @@ async function runAI() {
 每秒产出：${fmt(lastYield)} Token
 已通过评测：${S.stage} 项
 当前版本：v${S.rebirths + 1}.0
-图鉴进度：${dexCount()}/${MODELS.length * 4}`;
+图鉴进度：${dexCount()}/${MODELS.length * VARIANTS.length}`;
   const out = $('#aiOut'), btn = $('#aiBtn'), stop = $('#aiStop');
   aiAbort = new AbortController();
   btn.disabled = true; stop.classList.remove('hidden');
@@ -7217,8 +7290,8 @@ function renderBulkCardAccess() {
 
 function renderBulkCardSummary() {
   const amount = bulkAmount.valueAsNumber, all = bulkAllVariants.checked;
-  const scope = `${fmt(MODELS.length)} 款模型 · ${all ? `${VARIANTS.length} 种变体` : '仅标准卡'}`;
-  $('#bulkCardsSummary').textContent = bulkAmount.validity.valid ? `${scope} · 共增加 ${fmt(MODELS.length * (all ? VARIANTS.length : 1) * amount)} 张` : scope;
+  const scope = `${fmt(MODELS.length)} 款模型 · ${all ? '原四种变体（不含 Ultra）' : '仅标准卡'}`;
+  $('#bulkCardsSummary').textContent = bulkAmount.validity.valid ? `${scope} · 共增加 ${fmt(MODELS.length * (all ? 4 : 1) * amount)} 张` : scope;
 }
 
 bulkCardsButton.onclick = () => {
@@ -8169,7 +8242,7 @@ const chatActive = () => currentView === 'chat' && moderation.level !== 2;
 const chatAvatar = m => {
   const model = publicModel(m.sig,m.player_id);
   if (model) {
-    const v = [0,1,2,3].includes(m.sig_variant) ? m.sig_variant : 0;
+    const v = validVariant(m.sig_variant) ? m.sig_variant : 0;
     return `<span class="chat-avatar chat-avatar-model" role="img" aria-label="${esc(model.n)} · ${VARIANTS[v].name}" title="${esc(model.n)} · ${VARIANTS[v].name}" style="--avatar:${TIER_HEX[model.t] ?? LABS[model.lab].hue}">${sharedArt(model)}</span>`;
   }
   const hue = [...m.player_id].reduce((n,c) => (n * 31 + c.charCodeAt(0)) % 360, 0);
