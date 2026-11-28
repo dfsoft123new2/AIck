@@ -3251,10 +3251,10 @@ const WORLD_EVENT_EFFECTS = Object.freeze({
 });
 const EVENT_LEAK_CAP = .1;
 const PERSONAL_HOTSPOT_EFFECTS = Object.freeze({
-  speed:WORLD_EVENT_EFFECTS.speed,
+  speed:{...WORLD_EVENT_EFFECTS.speed,max:100},
   batch:{label:'每批固定张数',min:1,max:1000,step:1,example:10,unit:'张'},
-  price:WORLD_EVENT_EFFECTS.price, tokens:WORLD_EVENT_EFFECTS.tokens,
-  power:WORLD_EVENT_EFFECTS.power, odds:WORLD_EVENT_EFFECTS.odds
+  price:WORLD_EVENT_EFFECTS.price, tokens:{...WORLD_EVENT_EFFECTS.tokens,max:100},
+  power:{...WORLD_EVENT_EFFECTS.power,max:100}, odds:WORLD_EVENT_EFFECTS.odds
 });
 const PERSONAL_HOTSPOT_MINUTES = 1440;
 const worldEventClock = performance.now.bind(performance);
@@ -3305,27 +3305,27 @@ function refreshWorldEvent() {
   resetAutoPull();
   markDirty('pull','models','research','bench','world','hud');
 }
-function applyWorldEventReply(payload, sentAt, at = worldEventClock(), personal = false) {
+function decodeWorldEventReply(payload, sentAt, at, personal, previous = null) {
   const e = payload?.event;
-  let next = null;
-  if (e !== null) {
-    const specs = personal ? PERSONAL_HOTSPOT_EFFECTS : WORLD_EVENT_EFFECTS;
-    const previous = personal ? personalHotspot : worldEvent;
-    if (!e || typeof e.id !== 'string' || typeof e.title !== 'string' || !e.effects || typeof e.effects !== 'object' || Array.isArray(e.effects) ||
-        !Number.isFinite(e.remaining_ms) || e.remaining_ms < 0 || e.remaining_ms > (personal ? PERSONAL_HOTSPOT_MINUTES*60000 : 604800000)) return false;
-    const pairs = Object.entries(e.effects);
-    if (!pairs.length || !pairs.every(([key,value]) => validWorldEventEffect(key,value,specs))) return false;
-    const expires = sentAt + e.remaining_ms;
-    const since = previous?.id === e.id && at <= previous.until ? previous.since : at;
-    next = {id:e.id,title:e.title,effects:Object.fromEntries(pairs),expires,since,until:Math.min(expires,sentAt+WORLD_EVENT_LEASE_MS)};
-  }
+  if (e === null) return null;
+  const specs = personal ? PERSONAL_HOTSPOT_EFFECTS : WORLD_EVENT_EFFECTS;
+  if (!e || typeof e.id !== 'string' || typeof e.title !== 'string' || !e.effects || typeof e.effects !== 'object' || Array.isArray(e.effects) ||
+      !Number.isFinite(e.remaining_ms) || e.remaining_ms < 0 || e.remaining_ms > (personal ? PERSONAL_HOTSPOT_MINUTES*60000 : 604800000)) return undefined;
+  const pairs = Object.entries(e.effects);
+  if (!pairs.length || !pairs.every(([key,value]) => validWorldEventEffect(key,value,specs))) return undefined;
+  const expires = sentAt + e.remaining_ms;
+  const since = previous?.id === e.id && at <= previous.until ? previous.since : at;
+  return {id:e.id,title:e.title,effects:Object.fromEntries(pairs),expires,since,until:Math.min(expires,sentAt+WORLD_EVENT_LEASE_MS)};
+}
+
+function applyWorldEventReply(payload, sentAt, at = worldEventClock(), personal = false) {
+  const next = decodeWorldEventReply(payload,sentAt,at,personal,personal ? personalHotspot : worldEvent);
+  if (next === undefined) return false;
   if (personal) personalHotspot = next;
   else worldEvent = next;
   refreshWorldEvent();
   return true;
 }
-
-/* =================== ECONOMY =================== */
 function addTokens(x) { if (x > 0 && isFinite(x)) { S.tokens += x; S.lifetime += x; } }
 function buffMul(type, lab) {
   let m = 1;
@@ -7003,7 +7003,7 @@ async function changeWorldEvent(action,args) {
 }
 
 function checkPersonalEventContext(owner) {
-  const next = owner && canOpenAdminPanel() ? owner : null;
+  const next = owner && !moderation.level ? owner : null;
   const state = personalEventState;
   if (next !== state.owner) {
     Object.assign(state,{owner:next,revision:state.revision+1,retry:0,poll:null,mutation:null,connection:'idle'});
@@ -7015,7 +7015,8 @@ function checkPersonalEventContext(owner) {
 async function requestPersonalHotspot(action = 'status', args = {}, force = false) {
   checkWorldEventContext();
   const state = personalEventState, read = action === 'status', clock = worldEventClock();
-  if (!state.owner || state.mutation || (read && (state.poll || (!force && clock < state.retry)))) {
+  if (!cloud.board?.client || !state.owner || state.mutation || (!read && !canOpenAdminPanel()) ||
+      (read && (state.poll || (!force && clock < state.retry)))) {
     if (!read) throw Error('FRONTIER_PERSONAL_HOTSPOT_UNAVAILABLE');
     return;
   }
@@ -7042,6 +7043,18 @@ async function requestPersonalHotspot(action = 'status', args = {}, force = fals
     }
     if (!read) throw error;
   } finally { if (state[slot] === revision) state[slot] = null; }
+}
+
+async function requestPlayerHotspot(player,action,args) {
+  const owner = checkWorldEventContext(), b = cloud.board;
+  if (!owner || !canOpenAdminPanel()) throw Error('FRONTIER_PERSONAL_HOTSPOT_UNAVAILABLE');
+  const sentAt = worldEventClock();
+  const data = unwrap(await b.client.rpc('frontier_admin_personal_hotspot',{p_player:player,p_action:action,...args}));
+  if (owner !== checkWorldEventContext() || b !== cloud.board || !canOpenAdminPanel()) throw Error('FRONTIER_PERSONAL_HOTSPOT_UNAVAILABLE');
+  const event = decodeWorldEventReply(data,sentAt,worldEventClock(),true);
+  if (event === undefined) throw Error('FRONTIER_PERSONAL_HOTSPOT_RESPONSE');
+  if (action !== 'status' && player === cloud.uid) void requestPersonalHotspot('status',{},true);
+  return event;
 }
 
 window.addEventListener('offline',checkWorldEventContext);
@@ -7396,6 +7409,7 @@ $('#openAdmin').onclick = () => openAdminPanel();
 adminDialog.addEventListener('close', () => {
   if (adminDialog.open) return;
   adminSeq++; adminDetailSeq++; adminTarget = null;
+  paintPlayerHotspot = null;
 });
 function composePrivateNotice(id, name, horizon = false) {
   if (privateNoticeBusy) return;
@@ -7469,6 +7483,7 @@ async function loadAdminList() {
 async function loadAdminDetail() {
   const id = adminTarget, nameHint = adminTargetName, box = $('#adminDetail'), seq = ++adminDetailSeq;
   const current = () => adminDialog.open && seq === adminDetailSeq && adminTarget === id && canOpenAdminPanel();
+  paintPlayerHotspot = null;
   box.innerHTML = '<p class="note" role="status">正在读取玩家资料…</p>';
   try {
     let r;
@@ -7484,7 +7499,7 @@ async function loadAdminDetail() {
     const name = p?.name || nameHint || '未上榜玩家';
     const online = r.online, lastSeen = online?.last_seen ? new Date(online.last_seen) : null;
     const onlineTime = online ? fmtDur(online.seconds) : Object.hasOwn(r,'online') ? '暂无记录' : '未启用';
-    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理余额复核',balance_limit:'余额超限自动限制',auto_ban:'自动封号',edit_progress:'修改云档等级'};
+    const auditNames = {ban:'调整封禁',unban:'解除封禁',items:'调整道具',grant_all_cards:'批量加卡',self_reset:'清档重玩',chat_delete:'移除聊天消息',send_notice:'发送私密通知',private_gift:'发送私密赠礼',title_grant:'发放称号',packet_permission:'调整发红包权限',gpu_review:'处理余额复核',balance_limit:'余额超限自动限制',auto_ban:'自动封号',edit_progress:'修改云档等级',personal_hotspot_start:'发放专属热点',personal_hotspot_stop:'结束专属热点'};
     box.innerHTML = `<h3>${esc(name)}</h3><p class="note admin-id">${esc(id)} · ${esc(moderationInfo(r.hold?.level,r.hold?.expires_at))}</p>
       <dl class="profile-stats" id="adminOnlineTime"><div><dt>累计在线</dt><dd>${onlineTime}</dd></div>
       <div><dt>最近心跳</dt><dd>${lastSeen && Number.isFinite(+lastSeen) ? `<time datetime="${lastSeen.toISOString()}">${esc(lastSeen.toLocaleString('zh-CN'))}</time>` : '暂无记录'}</dd></div></dl>
@@ -7492,6 +7507,7 @@ async function loadAdminDetail() {
       <button type="button" class="btn ghost small" id="adminGrantHorizon">发放新卡与隐藏卡</button>
       <button type="button" class="btn ghost small" id="adminComposeTitle">发放称号</button>
       <section class="admin-progress" id="adminDrawStatus" aria-label="自动抽卡速度"><p class="note" role="status"></p><button type="button" class="btn ghost small">刷新抽速</button></section>
+      ${worldEventAdminHTML(true,true)}
       <details class="admin-progress"><summary>云档等级</summary><div id="adminProgress"></div></details>
       ${r.flags.length ? `<p class="note">待复核：${esc(reviewText(r.flags))}</p>` : ''}
       <div id="adminPlayerControls" aria-label="红包权限与 GPU 复核" aria-live="polite"></div>
@@ -7513,6 +7529,7 @@ async function loadAdminDetail() {
     $('#adminComposeTitle').onclick = () => chooseTitleRecipient(id);
     mountAdminProgress($('#adminProgress'),id,current);
     mountAdminDrawStatus($('#adminDrawStatus'),id,current);
+    bindWorldEventAdmin(true,{id,name,current,event:null,connection:'idle',busy:false});
     renderAdminPlayerControls(id);
     const ban = $('#adminBan'), items = $('#adminItems');
     const field = (form, name) => form.elements.namedItem(name);
@@ -8864,29 +8881,30 @@ for (const [button, target] of [['#accountLogout','#accountSummary'],['#accountG
 renderAccountPanel();
 
 const eventBadge = $('#worldEventBadge'), personalEventBadge = $('#personalHotspotBadge'), eventDetails = $('#worldEventDetails');
-let eventDetailsPersonal = false;
+let eventDetailsPersonal = false, paintPlayerHotspot = null;
 const eventSpecs = personal => personal ? PERSONAL_HOTSPOT_EFFECTS : WORLD_EVENT_EFFECTS;
 const eventEffectsLabel = (effects,personal) => Object.entries(eventSpecs(personal)).filter(([key]) => Object.hasOwn(effects,key))
   .map(([key,spec]) => [spec.label,spec.unit ? `${effects[key]} ${spec.unit}` : '×'+effects[key]+(key==='odds' ? '（泄露 ≤ 10%）' : '')]);
 
-function worldEventAdminHTML(personal = false) {
-  return `<details class="admin-notice" id="${personal ? 'adminPersonalHotspot' : 'adminWorldEvent'}">
-    <summary>${personal ? '个人热点与抽卡设置' : '全服活动'}</summary>
+function worldEventAdminHTML(personal = false, targeted = false) {
+  return `<details class="admin-notice" id="${targeted ? 'adminPlayerHotspot' : personal ? 'adminPersonalHotspot' : 'adminWorldEvent'}">
+    <summary>${targeted ? '玩家专属热点' : personal ? '个人热点与抽卡设置' : '全服活动'}</summary>
     <div class="event-current">
       <p class="note" data-event-current></p>
       <ul class="event-effect-list" data-event-effects hidden></ul>
       <button class="btn ghost small" type="button" data-event-stop hidden>提前结束</button>
+      ${targeted ? '<button class="btn ghost small" type="button" data-event-refresh>刷新热点</button>' : ''}
     </div>
     <form class="admin-tools event-form">
       <label>${personal ? '热点名称' : '活动名称'}<input class="input" name="title" maxlength="40" ${personal ? 'value="个人热点"' : ''} required></label>
       <label>持续时间（分钟）<input class="input" name="minutes" type="number" min="1" max="${personal ? PERSONAL_HOTSPOT_MINUTES : 10080}" step="1" value="${personal ? 15 : 30}" required></label>
-      <fieldset class="event-options"><legend>${personal ? '仅自己生效' : '活动效果'}</legend>
+      <fieldset class="event-options"><legend>${targeted ? '仅此玩家生效' : personal ? '仅自己生效' : '活动效果'}</legend>
         ${Object.entries(eventSpecs(personal)).map(([key,spec]) => `<div class="event-option">
           <label class="event-toggle"><input type="checkbox" data-effect="${key}">${spec.label}</label>
           <input class="input num" aria-label="${spec.label}${spec.unit ? '' : '倍率'}" name="${key}" type="number" min="${spec.min}" max="${spec.max}" step="${spec.step}" value="${spec.example}" required disabled>
           <span aria-hidden="true">${spec.unit || '×'}</span></div>`).join('')}
       </fieldset>
-      <button class="btn small" type="submit">${personal ? '开启个人热点' : '发布全服活动'}</button>
+      <button class="btn small" type="submit">${targeted ? '发放专属热点' : personal ? '开启个人热点' : '发布全服活动'}</button>
     </form>
     <p class="note notice-status" data-event-status role="status"></p>
   </details>`;
@@ -8902,22 +8920,25 @@ function paintEventEffectList(list,event,personal = false) {
 
 const eventCountdown = event => fmtDur(Math.ceil((event.expires-worldEventClock())/1000));
 
-function renderWorldEventAdmin(panel,event,personal = false) {
+function renderWorldEventAdmin(panel,event,personal = false,target = null) {
   const offline = !navigator.onLine;
   const form = panel.querySelector('form'), stop = panel.querySelector('[data-event-stop]');
-  const connection = personal ? personalEventState.connection : eventConnection;
-  const mutation = personal ? personalEventState.mutation : eventMutation;
+  const connection = target ? target.connection : personal ? personalEventState.connection : eventConnection;
+  const mutation = target ? target.busy : personal ? personalEventState.mutation : eventMutation;
   const name = personal ? '个人热点' : '全服活动';
   const ready = !offline && connection === 'ready';
   const state = event ? `进行中：${event.title} · 剩余 ${eventCountdown(event)}` :
     offline ? '未联网' : connection === 'missing' ? `当前服务器尚未启用${name}。` :
-    connection === 'denied' ? '当前账号没有管理员权限。' : connection === 'error' ? `暂时无法读取${name}，正在重试。` :
+    connection === 'denied' ? '当前账号没有管理员权限。' : connection === 'error' ?
+      (target ? '暂时无法读取专属热点。' : `暂时无法读取${name}，正在重试。`) :
     ready ? `当前没有${name}` : `正在读取${name}…`;
   textIfChanged(panel.querySelector('[data-event-current]'),state);
   const list = panel.querySelector('[data-event-effects]');
   list.hidden = stop.hidden = !event;
   paintEventEffectList(list,event,personal);
   stop.disabled = !ready || !!mutation;
+  const refresh = panel.querySelector('[data-event-refresh]');
+  if (refresh) refresh.disabled = offline || !!mutation;
   const disabled = !ready || !!mutation || !!event;
   form.elements.title.disabled = form.elements.minutes.disabled = form.querySelector('[type=submit]').disabled = disabled;
   for (const toggle of form.querySelectorAll('[data-effect]')) {
@@ -8931,6 +8952,7 @@ function renderWorldEvent() {
   const admin = adminDialog.open && $('#adminWorldEvent'), ownAdmin = adminDialog.open && $('#adminPersonalHotspot');
   if (admin?.open) renderWorldEventAdmin(admin,world);
   if (ownAdmin?.open) renderWorldEventAdmin(ownAdmin,personal,true);
+  if (adminDialog.open) paintPlayerHotspot?.();
   for (const [badge,event] of [[eventBadge,world],[personalEventBadge,personal]]) {
     badge.hidden = !event;
     if (!event) continue;
@@ -8952,38 +8974,71 @@ function showEventDetails(personal) {
 eventBadge.onclick = () => showEventDetails(false);
 personalEventBadge.onclick = () => showEventDetails(true);
 
-function bindWorldEventAdmin(personal = false) {
-  const panel = $(personal ? '#adminPersonalHotspot' : '#adminWorldEvent'), form = panel.querySelector('form');
+function bindWorldEventAdmin(personal = false, target = null) {
+  const panel = $(target ? '#adminPlayerHotspot' : personal ? '#adminPersonalHotspot' : '#adminWorldEvent'), form = panel.querySelector('form');
   const status = panel.querySelector('[data-event-status]');
-  const active = personal ? activePersonalHotspot : activeWorldEvent;
-  const mutation = () => personal ? personalEventState.mutation : eventMutation;
+  const current = () => !target || (panel.isConnected && target.current());
+  const active = target ? () => target.event?.expires > worldEventClock() ? target.event : null
+    : personal ? activePersonalHotspot : activeWorldEvent;
+  const mutation = () => target ? target.busy : personal ? personalEventState.mutation : eventMutation;
   const specs = eventSpecs(personal), scope = personal ? '个人热点' : '全服活动';
   let draft = null;
-  const paint = () => renderWorldEventAdmin(panel,active(),personal);
+  const paint = () => { if (current()) renderWorldEventAdmin(panel,active(),personal,target); };
+  async function requestTarget(action,args) {
+    target.busy = true;
+    try {
+      const event = await requestPlayerHotspot(target.id,action,args);
+      if (current()) { target.event = event; target.connection = 'ready'; }
+    } finally { target.busy = false; }
+  }
+  async function refreshTarget() {
+    if (!current() || target.busy) return;
+    target.connection = 'idle';
+    status.textContent = '';
+    const pending = requestTarget('status',{});
+    paint();
+    try { await pending; }
+    catch (error) {
+      if (!current()) return;
+      target.event = null;
+      target.connection = missingWorldRPC(error) ? 'missing' : error?.code === '42501' ? 'denied' : 'error';
+      status.textContent = error?.code === 'PT404' ? '该玩家账号已不存在。' : '';
+    } finally { paint(); }
+  }
+  if (target) {
+    panel.querySelector('[data-event-refresh]').onclick = refreshTarget;
+    paintPlayerHotspot = () => { if (panel.open) paint(); };
+  }
   panel.ontoggle = () => {
-    if (!panel.open) return;
+    if (!panel.open || !current()) return;
+    if (target) { void refreshTarget(); return; }
     paint();
     const pending = personal ? requestPersonalHotspot('status',{},true) : syncWorldEvent(cloud.board,true);
     void pending.then(paint);
   };
   form.oninput = () => { status.textContent = ''; paint(); };
   async function submit(action,args) {
-    const pending = personal ? requestPersonalHotspot(action,args) : changeWorldEvent(action,args);
+    if (!current()) return false;
+    const pending = target ? requestTarget(action,args) : personal ? requestPersonalHotspot(action,args) : changeWorldEvent(action,args);
     status.textContent = '正在提交…'; paint();
     try {
       await pending;
-      status.textContent = action === 'start' ? (personal ? '已开启个人热点。' : '已发布全服活动。') : `已结束${scope}。`;
+      if (!current()) return false;
+      status.textContent = action === 'start' ? (target ? '已发放专属热点。' : personal ? '已开启个人热点。' : '已发布全服活动。') : `已结束${scope}。`;
       return true;
     } catch (error) {
+      if (!current()) return false;
       status.textContent = missingWorldRPC(error) ? `请先安装${scope}的数据库更新。` :
-        error?.message === 'FRONTIER_EVENT_ACTIVE' ? `已有${scope}在进行，请先结束。` :
+        error?.message === 'FRONTIER_EVENT_ACTIVE' ? (target ? '该玩家已有热点，请刷新后再结束。' : `已有${scope}在进行，请先结束。`) :
+        error?.message === 'FRONTIER_EVENT_PLAYER_HELD' ? '该玩家当前受限，不能发放热点。' :
+        error?.message === 'FRONTIER_EVENT_PLAYER_NOT_FOUND' ? '该玩家账号已不存在。' :
         '未确认提交成功。请检查网络与权限，再重试。';
       return false;
     } finally { paint(); }
   }
   form.onsubmit = async e => {
     e.preventDefault();
-    if (mutation() || active() || !form.reportValidity()) return;
+    if (!current() || mutation() || active() || !form.reportValidity()) return;
     const title = form.elements.title.value.trim(), minutes = form.elements.minutes.valueAsNumber;
     if (!title || /[\x00-\x1f\x7f]/.test(title)) { status.textContent = '请输入有效的活动名称。'; return; }
     const effects = {};
@@ -8993,14 +9048,14 @@ function bindWorldEventAdmin(personal = false) {
       effects[key] = factor;
     }
     if (!Object.keys(effects).length) { status.textContent = '请选择至少一项活动效果。'; return; }
-    if (!window.confirm(`立即${personal ? '仅为自己开启' : '向全服发布'}「${title}」？\n持续 ${minutes} 分钟\n${eventEffectsLabel(effects,personal).map(([label,factor]) => label+' '+factor).join('、')}`)) return;
+    if (!window.confirm(`立即${target ? `仅为「${target.name}」开启` : personal ? '仅为自己开启' : '向全服发布'}「${title}」？\n持续 ${minutes} 分钟\n${eventEffectsLabel(effects,personal).map(([label,factor]) => label+' '+factor).join('、')}`)) return;
     const args = {p_title:title,p_minutes:minutes,p_effects:effects}, key = JSON.stringify(args);
     if (draft?.key !== key) draft = {key,id:newEventId()};
     if (await submit('start',{p_id:draft.id,...args})) { draft = null; form.reset(); paint(); }
   };
   panel.querySelector('[data-event-stop]').onclick = async () => {
     const event = active();
-    if (!event || mutation() || !window.confirm(`现在结束「${event.title}」？`)) return;
+    if (!current() || !event || mutation() || !window.confirm(`现在结束${target ? `「${target.name}」的` : ''}「${event.title}」？`)) return;
     await submit('stop',{p_id:event.id});
   };
   paint();
